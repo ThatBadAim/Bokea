@@ -5,9 +5,9 @@
 // screen rather than letting anyone past it.
 
 window.ENV = {
-  SUPABASE_URL: '', // e.g. 'https://xyzcompany.supabase.co'
-  SUPABASE_ANON_KEY: '', // e.g. 'eyJhbGciOiJIUzI1NiIsIn...'
-  
+  SUPABASE_URL: 'https://xwmimrocnanyjtcomlib.supabase.co'
+  SUPABASE_ANON_KEY: 'sb_publishable_pmMBWtdSdPeDJh_PdN_GUQ_YoCEOB-A'
+
   // Helper to determine if Supabase BaaS is ready
   isConfigured: function () {
     return Boolean(
