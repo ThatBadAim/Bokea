@@ -41,7 +41,9 @@
     --app-zoom: 0.9;
     --tap: 48.9px;
     --vh100: calc(100vh / 0.9);
+    --vh100: calc(100dvh / 0.9);
     --vw100: calc(100vw / 0.9);
+    --vw100: calc(100dvw / 0.9);
 
     --sidebar-width: 250px;
     --border-radius-lg: 8px;
@@ -84,7 +86,10 @@ body {
     display: flex;
     width: 100%;
     max-width: 100%;
+    height: var(--vh100);
     min-height: var(--vh100);
+    max-height: var(--vh100);
+    overflow: hidden;
 }
 
 /* Sidebar Navigation */
@@ -98,6 +103,8 @@ body {
     position: fixed;
     height: var(--vh100);
     z-index: 10;
+    overflow-y: auto;
+    overscroll-behavior: contain;
 }
 
 .brand {
@@ -234,7 +241,11 @@ body {
 .main-content {
     margin-left: var(--sidebar-width);
     flex-grow: 1;
+    height: var(--vh100);
     min-height: var(--vh100);
+    max-height: var(--vh100);
+    overflow-y: auto;
+    overscroll-behavior: contain;
     display: flex;
     flex-direction: column;
 }
@@ -1378,6 +1389,8 @@ svg.lucide {
     display: flex;
     align-items: center;
     justify-content: center;
+    padding: clamp(16px, 3vh, 32px);
+    overflow-y: auto;
     transition: opacity 0.5s ease, visibility 0.5s ease;
 }
 
@@ -1388,15 +1401,17 @@ svg.lucide {
 }
 
 .welcome-content {
-    padding: 60px;
-    max-width: 500px;
-    width: 90%;
+    padding: clamp(24px, 4.5vh, 52px) clamp(20px, 4vw, 48px);
+    max-width: 480px;
+    width: 92%;
+    max-height: calc(var(--vh100) - 32px);
+    overflow-y: auto;
     text-align: center;
     box-shadow: 0 20px 40px rgba(0,0,0,0.05);
     display: flex;
     flex-direction: column;
     align-items: center;
-    gap: 24px;
+    gap: clamp(14px, 2.2vh, 24px);
     border-radius: 16px;
     border: 1px solid var(--border-color);
     background: rgba(255, 255, 255, 0.85);
@@ -7903,5 +7918,137 @@ body.motion-off .focus-ring-fill { transition: none; }
     flex-direction: column;
     gap: 10px;
     margin-top: 10px;
+}
+
+/* ==========================================================================
+   Section 4: Layout, Viewport & UI Scaling Optimization
+   Ensures the entire landing and initial Today dashboard fits cleanly within
+   the standard desktop browser viewport (100vh / 100dvh) across 1080p and 1440p
+   resolutions without unwanted initial vertical scrolling or overflowing.
+   ========================================================================== */
+@media (min-width: 769px) {
+    /* Responsive desktop topbar */
+    .topbar {
+        padding: clamp(10px, 1.4vh, 15px) clamp(20px, 2.8vw, 36px);
+    }
+    .now-clock-time {
+        font-size: clamp(1.6rem, 2.2vh, 2rem);
+    }
+
+    /* Bounded, fluid main content area */
+    .main-content-body {
+        padding: clamp(14px, 2vh, 26px) clamp(20px, 2.8vw, 36px);
+        gap: clamp(10px, 1.6vh, 20px);
+        max-width: 1080px;
+        width: 100%;
+        margin: 0 auto;
+    }
+
+    /* Landing / Today View Header */
+    #homeView .header {
+        margin-bottom: clamp(4px, 0.8vh, 10px);
+    }
+    #homeView .welcome-text {
+        font-size: clamp(1.65rem, 2.5vh, 2.35rem);
+        margin-bottom: clamp(2px, 0.4vh, 5px);
+        line-height: 1.15;
+    }
+    #homeView .current-date {
+        font-size: clamp(0.72rem, 1vh, 0.82rem);
+        letter-spacing: 1.2px;
+    }
+
+    /* Home Stack vertical pacing */
+    #homeView .home-stack {
+        margin-top: clamp(6px, 1vh, 14px);
+        gap: clamp(8px, 1.1vh, 12px);
+        max-width: 900px;
+    }
+
+    /* Right Now hero card */
+    #homeView .right-now-body {
+        padding: clamp(14px, 1.8vh, 22px) clamp(18px, 2.4vw, 26px);
+        gap: clamp(8px, 1.2vh, 14px);
+    }
+    #homeView .right-now-title {
+        font-size: clamp(1.2rem, 1.8vh, 1.55rem);
+        line-height: 1.22;
+    }
+    #homeView .right-now-eyebrow {
+        font-size: 0.68rem;
+        gap: 4px 8px;
+    }
+    #homeView .right-now-actions .btn {
+        min-height: clamp(34px, 4vh, 40px);
+        padding: 0 16px;
+        font-size: 0.85rem;
+    }
+
+    /* After That row preview */
+    #homeView .sec-head {
+        margin-bottom: clamp(2px, 0.4vh, 6px);
+    }
+    #homeView .sec-label {
+        font-size: 0.74rem;
+    }
+    #homeView .after-grid {
+        gap: clamp(6px, 1vh, 10px);
+    }
+    #homeView .after-row {
+        padding: clamp(6px, 1vh, 10px) 16px;
+    }
+    #homeView .after-row-name {
+        font-size: clamp(0.82rem, 1.1vh, 0.9rem);
+    }
+
+    /* Schedule Timeline Panel */
+    #homeView .schedule-timeline-panel .card-header {
+        padding: clamp(8px, 1vh, 12px) clamp(14px, 1.8vw, 18px);
+    }
+    #homeView .schedule-timeline-panel .card-body {
+        padding: clamp(8px, 1.2vh, 14px) clamp(14px, 1.8vw, 18px) !important;
+        gap: clamp(6px, 1vh, 12px) !important;
+    }
+    #homeView .timeline-bar {
+        height: clamp(16px, 1.8vh, 20px) !important;
+    }
+    #homeView .timeline-markers {
+        margin-top: 3px !important;
+        font-size: 0.68rem;
+    }
+    #homeView #timelineLegend {
+        gap: 6px !important;
+        font-size: 0.72rem;
+    }
+
+    /* Capture bar */
+    #homeView .capture-wrap {
+        min-height: clamp(38px, 4.4vh, 44px);
+        padding: 0 14px;
+    }
+    #homeView .capture-input {
+        padding: clamp(6px, 0.8vh, 9px) 0;
+        font-size: clamp(0.82rem, 1.1vh, 0.88rem);
+    }
+
+    /* Sidebar Navigation Scaling */
+    .sidebar {
+        padding: clamp(16px, 2.4vh, 28px) 18px;
+    }
+    .brand {
+        margin-bottom: clamp(18px, 3.2vh, 40px);
+    }
+    .brand .brand-name,
+    .brand h2 {
+        font-size: clamp(1.85rem, 2.6vh, 2.25rem);
+    }
+    .nav-menu {
+        gap: clamp(3px, 0.6vh, 6px);
+    }
+    .nav-item {
+        min-height: clamp(36px, 4.2vh, 42px);
+        padding: clamp(6px, 1vh, 10px) 14px;
+        font-size: clamp(0.82rem, 1.1vh, 0.9rem);
+    }
 }
 
