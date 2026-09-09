@@ -3828,6 +3828,14 @@ document.addEventListener('DOMContentLoaded', () => {
     };
 
     const PRONOUN_PRESETS = ['she/her', 'he/him', 'they/them', 'she/they', 'he/they'];
+    const GENDER_OPTIONS = ['Male', 'Female', 'Non-Binary', 'Prefer Not to Say'];
+
+    function normalizeGender(val) {
+        if (!val) return '';
+        const clean = String(val).trim();
+        const match = GENDER_OPTIONS.find(opt => opt.toLowerCase() === clean.toLowerCase());
+        return match || clean;
+    }
 
     // Gender is a short list now rather than a text box. Anything already
     // saved that is not on the list is put back on it rather than thrown
@@ -3835,11 +3843,12 @@ document.addEventListener('DOMContentLoaded', () => {
     // is worse than a list with one extra entry on it.
     function keepUnlistedOption(select, value) {
         if (!select || !value) return;
-        const known = Array.prototype.some.call(select.options, o => o.value === value);
+        const norm = normalizeGender(value);
+        const known = Array.prototype.some.call(select.options, o => (o.value || '').toLowerCase() === norm.toLowerCase());
         if (known) return;
         const opt = document.createElement('option');
-        opt.value = value;
-        opt.textContent = value;
+        opt.value = norm;
+        opt.textContent = norm;
         select.appendChild(opt);
     }
 
@@ -4215,8 +4224,9 @@ document.addEventListener('DOMContentLoaded', () => {
         // the old free-text answer has to be added before it is applied.
         const genderSelect = profEl('profGender');
         if (genderSelect) {
-            keepUnlistedOption(genderSelect, profile.gender || '');
-            genderSelect.value = profile.gender || '';
+            const normalizedGender = normalizeGender(profile.gender || '');
+            keepUnlistedOption(genderSelect, normalizedGender);
+            genderSelect.value = normalizedGender;
         }
 
         const select = profEl('profPronouns');
@@ -4620,12 +4630,12 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     let lastLiveMinute = -1;
-    function updateLiveClock(m) {
+    function updateLiveClock(m, force = false) {
         const mins = typeof m === 'number' ? m : nowMinutes();
-        if (mins === lastLiveMinute) return;
+        if (mins === lastLiveMinute && !force) return;
         lastLiveMinute = mins;
         const timeElBig = document.getElementById('currentTimeBig');
-        if (timeElBig) timeElBig.textContent = fmtHM(mins);
+        if (timeElBig) timeElBig.textContent = formatAppTime(mins);
     }
     updateLiveClock();
 
@@ -4652,7 +4662,15 @@ document.addEventListener('DOMContentLoaded', () => {
 
         if (nameInput) nameInput.value = savedName;
         if (snoozeSelect) snoozeSelect.value = savedSnooze;
-        if (clockFormatSelect) clockFormatSelect.value = savedClockFormat;
+        if (clockFormatSelect) {
+            clockFormatSelect.value = savedClockFormat;
+            if (clockFormatSelect.dataset.formatWired !== 'true') {
+                clockFormatSelect.dataset.formatWired = 'true';
+                clockFormatSelect.addEventListener('change', (e) => {
+                    propagateClockFormatChange(e.target.value);
+                });
+            }
+        }
 
         updateThemeCardSelection(savedTheme);
 
@@ -4808,15 +4826,7 @@ document.addEventListener('DOMContentLoaded', () => {
             localStorage.setItem('bokea_clock_format', clockFormatSelect.value);
         }
 
-        updateLiveClock();
-        renderDailyScheduleTimeline();
-        renderNowBlock();
-        // Changing these hours changes what "morning" means on every task in
-        // the app, so everything that prints a block has to be redrawn.
-        renderNextUpTask();
-        renderAllTasksGrid();
-        renderCalendar();
-        syncWhenUI();
+        propagateClockFormatChange();
 
         if (token) {
             try {
@@ -6076,22 +6086,85 @@ function parseHM(value, fallback) {
     return parseInt(m[1], 10) * 60 + parseInt(m[2], 10);
 }
 
-// One clock in the whole app. The 12h/24h choice in Settings used to be
-// honoured by the topbar and ignored everywhere else, so the same moment was
-// written two different ways on one screen. Everything that prints a time
-// goes through here.
-function fmtHM(mins) {
-    const total = ((Math.round(mins) % 1440) + 1440) % 1440;
+// Centralized time-formatting utility function for the entire application.
+// Supports minute-of-day numbers (0..1440), Date instances, ISO strings,
+// timestamp strings ("14:30"), and epoch millisecond timestamps.
+function formatAppTime(value, options = {}) {
+    if (value === null || value === undefined || value === '') return '';
+    let totalMinutes;
+    if (typeof value === 'number') {
+        if (value >= 0 && value <= 1440 && !options.isTimestamp) {
+            totalMinutes = Math.round(value);
+        } else {
+            const d = new Date(value);
+            if (isNaN(d.getTime())) return '';
+            totalMinutes = d.getHours() * 60 + d.getMinutes();
+        }
+    } else if (value instanceof Date) {
+        if (isNaN(value.getTime())) return '';
+        totalMinutes = value.getHours() * 60 + value.getMinutes();
+    } else if (typeof value === 'string') {
+        const str = value.trim();
+        const timeMatch = /^(\d{1,2}):(\d{2})(?::\d{2})?$/.exec(str);
+        if (timeMatch) {
+            totalMinutes = parseInt(timeMatch[1], 10) * 60 + parseInt(timeMatch[2], 10);
+        } else {
+            const d = new Date(str);
+            if (!isNaN(d.getTime())) {
+                totalMinutes = d.getHours() * 60 + d.getMinutes();
+            } else {
+                const parsed = parseHM(str, null);
+                if (parsed !== null) totalMinutes = parsed;
+                else return String(value);
+            }
+        }
+    } else {
+        return String(value);
+    }
+
+    const total = ((Math.round(totalMinutes) % 1440) + 1440) % 1440;
     const h = Math.floor(total / 60);
     const m = total % 60;
     const mm = m < 10 ? '0' + m : String(m);
-    if ((localStorage.getItem('bokea_clock_format') || '12h') === '12h') {
+    const format = options.format || localStorage.getItem('bokea_clock_format') || '12h';
+
+    if (format === '12h') {
         const ampm = h >= 12 ? 'pm' : 'am';
         const dh = h % 12 === 0 ? 12 : h % 12;
         return `${dh}:${mm}${ampm}`;
     }
-    return `${h < 10 ? '0' : ''}${h}:${mm}`;
+    const hh = h < 10 ? '0' + h : String(h);
+    return `${hh}:${mm}`;
 }
+window.formatAppTime = formatAppTime;
+
+// Everything that prints a time routes through formatAppTime.
+function fmtHM(mins) {
+    return formatAppTime(mins);
+}
+window.fmtHM = fmtHM;
+
+// Propagates 12h/24h clock format changes across all time-of-day badges, clocks,
+// schedule cards, and timestamp labels across the interface without a page reload.
+function propagateClockFormatChange(newFormat) {
+    if (newFormat) {
+        try { localStorage.setItem('bokea_clock_format', newFormat); } catch(e) {}
+    }
+    updateLiveClock(nowMinutes(), true);
+    renderDailyScheduleTimeline();
+    renderNowBlock();
+    renderTimelineNow();
+    renderNextUpTask();
+    renderAllTasksGrid();
+    renderCalendar();
+    syncWhenUI();
+    try {
+        window.dispatchEvent(new CustomEvent('bokea-clock-format-changed', {
+            detail: { format: localStorage.getItem('bokea_clock_format') || '12h' }
+        }));
+    } catch(e) {}
+}
+window.propagateClockFormatChange = propagateClockFormatChange;
 
 // ---------- When in the day ----------
 //
