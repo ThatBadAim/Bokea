@@ -1,0 +1,176 @@
+{
+  "Boke\u00e0/Bokea.csproj": {
+    "mtime": 1788888926.2370565,
+    "seen": 1788889167.5423038,
+    "ast_hash": "657bdeb67c0a164829e7c678c49e1eb2",
+    "semantic_hash": ""
+  },
+  "Boke\u00e0/Database/AppDbContext.cs": {
+    "mtime": 1788888952.6938663,
+    "seen": 1788889167.542309,
+    "ast_hash": "f9f8051617c82fa98483969d1c65aac8",
+    "semantic_hash": ""
+  },
+  "Boke\u00e0/Database/Models.cs": {
+    "mtime": 1788888937.7010574,
+    "seen": 1788889167.5423121,
+    "ast_hash": "dbf66df4d4ee164d24bc69ea4918e963",
+    "semantic_hash": ""
+  },
+  "Boke\u00e0/Endpoints/AuthEndpoints.cs": {
+    "mtime": 1781730838.0,
+    "seen": 1788885665.2367876,
+    "ast_hash": "32b41f84e9b5f707cc486b0487158497",
+    "semantic_hash": "32b41f84e9b5f707cc486b0487158497"
+  },
+  "Boke\u00e0/Endpoints/DigestEndpoints.cs": {
+    "mtime": 1781202952.0,
+    "seen": 1788885665.2367918,
+    "ast_hash": "1a0024ef9acca982aac132caf5bf742b",
+    "semantic_hash": "1a0024ef9acca982aac132caf5bf742b"
+  },
+  "Boke\u00e0/Endpoints/TaskEndpoints.cs": {
+    "mtime": 1781730844.0,
+    "seen": 1788885665.2367964,
+    "ast_hash": "8fd553e901042003e10dd9adb9f16a36",
+    "semantic_hash": "8fd553e901042003e10dd9adb9f16a36"
+  },
+  "Boke\u00e0/Program.cs": {
+    "mtime": 1788888996.8341424,
+    "seen": 1788889167.542322,
+    "ast_hash": "fb3742d7632488c9ee4e5e7641d7e60f",
+    "semantic_hash": ""
+  },
+  "Boke\u00e0/Properties/launchSettings.json": {
+    "mtime": 1781034663.0,
+    "seen": 1788885665.2368062,
+    "ast_hash": "19406973143eca50077532b849956e66",
+    "semantic_hash": "19406973143eca50077532b849956e66"
+  },
+  "Boke\u00e0/Services/DigestService.cs": {
+    "mtime": 1788886107.1389985,
+    "seen": 1788889167.5423243,
+    "ast_hash": "e49c296c3de932f22c3f34b094d0ba33",
+    "semantic_hash": ""
+  },
+  "Boke\u00e0/Services/TaskWatchdogService.cs": {
+    "mtime": 1788888977.367972,
+    "seen": 1788889167.5423265,
+    "ast_hash": "28d0f0a84cb3f83ed97d12748d616525",
+    "semantic_hash": ""
+  },
+  "Boke\u00e0/appsettings.json": {
+    "mtime": 1788888932.8377411,
+    "seen": 1788889167.5423288,
+    "ast_hash": "6a724f80f7dd8915a0f6adcf3989c098",
+    "semantic_hash": ""
+  },
+  "Boke\u00e0/wwwroot/js/app.js": {
+    "mtime": 1788905257.6030486,
+    "seen": 1788905568.7217882,
+    "ast_hash": "d520971aa280de55bfedc723ff62b79f",
+    "semantic_hash": ""
+  },
+  "Boke\u00e0/wwwroot/manifest.json": {
+    "mtime": 1781202156.0,
+    "seen": 1788885665.2369065,
+    "ast_hash": "e38e6347cfd75ae30017fa0ee340711d",
+    "semantic_hash": "e38e6347cfd75ae30017fa0ee340711d"
+  },
+  "Boke\u00e0/wwwroot/sw.js": {
+    "mtime": 1788897858.927692,
+    "seen": 1788897967.8290355,
+    "ast_hash": "5515ca98b0cb141312363e1df2cf298e",
+    "semantic_hash": ""
+  },
+  "Boke\u00e0/task.md": {
+    "mtime": 1781641061.0,
+    "seen": 1788885665.2369149,
+    "ast_hash": "ee5d30fed6fc7b5cf480cd2ec867c659",
+    "semantic_hash": "ee5d30fed6fc7b5cf480cd2ec867c659"
+  },
+  "Boke\u00e0/Endpoints/PushEndpoints.cs": {
+    "mtime": 1788888987.3830833,
+    "seen": 1788889167.5423188,
+    "ast_hash": "dbe3d8dbe70d850671ecc2f3f2042071",
+    "semantic_hash": ""
+  },
+  "Boke\u00e0/Services/PushNotificationService.cs": {
+    "mtime": 1788888960.9639115,
+    "seen": 1788889167.5423253,
+    "ast_hash": "8f4e72fbf4511191a6dee0c05abfe9ea",
+    "semantic_hash": ""
+  },
+  "AGENTS.md": {
+    "mtime": 1788886392.3201156,
+    "seen": 1788889167.5423546,
+    "ast_hash": "4253c9434380fe89993071cdba575923",
+    "semantic_hash": ""
+  },
+  "Boke\u00e0/wwwroot/index.html": {
+    "mtime": 1788904926.8145049,
+    "seen": 1788905568.7220824,
+    "ast_hash": "87452dd4185d53ba0374ea2e62c83f9d",
+    "semantic_hash": ""
+  },
+  "Boke\u00e0/wwwroot/assets/icon.svg": {
+    "mtime": 1781202150.0,
+    "seen": 1788889167.5423598,
+    "ast_hash": "4a7a33788bb4bcf6cf63401c16179256",
+    "semantic_hash": ""
+  },
+  "Boke\u00e0/wwwroot/js/config.js": {
+    "mtime": 1788897843.9885204,
+    "seen": 1788897967.8290029,
+    "ast_hash": "4f263aeb4836aa3b5fa9d859926cae85",
+    "semantic_hash": ""
+  },
+  "vercel.json": {
+    "mtime": 1788897830.898369,
+    "seen": 1788897967.829037,
+    "ast_hash": "9ca0514e575ee1c84530595c219c2d7d",
+    "semantic_hash": ""
+  },
+  "design/canvas.json": {
+    "mtime": 1788901506.0954185,
+    "seen": 1788902955.5970125,
+    "ast_hash": "fdf1f5d85f001d7d96d4cbadc30e505a",
+    "semantic_hash": ""
+  },
+  "design/Focus.dc.html": {
+    "mtime": 1788901178.556523,
+    "seen": 1788902955.5970972,
+    "ast_hash": "71b9e03cd25cb6e81ed0bfc0e0b5aba5",
+    "semantic_hash": ""
+  },
+  "design/Insights.dc.html": {
+    "mtime": 1788901378.1300004,
+    "seen": 1788902955.597099,
+    "ast_hash": "b7ed2dc365fb34537c79de9d707ea5ec",
+    "semantic_hash": ""
+  },
+  "design/Main.dc.html": {
+    "mtime": 1788901102.6838512,
+    "seen": 1788902955.5971012,
+    "ast_hash": "ee483716d9b7eb756f20c4ed9d5b1155",
+    "semantic_hash": ""
+  },
+  "design/System.dc.html": {
+    "mtime": 1788901484.544088,
+    "seen": 1788902955.5971029,
+    "ast_hash": "6a17146c045464d6acf6bf170961d187",
+    "semantic_hash": ""
+  },
+  "design/Tasks.dc.html": {
+    "mtime": 1788901280.3449473,
+    "seen": 1788902955.5971057,
+    "ast_hash": "3e7063f3d1b9eb95063e34a37b30366c",
+    "semantic_hash": ""
+  },
+  "design/bokea-adhd-overhaul.html": {
+    "mtime": 1788901513.5814848,
+    "seen": 1788902955.5971076,
+    "ast_hash": "10ecd2e12aa61e941161ba2d9970a2e3",
+    "semantic_hash": ""
+  }
+}

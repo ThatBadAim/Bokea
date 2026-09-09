@@ -1,0 +1,15 @@
+{
+  "version": 2,
+  "outputDirectory": "Bokeà/wwwroot",
+  "cleanUrls": true,
+  "trailingSlash": false,
+  "routes": [
+    {
+      "handle": "filesystem"
+    },
+    {
+      "src": "/(.*)",
+      "dest": "/index.html"
+    }
+  ]
+}

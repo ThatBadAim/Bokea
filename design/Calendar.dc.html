@@ -1,0 +1,353 @@
+<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Playfair+Display:wght@600;700;800&display=swap">
+  <style>
+    *{box-sizing:border-box}
+    body{margin:0;font-family:'Inter',-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;-webkit-font-smoothing:antialiased}
+    a{color:#4A7C59;text-decoration:none} a:hover{color:#3b6247}
+    .app{
+      --bg:#F8F7F5; --card:#ffffff; --line:#e4e4e7; --line-str:#1A1A1A;
+      --ink:#1A1A1A; --ink-2:#57575f; --ink-3:#6b6b73;
+      --green:#4A7C59; --green-bg:#f0f4f1; --green-line:rgba(74,124,89,0.25); --green-tx:#3f6a4c;
+      --amber:#f59e0b; --amber-bg:#fef3c7; --amber-line:rgba(245,158,11,0.25); --amber-tx:#8a5a00;
+      --red:#ef4444; --red-bg:#fee2e2; --red-line:rgba(239,68,68,0.25); --red-tx:#b91c1c;
+      --gray:#f4f4f5; --sunk:rgba(0,0,0,0.025);
+      --solid:#000000; --solid-fg:#ffffff; --solid-hi:#27272a;
+      --sans:'Inter',-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;
+      --disp:'Playfair Display',Georgia,serif;
+      --cell-gap:6px;
+    }
+    .app[data-theme="dark"]{
+      --bg:#09090b; --card:#18181b; --line:#27272a; --line-str:#ffffff;
+      --ink:#ffffff; --ink-2:#a1a1aa; --ink-3:#71717a;
+      --green:#6c9a77; --green-bg:rgba(108,154,119,0.12); --green-line:rgba(108,154,119,0.35); --green-tx:#8fbd9a;
+      --amber-bg:rgba(245,158,11,0.12); --amber-line:rgba(245,158,11,0.35); --amber-tx:#f0b849;
+      --red-bg:rgba(239,68,68,0.12); --red-line:rgba(239,68,68,0.35); --red-tx:#f19a9a;
+      --gray:#18181b; --sunk:rgba(255,255,255,0.035);
+      --solid:#ffffff; --solid-fg:#09090b; --solid-hi:#e4e4e7;
+    }
+    .ic{fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;flex:0 0 auto}
+    .navitem{display:flex;align-items:center;gap:12px;padding:12px 14px;border-radius:6px;color:var(--ink-2);
+      font-weight:500;font-size:0.9rem;border:1px solid transparent;transition:all 0.15s ease;cursor:pointer}
+    .navitem:hover{color:var(--ink);background:var(--gray)}
+    .navitem[data-on="1"]{color:var(--solid-fg);background:var(--solid);border-color:var(--solid)}
+    .btn{font-family:var(--sans);font-weight:600;cursor:pointer;transition:all 0.15s ease;border:1px solid transparent}
+    .btn-solid{background:var(--solid);color:var(--solid-fg);border-color:var(--solid)}
+    .btn-solid:hover{background:var(--solid-hi);border-color:var(--solid-hi)}
+    .btn-quiet{background:var(--card);color:var(--ink);border-color:var(--line)}
+    .btn-quiet:hover{background:var(--gray);border-color:var(--line-str)}
+    .navbtn{width:44px;height:44px;display:inline-flex;align-items:center;justify-content:center;background:transparent;
+      border:1px solid var(--line);border-radius:6px;color:var(--ink-2);cursor:pointer;transition:all 0.15s ease}
+    .navbtn:hover{border-color:var(--line-str);color:var(--ink)}
+
+    /* ---- the day ---- */
+    .cell{position:relative;display:flex;flex-direction:column;gap:5px;padding:9px 10px 10px;text-align:left;
+      background:var(--card);border:1px solid var(--line);border-radius:8px;cursor:pointer;overflow:hidden;
+      font-family:var(--sans);transition:border-color 0.15s ease, background 0.15s ease}
+    .cell:hover{border-color:var(--line-str)}
+    .cell[data-out="1"]{background:transparent;border-color:transparent}
+    .cell[data-out="1"] .num{color:var(--ink-3);font-weight:400}
+    .cell[data-out="1"] .chip{opacity:0.55}
+    .cell[data-today="1"]{border-color:var(--line-str);border-width:2px;padding:8px 9px 9px}
+    .cell[data-sel="1"]{border-color:var(--line-str);border-width:2px;padding:8px 9px 9px;background:var(--sunk)}
+    .num{font-size:1rem;font-weight:600;color:var(--ink);line-height:1.1}
+    .cell[data-today="1"] .num{font-weight:800}
+    .chip{display:flex;align-items:center;gap:7px;min-height:22px}
+    .rail{width:3px;align-self:stretch;border-radius:2px;flex:0 0 auto}
+    .chipname{font-size:0.78rem;font-weight:500;color:var(--ink);line-height:1.25;overflow:hidden;
+      display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical}
+    .more{font-size:0.72rem;font-weight:600;color:var(--ink-3);padding-left:10px}
+  </style>
+</helmet>
+
+<div class="app" data-theme="{{theme}}"
+     style="display:flex;height:100vh;background:var(--bg);color:var(--ink);overflow:hidden">
+
+  <svg width="0" height="0" style="position:absolute" aria-hidden="true"><defs>
+    <symbol id="i-home" viewBox="0 0 24 24"><path d="M3 9.5 12 3l9 6.5V20a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1z"/><path d="M9 21v-7h6v7"/></symbol>
+    <symbol id="i-list" viewBox="0 0 24 24"><path d="M9 11l3 3 8-8"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></symbol>
+    <symbol id="i-chart" viewBox="0 0 24 24"><path d="M3 3v18h18"/><path d="M19 9l-5 5-4-4-3 3"/></symbol>
+    <symbol id="i-cal" viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="17" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/></symbol>
+    <symbol id="i-sliders" viewBox="0 0 24 24"><path d="M4 21v-6M4 11V3M12 21v-9M12 8V3M20 21v-5M20 12V3"/><path d="M1 15h6M9 8h6M17 12h6"/></symbol>
+    <symbol id="i-target" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="5"/><circle cx="12" cy="12" r="1.5"/></symbol>
+    <symbol id="i-clock" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3.5 2"/></symbol>
+    <symbol id="i-check" viewBox="0 0 24 24"><path d="M20 6 9 17l-5-5"/></symbol>
+    <symbol id="i-alert" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 7.5v5M12 16.2v.1"/></symbol>
+    <symbol id="i-left" viewBox="0 0 24 24"><path d="m15 18-6-6 6-6"/></symbol>
+    <symbol id="i-right" viewBox="0 0 24 24"><path d="m9 18 6-6-6-6"/></symbol>
+    <symbol id="i-close" viewBox="0 0 24 24"><path d="M18 6 6 18M6 6l12 12"/></symbol>
+    <symbol id="i-play" viewBox="0 0 24 24"><path d="M7 4.5v15l12-7.5z"/></symbol>
+    <symbol id="i-repeat" viewBox="0 0 24 24"><path d="M21 5v6h-6"/><path d="M3.6 9.5A9 9 0 0 1 20 8"/><path d="M3 19v-6h6"/><path d="M20.4 14.5A9 9 0 0 1 4 16"/></symbol>
+  </defs></svg>
+
+  <!-- ============ NAV RAIL — unchanged from the rest of the app ============ -->
+  <aside style="width:250px;flex:0 0 250px;background:var(--card);border-right:1px solid var(--line);display:flex;flex-direction:column;padding:30px 20px">
+    <div style="display:flex;flex-direction:column;align-items:center;text-align:center;gap:6px;margin-bottom:44px">
+      <h2 style="font-family:var(--disp);font-size:2.35rem;font-weight:700;letter-spacing:-0.6px;line-height:1.15;color:var(--ink);margin:0">Bokeà</h2>
+      <span style="font-size:0.8rem;text-transform:uppercase;letter-spacing:2px;color:var(--ink-2);font-weight:500;opacity:0.7">la vie est floue</span>
+    </div>
+    <nav style="display:flex;flex-direction:column;gap:6px;flex-grow:1">
+      <div class="navitem"><svg class="ic" width="18" height="18"><use href="#i-home"/></svg><span>Today</span></div>
+      <div class="navitem"><svg class="ic" width="18" height="18"><use href="#i-target"/></svg><span>Focus</span></div>
+      <div class="navitem"><svg class="ic" width="18" height="18"><use href="#i-list"/></svg><span>Everything</span></div>
+      <div class="navitem" data-on="1"><svg class="ic" width="18" height="18"><use href="#i-cal"/></svg><span>Calendar</span></div>
+      <div class="navitem"><svg class="ic" width="18" height="18"><use href="#i-chart"/></svg><span>Patterns</span></div>
+      <div class="navitem"><svg class="ic" width="18" height="18"><use href="#i-sliders"/></svg><span>Settings</span></div>
+    </nav>
+    <div style="border-top:1px solid var(--line);padding-top:18px;display:flex;align-items:center;gap:12px">
+      <div style="width:36px;height:36px;border-radius:50%;background:var(--gray);border:1px solid var(--line);display:flex;align-items:center;justify-content:center;font-weight:600;font-size:0.85rem;color:var(--ink)">U</div>
+      <div style="display:flex;flex-direction:column">
+        <span style="font-size:0.85rem;font-weight:600;color:var(--ink)">Productive Mind</span>
+        <span style="font-size:0.75rem;color:var(--ink-2);font-weight:500">2 done today</span>
+      </div>
+    </div>
+  </aside>
+
+  <!-- ============ THE MONTH — it is the whole page ============ -->
+  <main style="flex:1 1 auto;min-width:0;position:relative;display:flex;flex-direction:column;padding:30px 34px 30px;gap:16px">
+
+    <!-- One line of chrome. Month, one sentence, three buttons. -->
+    <div style="display:flex;align-items:center;justify-content:space-between;gap:24px;flex:0 0 auto">
+      <div style="display:flex;align-items:baseline;gap:16px;min-width:0">
+        <h1 style="font-family:var(--disp);font-size:2.4rem;font-weight:700;letter-spacing:-1px;line-height:1;margin:0;color:var(--ink)">{{monthName}}</h1>
+        <p style="margin:0;font-size:0.95rem;color:var(--ink-2);font-weight:500">{{sentence}}</p>
+      </div>
+      <div style="display:flex;align-items:center;gap:8px;flex:0 0 auto">
+        <button class="navbtn" onClick="{{prev}}" aria-label="Previous month"><svg class="ic" width="18" height="18"><use href="#i-left"/></svg></button>
+        <button class="btn btn-quiet" style="height:44px;padding:0 18px;border-radius:6px;font-size:0.88rem" onClick="{{today}}">Today</button>
+        <button class="navbtn" onClick="{{next}}" aria-label="Next month"><svg class="ic" width="18" height="18"><use href="#i-right"/></svg></button>
+      </div>
+    </div>
+
+    <!-- Weekday header -->
+    <div style="display:grid;grid-template-columns:repeat(7, minmax(0, 1fr));gap:var(--cell-gap);flex:0 0 auto">
+      <sc-for list="{{weekdays}}" as="w" hint-placeholder-count="7">
+        <span style="text-align:left;padding-left:10px;font-size:0.7rem;font-weight:700;letter-spacing:0.09em;text-transform:uppercase;color:var(--ink-3)">{{w.label}}</span>
+      </sc-for>
+    </div>
+
+    <!-- The grid fills everything that is left -->
+    <div style="display:grid;grid-template-columns:repeat(7, minmax(0, 1fr));grid-auto-rows:minmax(0, 1fr);gap:var(--cell-gap);flex:1 1 auto;min-height:0">
+      <sc-for list="{{cells}}" as="c" hint-placeholder-count="35">
+        <button class="cell" data-out="{{c.outside}}" data-today="{{c.isToday}}" data-sel="{{c.isSel}}" onClick="{{c.pick}}">
+          <span style="display:flex;align-items:baseline;justify-content:space-between;gap:6px;flex:0 0 auto">
+            <span class="num">{{c.day}}</span>
+            <span style="font-size:0.64rem;font-weight:800;letter-spacing:0.1em;text-transform:uppercase;color:var(--ink-3)">{{c.tag}}</span>
+          </span>
+          <span style="display:flex;flex-direction:column;gap:4px;min-height:0;overflow:hidden">
+            <sc-for list="{{c.chips}}" as="p" hint-placeholder-count="2">
+              <span class="chip">
+                <span class="rail" style="background:{{p.tone}}"></span>
+                <span class="chipname">{{p.name}}</span>
+              </span>
+            </sc-for>
+            <sc-if value="{{c.hasMore}}" hint-placeholder-val="{{ false }}">
+              <span class="more">{{c.moreLabel}}</span>
+            </sc-if>
+          </span>
+        </button>
+      </sc-for>
+    </div>
+
+    <!-- ============ ONE DAY — asked for, never in the way ============ -->
+    <sc-if value="{{dayOpen}}" hint-placeholder-val="{{ true }}">
+      <div style="position:absolute;top:0;right:0;bottom:0;width:372px;background:var(--card);border-left:1px solid var(--line);
+                  box-shadow:-18px 0 44px rgba(20,20,19,0.07);display:flex;flex-direction:column;gap:16px;padding:28px 26px">
+        <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:12px">
+          <span style="display:flex;flex-direction:column;gap:3px;min-width:0">
+            <span style="font-size:0.68rem;font-weight:700;letter-spacing:0.09em;text-transform:uppercase;color:var(--ink-3)">{{day.eyebrow}}</span>
+            <span style="font-family:var(--disp);font-size:1.7rem;font-weight:700;letter-spacing:-0.4px;color:var(--ink)">{{day.title}}</span>
+            <span style="font-size:0.88rem;color:var(--ink-2);margin-top:4px">{{day.line}}</span>
+          </span>
+          <button class="navbtn" style="width:38px;height:38px" onClick="{{closeDay}}" aria-label="Close"><svg class="ic" width="17" height="17"><use href="#i-close"/></svg></button>
+        </div>
+
+        <div style="display:flex;flex-direction:column;gap:8px;flex:1 1 auto;min-height:0;overflow:hidden">
+          <sc-for list="{{day.rows}}" as="r" hint-placeholder-count="3">
+            <div style="display:flex;align-items:center;gap:14px;padding:14px 16px;background:var(--card);border:1px solid var(--line);border-radius:8px">
+              <span style="width:4px;align-self:stretch;border-radius:9999px;background:{{r.tone}};flex:0 0 auto"></span>
+              <span style="display:flex;flex-direction:column;gap:4px;flex:1 1 auto;min-width:0">
+                <span style="font-size:0.95rem;font-weight:600;color:var(--ink);line-height:1.3">{{r.name}}</span>
+                <span style="display:inline-flex;align-items:center;gap:7px;font-size:0.76rem;font-weight:600;color:{{r.stateTx}}">
+                  <svg class="ic" width="13" height="13"><use href="{{r.stateIcon}}"/></svg>{{r.stateLabel}}
+                </span>
+              </span>
+              <span style="display:flex;align-items:baseline;gap:3px;flex:0 0 auto">
+                <span style="font-size:1rem;font-weight:700;color:var(--ink)">{{r.mins}}</span>
+                <span style="font-size:0.74rem;font-weight:600;color:var(--ink-2)">min</span>
+              </span>
+            </div>
+          </sc-for>
+
+          <sc-if value="{{day.empty}}" hint-placeholder-val="{{ false }}">
+            <div style="display:flex;flex-direction:column;align-items:center;justify-content:center;gap:8px;padding:44px 0;border:1px dashed var(--line);border-radius:8px">
+              <svg class="ic" width="24" height="24" style="color:var(--green)"><use href="#i-check"/></svg>
+              <span style="font-size:0.95rem;font-weight:600;color:var(--ink)">Clear</span>
+              <span style="font-size:0.84rem;color:var(--ink-2)">Nothing is booked for this day.</span>
+            </div>
+          </sc-if>
+        </div>
+
+        <button class="btn btn-solid" style="height:48px;border-radius:8px;font-size:0.9rem;display:inline-flex;align-items:center;justify-content:center;gap:9px;width:100%">
+          <svg class="ic" width="17" height="17"><use href="#i-play"/></svg>Start the first one
+        </button>
+      </div>
+    </sc-if>
+  </main>
+</div>
+</x-dc>
+
+<script data-dc-script data-props='{"theme":{"editor":"enum","options":["light","dark"],"default":"light","section":"Appearance"},"detail":{"editor":"enum","options":["names","counts"],"default":"names","section":"Density"},"$preview":{"width":1440,"height":980}}'>
+class Component extends DCLogic {
+  constructor(props) {
+    super(props);
+    // Nothing is selected on open — the month is the whole screen until asked otherwise.
+    this.state = { monthOffset: 0, sel: null };
+  }
+
+  // The app treats 9 September 2026 as today.
+  today() { return { y: 2026, m: 8, d: 9 }; }
+
+  monthNames() {
+    return ['January','February','March','April','May','June','July','August','September','October','November','December'];
+  }
+
+  // Sample load for September 2026, keyed by day of the month.
+  // A daily habit is true of every day, so it is deliberately not counted here —
+  // it would put the same number on all thirty cells and flatten the map.
+  book() {
+    return {
+      2:  [{ name: 'Strength training', state: 'green', mins: 27 }],
+      4:  [{ name: 'Weekly call with family', state: 'green', mins: 25 }],
+      7:  [{ name: 'Review budget', state: 'amber', mins: 20 }],
+      8:  [{ name: 'Board game night', state: 'red', mins: 10 }],
+      9:  [{ name: 'Strength training', state: 'red', mins: 27 },
+           { name: 'Freelance invoices', state: 'amber', mins: 15 },
+           { name: 'Tidy the workspace', state: 'green', mins: 30 }],
+      11: [{ name: 'Weekly call with family', state: 'green', mins: 25 }],
+      14: [{ name: 'Review budget', state: 'green', mins: 20 },
+           { name: 'Dentist', state: 'green', mins: 45 }],
+      16: [{ name: 'Strength training', state: 'green', mins: 27 }],
+      18: [{ name: 'Weekly call with family', state: 'green', mins: 25 },
+           { name: 'Car service', state: 'green', mins: 60 },
+           { name: 'Renew passport', state: 'green', mins: 20 },
+           { name: 'Coffee with Sam', state: 'green', mins: 45 }],
+      21: [{ name: 'Review budget', state: 'green', mins: 20 }],
+      23: [{ name: 'Strength training', state: 'green', mins: 27 }],
+      25: [{ name: 'Weekly call with family', state: 'green', mins: 25 }],
+      29: [{ name: 'Quarter review', state: 'green', mins: 40 }],
+      30: [{ name: 'Freelance invoices', state: 'green', mins: 15 }]
+    };
+  }
+
+  tone(state) {
+    if (state === 'red') return { tone: 'var(--red)', stateTx: 'var(--red-tx)', stateIcon: '#i-alert', stateLabel: 'Needs you' };
+    if (state === 'amber') return { tone: 'var(--amber)', stateTx: 'var(--amber-tx)', stateIcon: '#i-clock', stateLabel: 'Due that day' };
+    return { tone: 'var(--green)', stateTx: 'var(--green-tx)', stateIcon: '#i-repeat', stateLabel: 'Ticking along' };
+  }
+
+  itemsFor(y, m, d) {
+    const t = this.today();
+    if (y !== t.y || m !== t.m) return [];
+    return this.book()[d] || [];
+  }
+
+  renderVals() {
+    const t = this.today();
+    const names = this.monthNames();
+    const off = this.state.monthOffset;
+    const base = new Date(t.y, t.m + off, 1);
+    const year = base.getFullYear();
+    const month = base.getMonth();
+
+    const lead = (base.getDay() + 6) % 7;                    // Monday-first
+    const daysIn = new Date(year, month + 1, 0).getDate();
+    const total = Math.ceil((lead + daysIn) / 7) * 7;
+    const showNames = (this.props.detail ?? 'names') === 'names';
+    const cap = showNames ? 3 : 0;
+
+    let needsYou = 0;
+    let booked = 0;
+
+    const cells = [];
+    for (let i = 0; i < total; i++) {
+      const d = new Date(year, month, 1 - lead + i);
+      const inMonth = d.getMonth() === month;
+      const items = this.itemsFor(d.getFullYear(), d.getMonth(), d.getDate());
+      const isToday = d.getFullYear() === t.y && d.getMonth() === t.m && d.getDate() === t.d;
+      const key = d.getFullYear() + '-' + d.getMonth() + '-' + d.getDate();
+
+      if (inMonth) {
+        booked += items.length;
+        needsYou += items.filter((x) => x.state === 'red').length;
+      }
+
+      const shown = items.slice(0, cap);
+      const rest = items.length - shown.length;
+
+      // The colour never carries the meaning alone: the name is on the cell,
+      // and a day with nothing shows nothing rather than a zero.
+      cells.push({
+        day: d.getDate(),
+        outside: inMonth ? '0' : '1',
+        isToday: isToday ? '1' : '0',
+        isSel: this.state.sel === key ? '1' : '0',
+        tag: isToday ? 'Today' : '',
+        chips: shown.map((x) => ({ name: x.name, tone: this.tone(x.state).tone })),
+        hasMore: rest > 0 || (!showNames && items.length > 0),
+        moreLabel: showNames
+          ? (rest === 1 ? '1 more' : rest + ' more')
+          : (items.length === 1 ? '1 thing' : items.length + ' things'),
+        pick: () => this.setState({ sel: this.state.sel === key ? null : key, picked: { y: d.getFullYear(), m: d.getMonth(), d: d.getDate() } })
+      });
+    }
+
+    const sentence = booked === 0
+      ? 'Nothing is booked in yet.'
+      : needsYou === 0
+        ? booked + (booked === 1 ? ' thing booked in. Nothing is late.' : ' things booked in. Nothing is late.')
+        : booked + ' things booked in · ' + needsYou + (needsYou === 1 ? ' needs you' : ' need you');
+
+    // The day panel only exists once a day has been picked.
+    const p = this.state.picked;
+    const dayOpen = !!this.state.sel && !!p;
+    let day = { eyebrow: '', title: '', line: '', rows: [], empty: false };
+    if (dayOpen) {
+      const items = this.itemsFor(p.y, p.m, p.d);
+      const isToday = p.y === t.y && p.m === t.m && p.d === t.d;
+      const mins = items.reduce((s, x) => s + x.mins, 0);
+      const rank = { red: 1, amber: 2, green: 3 };
+      const sorted = items.slice().sort((a, b) => rank[a.state] - rank[b.state]);
+      day = {
+        eyebrow: isToday ? 'Today' : ['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday'][new Date(p.y, p.m, p.d).getDay()],
+        title: p.d + ' ' + names[p.m],
+        line: items.length === 0 ? 'A clear day.' : items.length + (items.length === 1 ? ' thing · about ' : ' things · about ') + mins + ' min',
+        rows: sorted.map((x) => Object.assign({}, x, this.tone(x.state))),
+        empty: items.length === 0
+      };
+    }
+
+    return {
+      monthName: names[month] + (year === t.y ? '' : ' ' + year),
+      sentence: sentence,
+      weekdays: ['Mon','Tue','Wed','Thu','Fri','Sat','Sun'].map((l) => ({ label: l })),
+      cells: cells,
+      dayOpen: dayOpen,
+      day: day,
+      prev: () => this.setState({ monthOffset: off - 1, sel: null }),
+      next: () => this.setState({ monthOffset: off + 1, sel: null }),
+      today: () => this.setState({ monthOffset: 0, sel: null }),
+      closeDay: () => this.setState({ sel: null })
+    };
+  }
+}
+</script>
+</body>
+</html>

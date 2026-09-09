@@ -1,0 +1,1569 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Bokeà</title>
+    <meta name="description" content="Bokeà tracks the things in your life that come round again and tells you the one that needs you now.">
+    <!-- Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Outfit:wght@300;400;500;600;700&family=Playfair+Display:ital,wght@0,400..900;1,400..900&display=swap" rel="stylesheet">
+    <!-- CSS -->
+    <link rel="stylesheet" href="css/style.css?v=5">
+    <!-- PWA Settings -->
+    <link rel="manifest" href="manifest.json">
+    <meta name="theme-color" content="#09090b">
+    <link rel="apple-touch-icon" href="assets/icon.svg">
+    <link rel="icon" href="assets/icon.svg" type="image/svg+xml">
+    <!-- Icons -->
+    <script src="https://unpkg.com/lucide@latest" defer></script>
+    <!-- Accessibility preferences are applied before first paint so the page
+         never flashes at the wrong size or contrast. -->
+    <script src="js/a11y.js"></script>
+</head>
+<body>
+    <!-- First stop for keyboard and screen reader users: jump past the chrome. -->
+    <a href="#mainContent" class="skip-link">Skip to main content</a>
+    <!-- Authentication Screen -->
+    <div id="welcomeScreen" class="welcome-screen" role="region" aria-labelledby="welcomeGreeting">
+        <div class="welcome-content glass-card" style="min-width: 350px;">
+            <h1 id="welcomeGreeting" class="welcome-greeting" tabindex="-1">Bokeà</h1>
+            <p class="welcome-subtext" style="margin-bottom: 2rem;">la vie est floue</p>
+
+            <div id="authFormsContainer">
+                <!-- Real autocomplete tokens: password managers are assistive
+                     technology, and the old hidden "autofill trap" fields broke
+                     them as well as adding noise for screen readers. -->
+                <form id="loginFormSection" onsubmit="event.preventDefault();" aria-labelledby="loginFormHeading">
+                    <h2 id="loginFormHeading" class="sr-only">Log in to your account</h2>
+
+                    <div class="input-group" style="margin-bottom: 15px;">
+                        <label for="loginEmailInput" class="input-label" style="text-align: left; display: block; margin-bottom: 5px;">Email</label>
+                        <input type="email" id="loginEmailInput" name="email" class="form-control"
+                               autocomplete="username" autocapitalize="none" spellcheck="false"
+                               inputmode="email" required aria-describedby="loginEmailHint">
+                        <span id="loginEmailHint" class="field-hint">For example: name@example.com</span>
+                    </div>
+                    <div class="input-group" style="margin-bottom: 20px;">
+                        <label for="loginPasswordInput" class="input-label" style="text-align: left; display: block; margin-bottom: 5px;">Password</label>
+                        <span class="password-field">
+                            <input type="password" id="loginPasswordInput" name="password" class="form-control"
+                                   autocomplete="current-password" required>
+                            <button type="button" class="password-reveal" data-reveals="loginPasswordInput"
+                                    aria-pressed="false">Show<span class="sr-only"> password</span></button>
+                        </span>
+                    </div>
+                    <button type="button" id="loginBtn" class="btn btn-primary" style="width: 100%; margin-bottom: 15px;">Log in</button>
+                    <p style="font-size: 0.9rem; color: var(--text-secondary);">Don't have an account? <button type="button" id="showRegisterLink" class="link-button">Sign up</button></p>
+                </form>
+
+                <form id="registerFormSection" class="hidden" onsubmit="event.preventDefault();" aria-labelledby="registerFormHeading">
+                    <h2 id="registerFormHeading" class="sr-only">Create an account</h2>
+
+                    <div class="input-group" style="margin-bottom: 15px;">
+                        <label for="registerNameInput" class="input-label" style="text-align: left; display: block; margin-bottom: 5px;">First name</label>
+                        <input type="text" id="registerNameInput" name="given-name" class="form-control"
+                               autocomplete="given-name" required aria-describedby="registerNameHint">
+                        <span id="registerNameHint" class="field-hint">Only used to greet you. Nothing else is filled in for you.</span>
+                    </div>
+                    <div class="input-group" style="margin-bottom: 15px;">
+                        <label for="registerEmailInput" class="input-label" style="text-align: left; display: block; margin-bottom: 5px;">Email</label>
+                        <input type="email" id="registerEmailInput" name="email" class="form-control"
+                               autocomplete="email" autocapitalize="none" spellcheck="false"
+                               inputmode="email" required aria-describedby="registerEmailHint">
+                        <span id="registerEmailHint" class="field-hint">For example: name@example.com</span>
+                    </div>
+                    <div class="input-group" style="margin-bottom: 20px;">
+                        <label for="registerPasswordInput" class="input-label" style="text-align: left; display: block; margin-bottom: 5px;">Password</label>
+                        <span class="password-field">
+                            <input type="password" id="registerPasswordInput" name="new-password" class="form-control"
+                                   autocomplete="new-password" required
+                                   aria-describedby="registerPasswordHint">
+                            <button type="button" class="password-reveal" data-reveals="registerPasswordInput"
+                                    aria-pressed="false">Show<span class="sr-only"> password</span></button>
+                        </span>
+                        <span id="registerPasswordHint" class="field-hint">At least 8 characters.</span>
+                    </div>
+                    <button type="button" id="registerBtn" class="btn btn-primary" style="width: 100%; margin-bottom: 15px;">Create account</button>
+                    <p style="font-size: 0.9rem; color: var(--text-secondary);">Already have an account? <button type="button" id="showLoginLink" class="link-button">Log in</button></p>
+                </form>
+
+                <!-- Announced the moment it is filled in, not only when noticed. -->
+                <div id="authErrorMsg" class="text-red hidden" role="alert" aria-live="assertive"
+                     style="margin-top: 15px; font-size: 0.9rem;"></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ==========================================================
+         Onboarding, step 1 of 2: the schedule.
+         Step 2 is the guided tour (js/onboarding.js), which starts
+         the moment this screen is completed or skipped.
+         ========================================================== -->
+    <div id="setupScreen" class="welcome-screen hidden" role="region" aria-labelledby="setupHeading">
+        <div class="welcome-content glass-card" style="min-width: 450px; max-width: 500px; padding: 2.5rem;">
+            <p class="onboarding-progress">One question, once</p>
+            <h1 id="setupHeading" class="welcome-greeting" tabindex="-1" style="font-size: 2rem; margin-bottom: 0.5rem; text-align: center;">When does your day run?</h1>
+            <p class="welcome-subtext" style="margin-bottom: 2rem; text-align: center;">Bokeà uses this to work out when to put things in front of you. You can change all of it later in Settings.</p>
+
+            <form id="setupForm">
+                <!-- Sleep Schedule Section -->
+                <fieldset class="setup-fieldset" style="margin-bottom: 1.5rem; text-align: left;">
+                    <legend class="setup-legend">
+                        <i data-lucide="moon" style="width: 18px; height: 18px; color: var(--primary-color);" aria-hidden="true"></i>
+                        <span>Sleep schedule</span>
+                    </legend>
+
+                    <div style="display: flex; gap: 15px; margin-bottom: 1rem;">
+                        <div style="flex: 1;">
+                            <label for="setupBedTime" class="input-label" style="display: block; margin-bottom: 5px;">Go to bed</label>
+                            <input type="time" id="setupBedTime" name="bedTime" class="form-control" value="22:30" required>
+                        </div>
+                        <div style="flex: 1;">
+                            <label for="setupWakeUpTime" class="input-label" style="display: block; margin-bottom: 5px;">Wake up</label>
+                            <input type="time" id="setupWakeUpTime" name="wakeUpTime" class="form-control" value="06:30" required>
+                        </div>
+                    </div>
+
+                    <!-- Sleep Health Meter. The bar is decorative; the words next
+                         to it carry the same information for anyone who cannot
+                         see it, and the region announces changes politely. -->
+                    <div id="sleepHealthMeterBox" class="sleep-health-card" role="status" aria-live="polite"
+                         style="margin-bottom: 1.5rem; padding: 12px; border: 1px solid var(--border-color); border-radius: var(--border-radius-md); background: rgba(255, 255, 255, 0.02);">
+                        <div style="display: flex; justify-content: space-between; margin-bottom: 8px; font-size: 0.85rem;">
+                            <span id="sleepDurationText" style="color: var(--text-main); font-weight: 500;">Sleep duration: 8 hours</span>
+                            <span id="sleepHealthLabel" class="health-badge health-optimal">Optimal</span>
+                        </div>
+                        <div class="meter-bar-bg" aria-hidden="true" style="height: 6px; background: rgba(255,255,255,0.1); border-radius: 3px; overflow: hidden;">
+                            <div id="sleepHealthBar" class="meter-bar-fill health-optimal" style="width: 80%; height: 100%; border-radius: 3px;"></div>
+                        </div>
+                        <p id="sleepHealthTips" style="font-size: 0.75rem; color: var(--text-secondary); margin-top: 8px; line-height: 1.4;">
+                            7 to 9 hours is the ideal sleep window for adults to maintain metabolic and cognitive health.
+                        </p>
+                    </div>
+                </fieldset>
+
+                <div class="setup-rule" role="presentation"></div>
+
+                <!-- Work Schedule Section -->
+                <fieldset class="setup-fieldset" style="margin-bottom: 2rem; text-align: left;">
+                    <legend class="setup-legend">
+                        <i data-lucide="briefcase" style="width: 18px; height: 18px; color: var(--primary-color);" aria-hidden="true"></i>
+                        <span>Work schedule</span>
+                    </legend>
+
+                    <div style="display: flex; gap: 15px; margin-bottom: 1.2rem;">
+                        <div style="flex: 1;">
+                            <label for="setupWorkStart" class="input-label" style="display: block; margin-bottom: 5px;">Work starts</label>
+                            <input type="time" id="setupWorkStart" name="workStart" class="form-control" value="09:00" required>
+                        </div>
+                        <div style="flex: 1;">
+                            <label for="setupWorkEnd" class="input-label" style="display: block; margin-bottom: 5px;">Work ends</label>
+                            <input type="time" id="setupWorkEnd" name="workEnd" class="form-control" value="17:00" required>
+                        </div>
+                    </div>
+
+                    <fieldset class="weekday-fieldset">
+                        <legend class="input-label" style="margin-bottom: 8px;">Days of the week you work</legend>
+                        <div class="weekday-selector" style="display: flex; gap: 8px; justify-content: space-between; flex-wrap: wrap;">
+                            <label class="weekday-pill">
+                                <input type="checkbox" name="setupWorkDays" value="Monday" checked>
+                                <span><span aria-hidden="true">Mon</span><span class="sr-only">Monday</span></span>
+                            </label>
+                            <label class="weekday-pill">
+                                <input type="checkbox" name="setupWorkDays" value="Tuesday" checked>
+                                <span><span aria-hidden="true">Tue</span><span class="sr-only">Tuesday</span></span>
+                            </label>
+                            <label class="weekday-pill">
+                                <input type="checkbox" name="setupWorkDays" value="Wednesday" checked>
+                                <span><span aria-hidden="true">Wed</span><span class="sr-only">Wednesday</span></span>
+                            </label>
+                            <label class="weekday-pill">
+                                <input type="checkbox" name="setupWorkDays" value="Thursday" checked>
+                                <span><span aria-hidden="true">Thu</span><span class="sr-only">Thursday</span></span>
+                            </label>
+                            <label class="weekday-pill">
+                                <input type="checkbox" name="setupWorkDays" value="Friday" checked>
+                                <span><span aria-hidden="true">Fri</span><span class="sr-only">Friday</span></span>
+                            </label>
+                            <label class="weekday-pill">
+                                <input type="checkbox" name="setupWorkDays" value="Saturday">
+                                <span><span aria-hidden="true">Sat</span><span class="sr-only">Saturday</span></span>
+                            </label>
+                            <label class="weekday-pill">
+                                <input type="checkbox" name="setupWorkDays" value="Sunday">
+                                <span><span aria-hidden="true">Sun</span><span class="sr-only">Sunday</span></span>
+                            </label>
+                        </div>
+                    </fieldset>
+                </fieldset>
+
+                <button type="submit" id="saveSetupBtn" class="btn btn-primary" style="width: 100%; display: flex; align-items: center; justify-content: center; gap: 8px; padding: 12px;">
+                    <i data-lucide="check" style="width: 16px; height: 16px;" aria-hidden="true"></i>
+                    <span>Save and continue</span>
+                </button>
+                <button type="button" id="skipSetupBtn" class="btn btn-secondary" style="width: 100%; margin-top: 10px; background: transparent; border: none; color: var(--text-secondary); font-size: 0.85rem;">
+                    Use the times shown above
+                </button>
+            </form>
+        </div>
+    </div>
+
+    <!-- Background glowing orbs for glassmorphism -->
+    <div class="orb-container" aria-hidden="true">
+        <div class="orb orb-1"></div>
+        <div class="orb orb-2"></div>
+        <div class="orb orb-3"></div>
+    </div>
+
+    <div class="app-container">
+        <!-- Sidebar Navigation -->
+        <aside class="sidebar" aria-label="Primary">
+            <button type="button" class="brand" id="brandHomeBtn" aria-label="Bokeà — go to Today">
+                <span class="brand-name">Bokeà</span>
+                <span class="brand-slogan">la vie est floue</span>
+                <span class="sr-only">Go to Today</span>
+            </button>
+            <!-- Buttons, not empty anchors: these switch views in place rather
+                 than navigating, and href="#" sends a screen reader nowhere. -->
+            <nav class="nav-menu" aria-label="Sections">
+                <button type="button" class="nav-item active" data-tab="home" aria-label="Today" aria-current="page">
+                    <span class="nav-label"><i data-lucide="home" aria-hidden="true"></i><span>Today</span></span>
+                </button>
+                <button type="button" class="nav-item" data-tab="tasks" aria-label="Everything">
+                    <span class="nav-label"><i data-lucide="check-square" aria-hidden="true"></i><span>Everything</span></span>
+                    <span class="nav-count is-empty" id="navNeedsCount" aria-hidden="true">0</span>
+                    <span class="sr-only" id="navNeedsCountText"></span>
+                </button>
+                <button type="button" class="nav-item" data-tab="analytics" aria-label="Patterns">
+                    <span class="nav-label"><i data-lucide="line-chart" aria-hidden="true"></i><span>Patterns</span></span>
+                </button>
+                <button type="button" class="nav-item" data-tab="calendar" aria-label="Calendar">
+                    <span class="nav-label"><i data-lucide="calendar" aria-hidden="true"></i><span>Calendar</span></span>
+                </button>
+                <button type="button" class="nav-item" data-tab="profile" aria-label="Profile">
+                    <span class="nav-label"><i data-lucide="user" aria-hidden="true"></i><span>Profile</span></span>
+                </button>
+                <button type="button" class="nav-item" data-tab="settings" aria-label="Settings" id="openSettings">
+                    <span class="nav-label"><i data-lucide="settings" aria-hidden="true"></i><span>Settings</span></span>
+                </button>
+            </nav>
+            <!-- The account box has always sat here looking like a link. It is
+                 one now: the most obvious place to click to change your details
+                 should be the place your details are already shown. -->
+            <button type="button" class="user-profile" id="sidebarProfileBtn" data-tab="profile">
+                <span class="avatar" aria-hidden="true"></span>
+                <span class="user-info">
+                    <span class="username">Your account</span>
+                    <span class="user-status" id="userStatusLine">Nothing owed yet</span>
+                </span>
+                <span class="sr-only">Open your profile</span>
+            </button>
+        </aside>
+
+        <!-- Main Content Area -->
+        <main class="main-content" id="mainContent" tabindex="-1">
+            <!-- Topbar -->
+            <div class="topbar">
+                <!-- Now bar: the clock is always on screen. Time blindness is the enemy.
+                     It is not a live region: a clock that announces itself every
+                     second makes a screen reader unusable. -->
+                <div class="now-clock" aria-live="off">
+                    <span class="now-clock-time" id="currentTimeBig">00:00</span>
+                    <span class="now-clock-date" id="currentDate">&nbsp;</span>
+                </div>
+
+                <div class="now-block" id="nowBlock" aria-live="off">
+                    <div class="now-block-head">
+                        <span class="now-block-name" id="nowBlockName">Your day</span>
+                        <span class="now-block-left" id="nowBlockLeft">&nbsp;</span>
+                    </div>
+                    <div class="now-block-bar" aria-hidden="true">
+                        <div class="now-block-fill" id="nowBlockFill" style="width: 0%;"></div>
+                    </div>
+                    <div class="now-block-scale">
+                        <span id="nowBlockStart">&nbsp;</span>
+                        <span id="nowBlockEnd">&nbsp;</span>
+                    </div>
+                </div>
+
+                <div class="topbar-right">
+                    <!-- Theme Toggle (Dark Mode) -->
+                    <button type="button" id="themeToggleBtn" class="theme-toggle-btn" aria-pressed="false">
+                        <i data-lucide="moon" id="themeToggleIcon" aria-hidden="true"></i>
+                        <span class="sr-only" id="themeToggleLabel">Dark theme</span>
+                    </button>
+
+                    <!-- Notification Bell Dropdown -->
+                    <div class="notification-dropdown-container">
+                        <button type="button" class="notification-bell-box" id="notificationBellBox">
+                            <i data-lucide="bell" aria-hidden="true"></i>
+                            <span class="notification-badge hidden" id="notificationBadge" aria-hidden="true">0</span>
+                            <span class="sr-only" id="notificationBellLabel">Notifications</span>
+                        </button>
+                        <div class="dropdown-menu-box notification-menu-box" id="notificationMenuBox"
+                             role="region" aria-labelledby="notificationBellLabel">
+                            <div class="notification-header">
+                                <span>Notifications</span>
+                                <button type="button" id="clearNotificationsBtn" class="clear-notifications-btn">Clear all</button>
+                            </div>
+                            <div class="notification-list" id="notificationList">
+                                <div class="notification-empty">No notifications</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Profile Menu -->
+                    <div class="profile-dropdown-container">
+                        <button type="button" class="profile-avatar-box" id="profileAvatarBox" aria-label="Account menu">
+                            <span class="profile-avatar-initial" aria-hidden="true"></span>
+                        </button>
+                        <div class="dropdown-menu-box" id="dropdownMenuBox" role="menu" aria-label="Account">
+                            <button type="button" role="menuitem" class="dropdown-item" id="dropdownHomeBtn">
+                                <i data-lucide="home" aria-hidden="true"></i>
+                                <span>Today</span>
+                            </button>
+                            <button type="button" role="menuitem" class="dropdown-item" id="dropdownProfileBtn">
+                                <i data-lucide="user" aria-hidden="true"></i>
+                                <span>Your profile</span>
+                            </button>
+                            <button type="button" role="menuitem" class="dropdown-item" id="dropdownSettingsBtn">
+                                <i data-lucide="settings" aria-hidden="true"></i>
+                                <span>Settings</span>
+                            </button>
+                            <button type="button" role="menuitem" class="dropdown-item" id="dropdownTutorialBtn">
+                                <i data-lucide="compass" aria-hidden="true"></i>
+                                <span>Replay the tutorial</span>
+                            </button>
+                            <div class="dropdown-divider" role="separator"></div>
+                            <button type="button" role="menuitem" class="dropdown-item text-red" id="dropdownSignOutBtn">
+                                <i data-lucide="log-out" aria-hidden="true"></i>
+                                <span>Sign out</span>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="main-content-body">
+                <!-- Home View (Landing Page) -->
+                <div id="homeView" class="tab-view" role="region" aria-label="Today">
+                    <!-- Greeting only. The clock and date live in the now bar, always visible. -->
+                    <header class="header">
+                        <h1 class="welcome-text" tabindex="-1"><span id="dashboardGreeting">Good morning</span><span id="greetingComma" hidden>,</span> <span id="userName"></span></h1>
+                        <p class="current-date" id="homeMomentum">Nothing owed yet today.</p>
+                    </header>
+
+                    <div class="home-stack">
+                        <!-- FIRST RUN — shown only while the account is empty.
+                             This is the whole of onboarding now: one sentence
+                             pointing at the field already on the screen, and
+                             the examples offered up front rather than at the
+                             end of a tour nobody finished. -->
+                        <section class="first-run hidden" id="firstRunCard" aria-live="polite"></section>
+
+                        <!-- RIGHT NOW — the only thing on this screen with visual weight -->
+                        <section class="right-now" id="rightNowCard" aria-label="Right now" aria-live="polite">
+                            <!-- Rendered by renderRightNow() -->
+                        </section>
+
+                        <!-- AFTER THAT — two quiet rows, deliberately without buttons -->
+                        <section class="home-section" id="afterSection">
+                            <div class="sec-head">
+                                <span class="sec-label">After that</span>
+                                <span id="afterSectionNote" style="font-size: 0.78rem; color: var(--text-muted); font-weight: 500;">&nbsp;</span>
+                            </div>
+                            <div class="after-grid" id="afterGrid">
+                                <!-- Rendered by renderAfterThat() -->
+                            </div>
+                        </section>
+
+                        <!-- WAITING ON YOU — folded away until you ask for it -->
+                        <section class="fold" id="waitingFold">
+                            <button type="button" class="fold-head" id="waitingFoldHead"
+                                    aria-expanded="false" aria-controls="waitingFoldBody">
+                                <span class="fold-head-left">
+                                    <i data-lucide="inbox" style="width: 18px; height: 18px; color: var(--text-secondary);"></i>
+                                    <span class="fold-title">Waiting on you</span>
+                                    <span class="fold-tally tally-red" id="waitingTallyRed"><span class="dot"></span><span>0 late</span></span>
+                                    <span class="fold-tally tally-amber" id="waitingTallyAmber"><span class="dot"></span><span>0 soon</span></span>
+                                </span>
+                                <span class="fold-toggle">
+                                    <span id="waitingFoldLabel">Show</span>
+                                    <i data-lucide="chevron-right" id="waitingFoldIcon"></i>
+                                </span>
+                            </button>
+                            <div class="fold-body hidden" id="waitingFoldBody">
+                                <!-- Rendered by renderWaiting() -->
+                            </div>
+                        </section>
+
+                        <!-- Today's Schedule Timeline — time made physical -->
+                        <section class="card glass-card schedule-timeline-panel" id="schedule-timeline-panel">
+                            <div class="card-header">
+                                <div class="title-with-icon">
+                                    <i data-lucide="clock" style="width: 16px; height: 16px;"></i>
+                                    <h2 class="card-title">Today&rsquo;s schedule</h2>
+                                </div>
+                                <span class="badge" id="scheduleDayBadge" style="font-size: 0.72rem; padding: 2px 8px; border-radius: 10px; background: var(--bg-dark-gray); border: 1px solid var(--border-color); color: var(--text-secondary); font-weight: 600;">Today</span>
+                            </div>
+                            <div class="card-body" style="display: flex; flex-direction: column; gap: 20px; padding: 20px;">
+                                <div class="timeline-container" style="position: relative; padding-bottom: 5px; width: 100%;">
+                                    <div class="timeline-bar" id="timelineBar" style="display: flex; height: 24px; border-radius: 12px; overflow: hidden; border: 1px solid var(--border-color); background: var(--bg-dark-gray); width: 100%;">
+                                        <!-- segments injected dynamically -->
+                                    </div>
+                                    <div class="timeline-markers" id="timelineMarkers" style="display: flex; justify-content: space-between; font-size: 0.7rem; color: var(--text-secondary); margin-top: 8px; padding: 0 4px;">
+                                        <span>12 AM</span>
+                                        <span>6 AM</span>
+                                        <span>12 PM</span>
+                                        <span>6 PM</span>
+                                        <span>12 AM</span>
+                                    </div>
+                                </div>
+                                <div id="timelineLegend" style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 10px; width: 100%;">
+                                    <!-- legend injected dynamically -->
+                                </div>
+                            </div>
+                        </section>
+
+                        <!-- PARKED — what the capture bar took in and nobody
+                             has scheduled yet. No dates, no colour, no
+                             nagging: one decision each, and only when asked
+                             for. Hidden entirely when empty. -->
+                        <section class="fold parked-tray hidden" id="parkedTray">
+                            <button type="button" class="fold-head" id="parkedTrayHead"
+                                    aria-expanded="false" aria-controls="parkedTrayBody">
+                                <span class="fold-head-left">
+                                    <i data-lucide="inbox" style="width: 18px; height: 18px; color: var(--text-secondary);"></i>
+                                    <span class="fold-title">Parked</span>
+                                    <span class="fold-tally tally-parked" id="parkedTrayCount">0 thoughts</span>
+                                </span>
+                                <span class="fold-toggle">
+                                    <span id="parkedTrayLabel">Show</span>
+                                    <i data-lucide="chevron-right" id="parkedTrayIcon"></i>
+                                </span>
+                            </button>
+                            <div class="fold-body hidden" id="parkedTrayBody">
+                                <!-- Rendered by renderParked() -->
+                            </div>
+                        </section>
+
+                        <!-- CAPTURE — always here, never a modal -->
+                        <div class="capture-wrap">
+                            <i data-lucide="plus" aria-hidden="true"></i>
+                            <label for="captureInput" class="sr-only">Park a thought — it is saved with no date until you give it one</label>
+                            <input type="text" id="captureInput" class="capture-input" placeholder="Park a thought &mdash; no date, no nagging"
+                                   autocomplete="off" aria-describedby="captureHint">
+                            <span class="capture-hint" id="captureHint">Enter to save</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- ============================================================
+                     CALENDAR — one month, edge to edge, with the actual names
+                     of things written into the days. Nothing here needs
+                     decoding: no legend, no colour wash, no second column
+                     standing by for a day nobody picked. The day panel opens
+                     when a day is clicked and closes again.
+                     ============================================================ -->
+                <div id="calendarFullView" class="tab-view hidden" role="region" aria-label="Calendar">
+                    <div class="cal-head">
+                        <div>
+                            <h1 class="view-title" id="calMonthTitle" tabindex="-1">Month</h1>
+                            <p class="view-sub" id="calMonthSentence">&nbsp;</p>
+                        </div>
+                        <div class="cal-month-nav">
+                            <button type="button" class="cal-nav-btn" id="calPrevBtn" title="Previous month" aria-label="Previous month">
+                                <i data-lucide="chevron-left"></i>
+                            </button>
+                            <button type="button" class="cal-today-btn" id="calTodayBtn">Today</button>
+                            <button type="button" class="cal-nav-btn" id="calNextBtn" title="Next month" aria-label="Next month">
+                                <i data-lucide="chevron-right"></i>
+                            </button>
+                        </div>
+                    </div>
+
+                    <div class="cal-layout">
+                        <section class="cal-month">
+                            <div class="cal-weekdays" aria-hidden="true">
+                                <span>Mon</span><span>Tue</span><span>Wed</span>
+                                <span>Thu</span><span>Fri</span><span>Sat</span><span>Sun</span>
+                            </div>
+
+                            <!-- A group rather than a grid: the cells are self-labelling buttons laid
+                                 out by CSS, with roving tabindex and arrow-key movement, and
+                                 role="grid" would require row structure that the layout does not have. -->
+                            <div class="cal-grid" id="calGrid" role="group" aria-label="Days of the month"></div>
+                        </section>
+                    </div>
+                </div>
+
+                <!-- Tasks View -->
+                <div id="tasksView" class="tab-view hidden" role="region" aria-label="Everything">
+                    <div style="display: flex; align-items: flex-end; justify-content: space-between; gap: 24px; margin-bottom: 24px; flex-wrap: wrap;">
+                        <div style="display: flex; flex-direction: column; gap: 6px;">
+                            <h1 class="welcome-text" style="font-size: 2.6rem; margin-bottom: 0;">Everything</h1>
+                            <p style="margin: 0; font-size: 0.95rem; color: var(--text-secondary);" id="tasksShownLine" role="status" aria-live="polite">&nbsp;</p>
+                        </div>
+                        <button class="btn btn-primary" onclick="openCreateTaskModal()" style="min-height: 48px; padding: 0 22px; border-radius: 9999px; font-size: 0.95rem; display: inline-flex; align-items: center; gap: 10px;">
+                            <i data-lucide="plus" style="width: 18px; height: 18px;"></i>
+                            <span>New task</span>
+                        </button>
+                    </div>
+
+                    <div class="capture-wrap" style="margin-bottom: 22px;">
+                        <i data-lucide="search" aria-hidden="true"></i>
+                        <label for="taskSearchInput" class="sr-only">Search your tasks by name</label>
+                        <input type="search" id="taskSearchInput" class="capture-input" placeholder="Search by name" autocomplete="off" style="padding-right: 20px;">
+                    </div>
+
+                    <!-- ONE unified control bar for status segments -->
+                    <div style="margin-bottom: 20px;">
+                        <div class="seg-bar" id="taskSegBar" role="group" aria-label="Filter by what needs doing">
+                            <button type="button" class="seg active" data-seg="now" aria-pressed="true">
+                                <i data-lucide="alert-circle" style="width: 16px; height: 16px;"></i>
+                                <span>Needs attention</span>
+                                <span class="seg-count" data-seg-count="now">0</span>
+                            </button>
+                            <button type="button" class="seg" data-seg="ticking" aria-pressed="false">
+                                <i data-lucide="refresh-cw" style="width: 16px; height: 16px;"></i>
+                                <span>Active</span>
+                                <span class="seg-count" data-seg-count="ticking">0</span>
+                            </button>
+                            <button type="button" class="seg" data-seg="parked" aria-pressed="false">
+                                <i data-lucide="inbox" style="width: 16px; height: 16px;"></i>
+                                <span>Parked</span>
+                                <span class="seg-count" data-seg-count="parked">0</span>
+                            </button>
+                            <button type="button" class="seg" data-seg="all" aria-pressed="false">
+                                <i data-lucide="layout-grid" style="width: 16px; height: 16px;"></i>
+                                <span>All</span>
+                                <span class="seg-count" data-seg-count="all">0</span>
+                            </button>
+                        </div>
+                    </div>
+
+                    <div style="display: flex; flex-direction: column; gap: 12px;">
+                        <div class="sec-head">
+                            <span class="sec-label" id="tasksListHeading">Active tasks</span>
+                            <div style="display: flex; align-items: center; gap: 8px; flex-wrap: wrap;">
+                                <label for="taskAreaSelect" class="sr-only">Filter by area</label>
+                                <select id="taskAreaSelect" class="tasks-filter-select" aria-label="Filter by area">
+                                    <option value="all">All Areas</option>
+                                    <option value="Health &amp; Vitality">Health</option>
+                                    <option value="Career &amp; Finance">Money</option>
+                                    <option value="Relationships &amp; Social">People</option>
+                                    <option value="Mind &amp; Environment">Mind</option>
+                                </select>
+                                <label for="taskSortSelect" class="sr-only">Sort tasks</label>
+                                <select id="taskSortSelect" class="tasks-filter-select" aria-label="Sort tasks">
+                                    <option value="urgency">Urgency</option>
+                                    <option value="time">Time of day</option>
+                                    <option value="dueDate">Due date</option>
+                                    <option value="name">Name</option>
+                                    <option value="order">Custom order</option>
+                                </select>
+                                <button type="button" class="cap-toggle" id="capToggleBtn">
+                                    <i data-lucide="target"></i>
+                                    <span id="capToggleLabel">Three at a time</span>
+                                </button>
+                            </div>
+                        </div>
+
+                        <div id="allTasksGrid" role="group" aria-labelledby="tasksListHeading" style="display: flex; flex-direction: column; gap: 10px;">
+                            <!-- Rendered by renderAllTasksGrid() as rows -->
+                        </div>
+
+                        <button type="button" class="show-more-btn hidden" id="showMoreBtn">
+                            <i data-lucide="chevron-down"></i>
+                            <span id="showMoreLabel">Show the rest</span>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Analytics View -->
+                <div id="analyticsView" class="tab-view hidden" role="region" aria-label="Patterns">
+                    <div class="view-head">
+                        <h1 class="view-title" tabindex="-1">Patterns</h1>
+                        <p class="view-sub">What your history actually says, once there is enough of it.</p>
+                    </div>
+
+                    <!-- Analytics & Consistency Graph -->
+                    <div class="stats-strip" style="margin-bottom: 24px;">
+                        <div class="stat-card done" title="Tasks completed today">
+                            <span style="font-size: 0.7rem; text-transform: uppercase; letter-spacing: 0.5px; color: var(--text-secondary); font-weight: 700;">Done Today</span>
+                            <div style="display: flex; align-items: baseline; justify-content: space-between; margin-top: 4px; width: 100%;">
+                                <span id="statsCompletedToday" style="font-size: 1.55rem; font-weight: 700; color: var(--text-main); font-family: var(--font-display);">0</span>
+                            </div>
+                        </div>
+                        <div class="stat-card streak" title="Consecutive days completing tasks">
+                            <span style="font-size: 0.7rem; text-transform: uppercase; letter-spacing: 0.5px; color: var(--text-secondary); font-weight: 700;">Streak</span>
+                            <div style="display: flex; align-items: baseline; justify-content: space-between; margin-top: 4px; width: 100%;">
+                                <span id="statsStreak" style="font-size: 1.55rem; font-weight: 700; color: var(--text-main); font-family: var(--font-display);">0d</span>
+                                <i data-lucide="trending-up" style="width: 14px; height: 14px; color: var(--color-green);"></i>
+                            </div>
+                        </div>
+                        <div class="stat-card compliance" title="Average compliance rate">
+                            <span style="font-size: 0.7rem; text-transform: uppercase; letter-spacing: 0.5px; color: var(--text-secondary); font-weight: 700;">Compliance</span>
+                            <div style="display: flex; align-items: baseline; justify-content: space-between; margin-top: 4px; width: 100%;">
+                                <span id="statsRate" style="font-size: 1.55rem; font-weight: 700; color: var(--text-main); font-family: var(--font-display);">0%</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <section class="card glass-card analytics-panel" style="width: 100%;">
+                        <div class="card-header">
+                            <div class="title-with-icon">
+                                <i data-lucide="activity"></i>
+                                <h2 class="card-title">Consistency index</h2>
+                            </div>
+                            <div class="graph-toggle" role="group" aria-label="History range">
+                                <button type="button" class="toggle-btn active" data-range="7" aria-pressed="true">7 days</button>
+                                <button type="button" class="toggle-btn" data-range="30" aria-pressed="false">30 days</button>
+                            </div>
+                        </div>
+                        <div class="card-body graph-container" style="min-height: 320px;">
+                            <!-- SVG graph container. The chart is decorative to
+                                 assistive technology; the table below carries the
+                                 same numbers and can be revealed by anyone. -->
+                            <div id="svgWrapper" class="svg-wrapper" style="height: 320px;"></div>
+                        </div>
+                        <div style="padding: 0 22px 6px;">
+                            <details class="chart-data-details">
+                                <summary>Show this chart as a table</summary>
+                                <div class="chart-data-table-wrap">
+                                    <table class="chart-data-table" id="analyticsDataTable">
+                                        <caption class="sr-only">Daily completion rate</caption>
+                                        <thead>
+                                            <tr><th scope="col">Date</th><th scope="col">Completed</th><th scope="col">Due</th><th scope="col">Rate</th></tr>
+                                        </thead>
+                                        <tbody id="analyticsDataTableBody">
+                                            <tr><td colspan="4">No history yet.</td></tr>
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </details>
+                        </div>
+                        <div style="padding: 0 22px 22px;">
+                            <div class="finding" role="status" aria-live="polite">
+                                <i data-lucide="lightbulb" aria-hidden="true"></i>
+                                <p id="analyticsFinding">Not enough history yet &mdash; a few more days and this will tell you which days actually carry you.</p>
+                            </div>
+                        </div>
+                    </section>
+                </div>
+
+                <!-- Settings View -->
+                <!-- One group at a time. The old screen was a single form ten
+                     sections tall: everything on it competed, nothing could be
+                     found twice, and half of it only took effect after a Save
+                     button at the bottom that you had to scroll to. Now the rail
+                     picks one small panel, and every control writes itself the
+                     moment you touch it. -->
+                <div id="settingsView" class="tab-view hidden" role="region" aria-label="Settings">
+                    <div class="view-head">
+                        <h1 class="view-title" tabindex="-1">Settings</h1>
+                        <p class="view-sub">One group at a time. Everything saves itself &mdash; there is no Save button to forget.</p>
+                    </div>
+
+                    <div class="set-layout">
+                        <!-- The rail says what is inside each group, so nothing
+                             has to be found by opening all six. -->
+                        <div class="set-rail" role="tablist" aria-label="Settings groups" aria-orientation="vertical">
+                            <button type="button" class="set-tab" role="tab" id="setTab-you"
+                                    data-sgroup="you" aria-selected="true" aria-controls="setPanel-you">
+                                <i data-lucide="user" aria-hidden="true"></i>
+                                <span class="set-tab-text">
+                                    <span class="set-tab-name">You</span>
+                                    <span class="set-tab-what">Your name, the clock, the tour</span>
+                                </span>
+                            </button>
+                            <button type="button" class="set-tab" role="tab" id="setTab-day"
+                                    data-sgroup="day" aria-selected="false" aria-controls="setPanel-day" tabindex="-1">
+                                <i data-lucide="calendar" aria-hidden="true"></i>
+                                <span class="set-tab-text">
+                                    <span class="set-tab-name">Your day</span>
+                                    <span class="set-tab-what">Sleep, work hours, working days</span>
+                                </span>
+                            </button>
+                            <button type="button" class="set-tab" role="tab" id="setTab-words"
+                                    data-sgroup="words" aria-selected="false" aria-controls="setPanel-words" tabindex="-1">
+                                <i data-lucide="message-square" aria-hidden="true"></i>
+                                <span class="set-tab-text">
+                                    <span class="set-tab-name">How it treats you</span>
+                                    <span class="set-tab-what">Wording, how much you see, snoozing</span>
+                                </span>
+                            </button>
+                            <button type="button" class="set-tab" role="tab" id="setTab-look"
+                                    data-sgroup="look" aria-selected="false" aria-controls="setPanel-look" tabindex="-1">
+                                <i data-lucide="eye" aria-hidden="true"></i>
+                                <span class="set-tab-text">
+                                    <span class="set-tab-name">Reading it</span>
+                                    <span class="set-tab-what">Text size, contrast, motion, theme</span>
+                                </span>
+                            </button>
+                            <button type="button" class="set-tab" role="tab" id="setTab-reminders"
+                                    data-sgroup="reminders" aria-selected="false" aria-controls="setPanel-reminders" tabindex="-1">
+                                <i data-lucide="bell" aria-hidden="true"></i>
+                                <span class="set-tab-text">
+                                    <span class="set-tab-name">Reminders</span>
+                                    <span class="set-tab-what">Notifications on this device</span>
+                                </span>
+                            </button>
+                            <div class="set-rail-sep" role="presentation"></div>
+                            <button type="button" class="set-tab is-danger" role="tab" id="setTab-data"
+                                    data-sgroup="data" aria-selected="false" aria-controls="setPanel-data" tabindex="-1">
+                                <i data-lucide="rotate-ccw" aria-hidden="true"></i>
+                                <span class="set-tab-text">
+                                    <span class="set-tab-name">Start over</span>
+                                    <span class="set-tab-what">Empty the app and begin again</span>
+                                </span>
+                            </button>
+                        </div>
+
+                        <!-- The form still exists, and pressing Enter in any field
+                             still commits, but nothing waits on it: every control
+                             below writes on change. -->
+                        <form id="appSettingsForm" class="set-stage">
+
+                            <!-- ---------- You ---------- -->
+                            <section class="set-panel" role="tabpanel" id="setPanel-you"
+                                     aria-labelledby="setTab-you" data-sgroup="you">
+                                <div class="set-head">
+                                    <div>
+                                        <h2 class="set-title" tabindex="-1">You</h2>
+                                        <p class="set-note">What it calls you, and how it shows the time.</p>
+                                    </div>
+                                    <span class="set-saved" id="settingsSavedFlag" role="status" aria-live="polite"></span>
+                                </div>
+
+                                <div class="set-body">
+                                    <div class="set-field">
+                                        <label for="settingsNameInput" class="settings-label">What should it call you?</label>
+                                        <input type="text" id="settingsNameInput" class="settings-input" placeholder="First name" autocomplete="given-name">
+                                        <span class="field-hint">Used in the greeting on Today. Nowhere else.</span>
+                                    </div>
+
+                                    <div class="set-field">
+                                        <label for="settingsClockFormat" class="settings-label">Clock</label>
+                                        <select id="settingsClockFormat" class="settings-select">
+                                            <option value="12h">12-hour (2:30 PM)</option>
+                                            <option value="24h">24-hour (14:30)</option>
+                                        </select>
+                                        <span class="field-hint">The clock in the top bar never goes away. That is deliberate.</span>
+                                    </div>
+
+                                    <div class="set-block">
+                                        <h3 class="set-block-title"><i data-lucide="compass" aria-hidden="true"></i>The one-minute tour</h3>
+                                        <p class="set-block-note">Walks you round the app. Replay it as often as you like &mdash; it never touches your tasks.</p>
+                                        <button type="button" id="replayTutorialBtn" class="btn btn-secondary set-btn">
+                                            <i data-lucide="play" aria-hidden="true"></i>
+                                            <span>Replay the tour</span>
+                                        </button>
+                                    </div>
+                                </div>
+                            </section>
+
+                            <!-- ---------- Your day ---------- -->
+                            <section class="set-panel" role="tabpanel" id="setPanel-day"
+                                     aria-labelledby="setTab-day" data-sgroup="day" hidden>
+                                <div class="set-head">
+                                    <div>
+                                        <h2 class="set-title" tabindex="-1">Your day</h2>
+                                        <p class="set-note">These four times are how Bokeà works out when to put something in front of you.</p>
+                                    </div>
+                                    <span class="set-saved" id="settingsSavedFlagDay" role="status" aria-live="polite"></span>
+                                </div>
+
+                                <div class="set-body">
+                                    <div class="set-block">
+                                        <h3 class="set-block-title"><i data-lucide="moon" aria-hidden="true"></i>Sleep</h3>
+                                        <div class="set-pair">
+                                            <div class="set-field">
+                                                <label for="settingsBedTime" class="settings-label">Bed</label>
+                                                <input type="time" id="settingsBedTime" class="settings-input">
+                                            </div>
+                                            <div class="set-field">
+                                                <label for="settingsWakeUpTime" class="settings-label">Awake</label>
+                                                <input type="time" id="settingsWakeUpTime" class="settings-input">
+                                            </div>
+                                        </div>
+
+                                        <div id="settingsSleepMeterBox" class="sleep-health-card set-meter">
+                                            <div class="set-meter-head">
+                                                <span id="settingsSleepDurationText">Sleep Duration: 8 hours</span>
+                                                <span id="settingsSleepHealthLabel" class="health-badge health-optimal">Optimal</span>
+                                            </div>
+                                            <div class="meter-bar-bg set-meter-bar">
+                                                <div id="settingsSleepHealthBar" class="meter-bar-fill health-optimal set-meter-fill"></div>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <div class="set-block">
+                                        <h3 class="set-block-title"><i data-lucide="briefcase" aria-hidden="true"></i>Work</h3>
+                                        <div class="set-pair">
+                                            <div class="set-field">
+                                                <label for="settingsWorkStart" class="settings-label">Starts</label>
+                                                <input type="time" id="settingsWorkStart" class="settings-input">
+                                            </div>
+                                            <div class="set-field">
+                                                <label for="settingsWorkEnd" class="settings-label">Ends</label>
+                                                <input type="time" id="settingsWorkEnd" class="settings-input">
+                                            </div>
+                                        </div>
+
+                                        <fieldset class="weekday-fieldset set-field">
+                                            <legend class="settings-label">Days you work</legend>
+                                            <div class="weekday-selector">
+                                                <label class="weekday-pill">
+                                                    <input type="checkbox" name="settingsWorkDays" value="Monday">
+                                                    <span>Mon</span>
+                                                </label>
+                                                <label class="weekday-pill">
+                                                    <input type="checkbox" name="settingsWorkDays" value="Tuesday">
+                                                    <span>Tue</span>
+                                                </label>
+                                                <label class="weekday-pill">
+                                                    <input type="checkbox" name="settingsWorkDays" value="Wednesday">
+                                                    <span>Wed</span>
+                                                </label>
+                                                <label class="weekday-pill">
+                                                    <input type="checkbox" name="settingsWorkDays" value="Thursday">
+                                                    <span>Thu</span>
+                                                </label>
+                                                <label class="weekday-pill">
+                                                    <input type="checkbox" name="settingsWorkDays" value="Friday">
+                                                    <span>Fri</span>
+                                                </label>
+                                                <label class="weekday-pill">
+                                                    <input type="checkbox" name="settingsWorkDays" value="Saturday">
+                                                    <span>Sat</span>
+                                                </label>
+                                                <label class="weekday-pill">
+                                                    <input type="checkbox" name="settingsWorkDays" value="Sunday">
+                                                    <span>Sun</span>
+                                                </label>
+                                            </div>
+                                        </fieldset>
+                                    </div>
+                                </div>
+                            </section>
+
+                            <!-- ---------- How it treats you ---------- -->
+                            <section class="set-panel" role="tabpanel" id="setPanel-words"
+                                     aria-labelledby="setTab-words" data-sgroup="words" hidden>
+                                <div class="set-head">
+                                    <div>
+                                        <h2 class="set-title" tabindex="-1">How it treats you</h2>
+                                        <p class="set-note">Set once, applies everywhere. Nothing here shames you for a gap.</p>
+                                    </div>
+                                    <span class="set-saved" id="settingsSavedFlagWords" role="status" aria-live="polite"></span>
+                                </div>
+
+                                <div class="set-body">
+                                    <div class="sw-group">
+                                        <button type="button" class="sw" data-pref="capThree" role="switch" aria-checked="false">
+                                            <span class="sw-text">
+                                                <span class="sw-label">Show three things at a time</span>
+                                                <span class="sw-help">The rest stay one tap away. A list you can see the end of gets started.</span>
+                                            </span>
+                                            <span class="sw-side"><span class="sw-word">Off</span><span class="sw-track"><span class="sw-knob"></span></span></span>
+                                        </button>
+
+                                        <button type="button" class="sw" data-pref="gentle" role="switch" aria-checked="false">
+                                            <span class="sw-text">
+                                                <span class="sw-label">Gentle wording</span>
+                                                <span class="sw-help">Says &ldquo;needs you today&rdquo; rather than &ldquo;overdue&rdquo;, and never counts the days.</span>
+                                            </span>
+                                            <span class="sw-side"><span class="sw-word">Off</span><span class="sw-track"><span class="sw-knob"></span></span></span>
+                                        </button>
+
+                                        <button type="button" class="sw" data-pref="streaks" role="switch" aria-checked="false">
+                                            <span class="sw-text">
+                                                <span class="sw-label">Show streaks</span>
+                                                <span class="sw-help">Off by default. A broken streak is not information.</span>
+                                            </span>
+                                            <span class="sw-side"><span class="sw-word">Off</span><span class="sw-track"><span class="sw-knob"></span></span></span>
+                                        </button>
+                                    </div>
+
+                                    <div class="set-field">
+                                        <label for="settingsSnoozeSelect" class="settings-label">Snooze length</label>
+                                        <select id="settingsSnoozeSelect" class="settings-select">
+                                            <option value="12">Half a day</option>
+                                            <option value="24">A day</option>
+                                            <option value="48">Two days</option>
+                                            <option value="72">Three days</option>
+                                        </select>
+                                        <span class="field-hint">How long something stays gone when you say &ldquo;not this one&rdquo;. Putting it down is a decision too &mdash; it comes back on its own.</span>
+                                    </div>
+                                </div>
+                            </section>
+
+                            <!-- ---------- Reading it ---------- -->
+                            <section class="set-panel" role="tabpanel" id="setPanel-look"
+                                     aria-labelledby="setTab-look" data-sgroup="look" hidden>
+                                <div class="set-head">
+                                    <div>
+                                        <h2 class="set-title" tabindex="-1">Reading it</h2>
+                                        <p class="set-note">These take effect immediately and stay on this device &mdash; including on the sign-in screen.</p>
+                                    </div>
+                                    <span class="set-saved" id="settingsSavedFlagLook" role="status" aria-live="polite"></span>
+                                </div>
+
+                                <div class="set-body" id="a11ySettingsSection">
+                                    <div class="a11y-grid">
+                                        <div class="set-field">
+                                            <label for="a11yTextSize" class="settings-label">Text size</label>
+                                            <select id="a11yTextSize" class="settings-select">
+                                                <option value="normal">Normal</option>
+                                                <option value="large">Large (125%)</option>
+                                                <option value="larger">Larger (150%)</option>
+                                            </select>
+                                        </div>
+
+                                        <div class="set-field">
+                                            <label for="a11yContrast" class="settings-label">Contrast</label>
+                                            <select id="a11yContrast" class="settings-select">
+                                                <option value="normal">Standard</option>
+                                                <option value="high">High contrast</option>
+                                            </select>
+                                        </div>
+
+                                        <div class="set-field">
+                                            <label for="a11yMotion" class="settings-label">Movement</label>
+                                            <select id="a11yMotion" class="settings-select" aria-describedby="a11yMotionHint">
+                                                <option value="system">Follow my device</option>
+                                                <option value="reduced">Hold everything still</option>
+                                                <option value="full">Allow movement</option>
+                                            </select>
+                                            <span class="field-hint" id="a11yMotionHint">Holding it still removes sliding, fading and animated progress.</span>
+                                        </div>
+
+                                        <div class="set-field">
+                                            <label class="settings-checkbox">
+                                                <input type="checkbox" id="a11yUnderlineLinks">
+                                                <span>Always underline links</span>
+                                            </label>
+                                            <span class="field-hint">Useful if colour alone is hard to tell apart.</span>
+                                        </div>
+                                    </div>
+
+                                    <div class="sw-group">
+                                        <button type="button" class="sw" data-pref="compact" role="switch" aria-checked="false">
+                                            <span class="sw-text">
+                                                <span class="sw-label">Compact spacing</span>
+                                                <span class="sw-help">Tighter rows for when the list gets long.</span>
+                                            </span>
+                                            <span class="sw-side"><span class="sw-word">Off</span><span class="sw-track"><span class="sw-knob"></span></span></span>
+                                        </button>
+                                    </div>
+
+                                    <div class="set-block">
+                                        <h3 class="set-block-title"><i data-lucide="palette" aria-hidden="true"></i>Theme</h3>
+                                        <div class="set-themes" role="group" aria-label="Theme">
+                                            <button type="button" class="theme-option-card" id="themeLightCard" aria-pressed="false">
+                                                <i data-lucide="sun" aria-hidden="true"></i>
+                                                <span>Light</span>
+                                            </button>
+                                            <button type="button" class="theme-option-card" id="themeDarkCard" aria-pressed="false">
+                                                <i data-lucide="moon" aria-hidden="true"></i>
+                                                <span>Dark</span>
+                                            </button>
+                                        </div>
+                                    </div>
+
+                                    <p class="a11y-note">
+                                        Bokeà never uses colour on its own to tell you something: every task state carries
+                                        an icon and a word as well. Every control is reachable with Tab, and Escape closes
+                                        any dialog.
+                                    </p>
+                                </div>
+                            </section>
+
+                            <!-- ---------- Reminders ---------- -->
+                            <section class="set-panel" role="tabpanel" id="setPanel-reminders"
+                                     aria-labelledby="setTab-reminders" data-sgroup="reminders" hidden>
+                                <div class="set-head">
+                                    <div>
+                                        <h2 class="set-title" tabindex="-1">Reminders</h2>
+                                        <p class="set-note">One nudge when something turns amber or red, so you do not have to remember to open the app.</p>
+                                    </div>
+                                </div>
+
+                                <div class="set-body">
+                                    <div class="set-block">
+                                        <h3 class="set-block-title"><i data-lucide="bell-ring" aria-hidden="true"></i>On this device</h3>
+                                        <p class="set-block-note">Your phone or desktop shows the notification. Bokeà does not need to be open.</p>
+                                        <button type="button" id="pushNotifToggleBtn" class="btn btn-secondary set-btn">
+                                            <i data-lucide="bell" aria-hidden="true"></i>
+                                            <span id="pushNotifToggleLabel">Turn on reminders</span>
+                                        </button>
+                                        <p id="pushNotifStatus" class="field-hint"></p>
+                                    </div>
+                                </div>
+                            </section>
+
+                            <!-- ---------- Start over ---------- -->
+                            <section class="set-panel" role="tabpanel" id="setPanel-data"
+                                     aria-labelledby="setTab-data" data-sgroup="data" hidden>
+                                <div class="set-head">
+                                    <div>
+                                        <h2 class="set-title" tabindex="-1">Start over</h2>
+                                        <p class="set-note">Sometimes the list stops being yours and starting again is the honest move.</p>
+                                    </div>
+                                </div>
+
+                                <div class="set-body">
+                                    <!-- Two deliberate taps, not one tap and a browser
+                                         dialog. An irreversible thing should not be one
+                                         reflex away. -->
+                                    <div class="set-danger">
+                                        <h3 class="set-block-title text-red"><i data-lucide="alert-triangle" aria-hidden="true"></i>Empty the app</h3>
+                                        <p class="set-block-note">Deletes every task, every tick and every statistic on this account. Nothing is replaced with samples &mdash; you get an empty app. It cannot be undone.</p>
+
+                                        <button id="settingsResetDataBtn" type="button" class="btn btn-secondary set-btn text-red set-danger-btn"
+                                                aria-expanded="false" aria-controls="settingsResetConfirm">
+                                            <i data-lucide="rotate-ccw" aria-hidden="true"></i>
+                                            <span>Empty the app&hellip;</span>
+                                        </button>
+
+                                        <div class="set-confirm" id="settingsResetConfirm" hidden>
+                                            <p class="set-confirm-q">Delete everything and start with an empty app?</p>
+                                            <div class="set-confirm-row">
+                                                <button type="button" class="btn btn-secondary set-btn" id="settingsResetCancelBtn">Keep my things</button>
+                                                <button type="button" class="btn set-btn set-confirm-go" id="settingsResetConfirmBtn">Yes, delete everything</button>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </section>
+                        </form>
+                    </div>
+                </div>
+
+                <!-- Profile View -->
+                <!-- The one screen in Bokeà that is about the person rather than
+                     the work. It follows the same rules as Settings: nothing is
+                     held behind a Save button, nothing is required, and the card
+                     on the left shows the result of every change as it is made,
+                     so you can see what you are building instead of imagining it. -->
+                <div id="profileView" class="tab-view hidden" role="region" aria-label="Profile">
+                    <div class="view-head">
+                        <h1 class="view-title" tabindex="-1">Profile</h1>
+                        <p class="view-sub">All optional. Everything saves itself.</p>
+                    </div>
+
+                    <div class="prof-layout">
+                        <!-- The card is a preview, not a form. It is the answer to
+                             "what does this look like when I am done", visible the
+                             whole time you are filling the fields in. -->
+                        <aside class="prof-card" aria-label="Preview">
+                            <div class="prof-avatar" id="profAvatar">
+                                <img id="profAvatarImg" class="prof-avatar-img" alt="" hidden>
+                                <span class="prof-avatar-initial" id="profAvatarInitial" aria-hidden="true"></span>
+                            </div>
+
+                            <p class="prof-card-name" id="profCardName">Your account</p>
+                            <p class="prof-card-pronouns" id="profCardPronouns" hidden></p>
+                            <p class="prof-card-meta" id="profCardMeta" hidden></p>
+                            <p class="prof-card-bio" id="profCardBio" hidden></p>
+
+                            <div class="prof-avatar-actions">
+                                <!-- A label, not a button wrapping an input: the file
+                                     picker is the control, so the label is its name and
+                                     the keyboard reaches it the ordinary way. -->
+                                <label class="btn btn-secondary set-btn prof-pick" for="profAvatarInput">
+                                    <i data-lucide="image-plus" aria-hidden="true"></i>
+                                    <span id="profAvatarPickLabel">Add a picture</span>
+                                </label>
+                                <input type="file" id="profAvatarInput" class="prof-file"
+                                       accept="image/png, image/jpeg, image/webp, image/gif">
+                                <button type="button" id="profAvatarRemoveBtn" class="btn btn-secondary set-btn prof-remove" hidden>
+                                    <i data-lucide="trash-2" aria-hidden="true"></i>
+                                    <span>Remove</span>
+                                </button>
+                            </div>
+
+                            <p class="prof-private">
+                                <i data-lucide="lock" aria-hidden="true"></i>
+                                <span>Only you can see this.</span>
+                            </p>
+                        </aside>
+
+                        <form id="profileForm" class="prof-stage" novalidate>
+                            <!-- ---------- Your name ---------- -->
+                            <section class="set-panel">
+                                <div class="set-head">
+                                    <div>
+                                        <h2 class="set-title" tabindex="-1">Your name</h2>
+                                    </div>
+                                    <span class="set-saved" id="profSavedName" role="status" aria-live="polite"></span>
+                                </div>
+
+                                <div class="set-body">
+                                    <div class="set-pair">
+                                        <div class="set-field">
+                                            <label for="profFirstName" class="settings-label">First name</label>
+                                            <input type="text" id="profFirstName" class="settings-input" autocomplete="given-name" maxlength="60">
+                                        </div>
+                                        <div class="set-field">
+                                            <label for="profLastName" class="settings-label">Last name</label>
+                                            <input type="text" id="profLastName" class="settings-input" autocomplete="family-name" maxlength="60">
+                                        </div>
+                                    </div>
+
+                                    <div class="set-field">
+                                        <label for="profPronouns" class="settings-label">Pronouns</label>
+                                        <select id="profPronouns" class="settings-select">
+                                            <option value="">Not saying</option>
+                                            <option value="she/her">she/her</option>
+                                            <option value="he/him">he/him</option>
+                                            <option value="they/them">they/them</option>
+                                            <option value="she/they">she/they</option>
+                                            <option value="he/they">he/they</option>
+                                            <option value="__custom">Other&hellip;</option>
+                                        </select>
+                                    </div>
+
+                                    <div class="set-field" id="profPronounsCustomField" hidden>
+                                        <label for="profPronounsCustom" class="settings-label">Your pronouns</label>
+                                        <input type="text" id="profPronounsCustom" class="settings-input" maxlength="40" placeholder="e.g. xe/xem">
+                                    </div>
+
+                                    <div class="set-field">
+                                        <label for="profGender" class="settings-label">Gender</label>
+                                        <select id="profGender" class="settings-select">
+                                            <option value="">Not saying</option>
+                                            <option value="Male">Male</option>
+                                            <option value="Female">Female</option>
+                                            <option value="Prefer not to say">Prefer not to say</option>
+                                        </select>
+                                    </div>
+                                </div>
+                            </section>
+
+                            <!-- ---------- About you ---------- -->
+                            <section class="set-panel">
+                                <div class="set-head">
+                                    <div>
+                                        <h2 class="set-title" tabindex="-1">About you</h2>
+                                    </div>
+                                    <span class="set-saved" id="profSavedAbout" role="status" aria-live="polite"></span>
+                                </div>
+
+                                <div class="set-body">
+                                    <div class="set-field">
+                                        <label for="profDob" class="settings-label">Date of birth</label>
+                                        <input type="date" id="profDob" class="settings-input" autocomplete="bday" max="">
+                                        <!-- Age is shown, never typed. A number you enter is
+                                             wrong within a year; a date is right forever. -->
+                                        <span class="field-hint" id="profAgeHint"></span>
+                                        <p class="prof-error" id="profDobError" role="alert" hidden></p>
+                                    </div>
+
+                                    <div class="set-field">
+                                        <label for="profBio" class="settings-label">A note about you</label>
+                                        <textarea id="profBio" class="settings-input prof-textarea" rows="4" maxlength="400"
+                                                  placeholder="Anything you want to remember about yourself."></textarea>
+                                        <span class="field-hint"><span id="profBioCount">0</span>/400</span>
+                                    </div>
+                                </div>
+                            </section>
+
+                            <!-- ---------- Where you are ---------- -->
+                            <section class="set-panel">
+                                <div class="set-head">
+                                    <div>
+                                        <h2 class="set-title" tabindex="-1">Where you are</h2>
+                                    </div>
+                                    <span class="set-saved" id="profSavedPlace" role="status" aria-live="polite"></span>
+                                </div>
+
+                                <div class="set-body">
+                                    <div class="set-pair">
+                                        <div class="set-field">
+                                            <label for="profCity" class="settings-label">City</label>
+                                            <input type="text" id="profCity" class="settings-input" autocomplete="address-level2" maxlength="80">
+                                        </div>
+                                        <div class="set-field">
+                                            <label for="profCountry" class="settings-label">Country</label>
+                                            <input type="text" id="profCountry" class="settings-input" autocomplete="country-name" maxlength="80" list="profCountryList">
+                                            <datalist id="profCountryList"></datalist>
+                                        </div>
+                                    </div>
+
+                                    <div class="set-field">
+                                        <label for="profTimeZone" class="settings-label">Time zone</label>
+                                        <select id="profTimeZone" class="settings-select"></select>
+                                        <span class="field-hint" id="profTimeZoneHint"></span>
+                                        <button type="button" id="profTimeZoneDeviceBtn" class="btn btn-secondary set-btn prof-inline-btn">
+                                            <i data-lucide="crosshair" aria-hidden="true"></i>
+                                            <span>Use this device&rsquo;s time zone</span>
+                                        </button>
+                                    </div>
+                                </div>
+                            </section>
+
+                            <!-- ---------- How to reach you ---------- -->
+                            <section class="set-panel">
+                                <div class="set-head">
+                                    <div>
+                                        <h2 class="set-title" tabindex="-1">How to reach you</h2>
+                                    </div>
+                                    <span class="set-saved" id="profSavedContact" role="status" aria-live="polite"></span>
+                                </div>
+
+                                <div class="set-body">
+                                    <div class="set-field">
+                                        <span class="settings-label" id="profEmailLabel">Email</span>
+                                        <!-- Read-only on purpose: the email is the account,
+                                             and changing it is a different job from editing a
+                                             profile. The route to that job is named here. -->
+                                        <p class="prof-readonly" id="profEmail" aria-labelledby="profEmailLabel">&mdash;</p>
+                                        <span class="field-hint" id="profEmailHint">Changed from your account, not here.</span>
+                                    </div>
+
+                                    <div class="set-field">
+                                        <label for="profPhone" class="settings-label">Phone</label>
+                                        <input type="tel" id="profPhone" class="settings-input" autocomplete="tel" maxlength="30" placeholder="Optional">
+                                    </div>
+                                </div>
+                            </section>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <!-- ============================================================
+         THE DAY YOU PICKED
+         A day is one thing to deal with, so it gets the whole screen and
+         everything else goes behind a dim. No month in the corner, no
+         sidebar, no counts — the day, what is on it, and a box to add to
+         it. Escape, the backdrop and the close button all get you out,
+         and focus goes back to the day you came from.
+         ============================================================ -->
+    <div id="calDayOverlay" class="modal-overlay cal-day-overlay" aria-hidden="true">
+        <div class="cal-day" id="calDayDialog" role="dialog" aria-modal="true"
+             aria-labelledby="calDayTitle" tabindex="-1">
+            <div class="cal-day-head">
+                <div>
+                    <h2 class="cal-day-title" id="calDayTitle" tabindex="-1">&nbsp;</h2>
+                    <p class="cal-day-line" id="calDayLine">&nbsp;</p>
+                </div>
+                <button type="button" class="cal-day-close" id="calDayCloseBtn" title="Close" aria-label="Close the day">
+                    <i data-lucide="x"></i>
+                </button>
+            </div>
+
+            <!-- How far through the day you are. Counts what is finished, not
+                 what is owed, and is not drawn at all on a day with nothing
+                 on it: a full bar over an empty day rewards having had no day. -->
+            <div class="cal-day-progress" id="calDayProgress" role="progressbar"
+                 aria-label="Things done on this day" aria-valuemin="0" hidden>
+                <span class="cal-day-progress-track" aria-hidden="true">
+                    <span class="cal-day-progress-fill" id="calDayProgressFill"></span>
+                </span>
+                <span class="cal-day-progress-text" id="calDayProgressText" aria-hidden="true"></span>
+            </div>
+
+            <div class="cal-day-list" id="calDayList"></div>
+
+            <div class="capture-wrap cal-day-capture">
+                <i data-lucide="plus" aria-hidden="true"></i>
+                <label for="calDayCapture" class="sr-only">Add something to this day</label>
+                <input type="text" id="calDayCapture" class="capture-input" placeholder="Add something to this day"
+                       autocomplete="off" aria-describedby="calDayCaptureHint">
+                <span class="capture-hint" id="calDayCaptureHint">Enter to save</span>
+            </div>
+        </div>
+    </div>
+
+    <!-- Create/Edit Task Modal Dialog -->
+    <div id="taskModal" class="modal-overlay" aria-hidden="true">
+        <div class="modal-content glass-card" role="dialog" aria-modal="true"
+             aria-labelledby="modalTitle" id="taskModalDialog" tabindex="-1">
+            <div class="modal-header">
+                <h3 id="modalTitle" tabindex="-1">New task</h3>
+                <button type="button" class="close-btn" id="closeModalBtn" aria-label="Close, discarding this task">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <form id="taskForm">
+                <input type="hidden" id="taskId">
+                <!-- Hidden wizard state variables -->
+                <input type="hidden" id="taskCategory" value="Health & Vitality">
+                <input type="hidden" id="taskDuration" value="15">
+                <input type="hidden" id="taskType" value="interval">
+                <input type="hidden" id="taskNotify" value="digest">
+                <input type="hidden" id="taskTimeSlot" value="anytime">
+
+                <!-- ============================================================
+                     ONE SCREEN.
+                     This was four gated steps: category (pre-answered), then
+                     the name, then cadence, then a two-option notify radio
+                     (also pre-answered) - and no Save button until the fourth.
+                     So the minimum cost of recording "gym on Tuesdays" was
+                     four screens, two of which were already answered, and the
+                     thought that prompted the click had to survive all of it.
+
+                     Now: the name is first and focused, cadence is under it,
+                     and everything that already had a sensible default is
+                     folded away behind "More". The wizard-step wrappers stay
+                     because they carry the grouping the rest of the app reads;
+                     they are simply all on screen at once.
+                     ============================================================ -->
+                <div class="task-form-stack">
+
+                    <!-- The thought, first, before anything is asked about it -->
+                    <div class="wizard-step" data-step="2">
+                        <div class="form-group" id="taskNameInputGroup">
+                            <label for="taskName">What is it?</label>
+                            <input type="text" id="taskName" required autocomplete="off"
+                                   placeholder="Gym, pay rent, call Mum&hellip;">
+                        </div>
+                    </div>
+
+                    <!-- How often. The only other thing that genuinely has to be asked. -->
+                    <div class="wizard-step" data-step="3">
+                        <span class="when-block-label" id="cadenceLabel">How often?</span>
+                        <div class="wizard-button-grid freq-grid" role="group" aria-labelledby="cadenceLabel">
+                            <button type="button" class="wizard-option-btn active" data-freq-type="interval" data-freq-val="1">
+                                <i data-lucide="refresh-cw" aria-hidden="true"></i>
+                                <span>Every day</span>
+                            </button>
+                            <button type="button" class="wizard-option-btn" data-freq-type="interval" data-freq-val="7">
+                                <i data-lucide="calendar-days" aria-hidden="true"></i>
+                                <span>Every week</span>
+                            </button>
+                            <button type="button" class="wizard-option-btn" data-freq-type="interval" data-freq-val="30">
+                                <i data-lucide="calendar-range" aria-hidden="true"></i>
+                                <span>Every month</span>
+                            </button>
+                            <button type="button" class="wizard-option-btn" id="btnCustomDays" data-freq-type="custom">
+                                <i data-lucide="settings-2" aria-hidden="true"></i>
+                                <span>Every few days</span>
+                            </button>
+                            <button type="button" class="wizard-option-btn" id="btnFixedDate" data-freq-type="fixed">
+                                <i data-lucide="calendar" aria-hidden="true"></i>
+                                <span>One date</span>
+                            </button>
+                        </div>
+
+                        <div class="form-group hidden" id="intervalGroup" style="margin-top: 12px;">
+                            <label for="taskInterval">Every how many days?</label>
+                            <input type="number" id="taskInterval" min="1" value="1">
+                        </div>
+                        <div class="form-group hidden" id="dueDateGroup" style="margin-top: 12px;">
+                            <label for="taskDueDate">Which day?</label>
+                            <input type="date" id="taskDueDate">
+                        </div>
+                    </div>
+
+                    <!-- Everything that already had a good default. Nothing in
+                         here has to be opened for the task to be correct. -->
+                    <details class="task-more" id="taskMore">
+                        <summary class="task-more-summary">
+                            <i data-lucide="chevron-right" class="task-more-chevron" aria-hidden="true"></i>
+                            <span>More &mdash; when in the day, how long, which area</span>
+                        </summary>
+
+                        <div class="task-more-body">
+
+                            <div class="form-group">
+                                <label for="taskDescription">Notes <span class="label-optional">optional</span></label>
+                                <textarea id="taskDescription" rows="2" placeholder="Anything you want to remember about it"></textarea>
+                            </div>
+
+                            <!-- WHEN IN THE DAY
+                                 A date on its own never made anything happen. The
+                                 block comes first because it is the answer most
+                                 people actually have; the clock time is there for
+                                 the ones that genuinely have one. Each block shows
+                                 the hours it means for this person, read from their
+                                 own wake, work and bed times, so "Morning" is never
+                                 a word you have to guess the boundaries of. -->
+                            <div class="form-group when-block">
+                                <span class="when-block-label" id="whenBlockLabel">When in the day?</span>
+                                <div class="time-slot-grid" id="timeSlotGrid" role="group" aria-labelledby="whenBlockLabel">
+                                    <button type="button" class="wizard-option-btn slot-btn" data-slot="morning">
+                                        <span class="slot-btn-name">Morning</span>
+                                        <span class="slot-btn-range" data-slot-range="morning">&nbsp;</span>
+                                    </button>
+                                    <button type="button" class="wizard-option-btn slot-btn" data-slot="afternoon">
+                                        <span class="slot-btn-name">Daytime</span>
+                                        <span class="slot-btn-range" data-slot-range="afternoon">&nbsp;</span>
+                                    </button>
+                                    <button type="button" class="wizard-option-btn slot-btn" data-slot="evening">
+                                        <span class="slot-btn-name">Evening</span>
+                                        <span class="slot-btn-range" data-slot-range="evening">&nbsp;</span>
+                                    </button>
+                                    <button type="button" class="wizard-option-btn slot-btn active" data-slot="anytime">
+                                        <span class="slot-btn-name">Any time</span>
+                                        <span class="slot-btn-range">No set hour</span>
+                                    </button>
+                                </div>
+                            </div>
+
+                            <div class="task-more-pair">
+                                <div class="form-group" id="dueTimeGroup">
+                                    <label for="taskDueTime">Exact time <span class="label-optional">optional</span></label>
+                                    <input type="time" id="taskDueTime" aria-describedby="taskDueTimeHint">
+                                    <p class="field-hint" id="taskDueTimeHint"></p>
+                                </div>
+                                <div class="form-group" id="durationInputGroup">
+                                    <label for="taskDurationInput">How long <span class="label-optional">minutes</span></label>
+                                    <input type="number" id="taskDurationInput" min="1" max="480" value="15">
+                                </div>
+                            </div>
+
+                            <!-- Which area of life. Pre-answered, and moved out of
+                                 the way: it is a filing question, and filing is not
+                                 what somebody opened this form to do. -->
+                            <div class="wizard-step" data-step="1">
+                                <span class="when-block-label" id="areaLabel">Which part of life?</span>
+                                <div class="wizard-button-grid" role="group" aria-labelledby="areaLabel">
+                                    <button type="button" class="wizard-option-btn active" data-value="Health &amp; Vitality">
+                                        <i data-lucide="heart" class="icon-health" aria-hidden="true"></i>
+                                        <span>Health</span>
+                                    </button>
+                                    <button type="button" class="wizard-option-btn" data-value="Career &amp; Finance">
+                                        <i data-lucide="briefcase" class="icon-career" aria-hidden="true"></i>
+                                        <span>Money</span>
+                                    </button>
+                                    <button type="button" class="wizard-option-btn" data-value="Relationships &amp; Social">
+                                        <i data-lucide="users" class="icon-social" aria-hidden="true"></i>
+                                        <span>People</span>
+                                    </button>
+                                    <button type="button" class="wizard-option-btn" data-value="Mind &amp; Environment">
+                                        <i data-lucide="sparkles" class="icon-mind" aria-hidden="true"></i>
+                                        <span>Mind</span>
+                                    </button>
+                                </div>
+                            </div>
+
+                            <div class="form-group" id="taskNameSelectGroup">
+                                <label for="taskNameSelect">Start from a common one <span class="label-optional">optional</span></label>
+                                <select id="taskNameSelect" class="settings-select">
+                                    <option value="">Choose one to fill the form in</option>
+                                    <option value="water" data-name="Drink 2L Water" data-desc="Stay hydrated throughout the day" data-duration="2" data-slot="morning">Drink 2L water</option>
+                                    <option value="run" data-name="Morning Run / Jog" data-desc="Cardio exercise outside or on treadmill" data-duration="30" data-slot="morning">Morning run (30m)</option>
+                                    <option value="gym" data-name="Strength Training" data-desc="Resistance training workout" data-duration="45" data-slot="afternoon">Strength training (45m)</option>
+                                    <option value="medication" data-name="Take Medication" data-desc="Take prescribed medication / vitamins" data-duration="5" data-slot="morning">Take medication (5m)</option>
+                                    <option value="meditation" data-name="10-Min Mindfulness" data-desc="Deep breathing and mindful focus" data-duration="10" data-slot="evening">Ten minutes of mindfulness</option>
+                                    <option value="reading" data-name="Read 15 Pages" data-desc="Read non-fiction or educational book" data-duration="20" data-slot="evening">Read 15 pages (20m)</option>
+                                </select>
+                            </div>
+
+                            <!-- Whether missing this is allowed to go red. Off by
+                                 default: soft habits age to amber and stop there. -->
+                            <button type="button" class="sw" id="taskCommitmentSw" role="switch" aria-checked="false">
+                                <span class="sw-text">
+                                    <span class="sw-label">This one really matters</span>
+                                    <span class="sw-help">Bills, appointments, deadlines. Only these are allowed to turn red &mdash; everything else waits at amber without nagging.</span>
+                                </span>
+                                <span class="sw-side"><span class="sw-word">Off</span><span class="sw-track"><span class="sw-knob"></span></span></span>
+                            </button>
+
+                            <!-- Notifications. Two options, said plainly. -->
+                            <div class="wizard-step" data-step="4">
+                                <span class="when-block-label" id="notifyLabel">Reminders</span>
+                                <div class="wizard-button-grid" role="group" aria-labelledby="notifyLabel">
+                                    <button type="button" class="wizard-option-btn active" data-value="digest">
+                                        <i data-lucide="bell" aria-hidden="true"></i>
+                                        <span>Tell me in the morning</span>
+                                    </button>
+                                    <button type="button" class="wizard-option-btn" data-value="silent">
+                                        <i data-lucide="bell-off" aria-hidden="true"></i>
+                                        <span>Don&rsquo;t tell me</span>
+                                    </button>
+                                </div>
+                            </div>
+
+                        </div>
+                    </details>
+                </div>
+
+                <!-- Save exists from the moment there is a name. A task with
+                     only a name is a valid task. -->
+                <div class="modal-footer" style="margin-top: 22px;">
+                    <button type="button" class="btn btn-secondary" id="cancelTaskBtn">Cancel</button>
+                    <button type="submit" class="btn btn-primary" id="saveTaskBtn">Save</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- ============================================================
+         FOCUS — one task, its own duration counting down, and nothing
+         else. The box at the bottom catches the thought that arrives
+         thirty seconds in, so writing it down does not end the task.
+         ============================================================ -->
+    <div id="focusOverlay" class="focus-overlay hidden" aria-hidden="true">
+        <div class="focus-sheet" role="dialog" aria-modal="true" aria-labelledby="focusTaskName">
+            <div class="focus-top">
+                <span class="focus-eyebrow">Focus</span>
+                <button type="button" class="focus-close" id="focusCloseBtn" aria-label="Leave focus, keeping the task">
+                    <i data-lucide="x" aria-hidden="true"></i>
+                </button>
+            </div>
+
+            <div class="focus-clock">
+                <span class="focus-timer" id="focusTimer" role="timer" aria-live="off">0:00</span>
+                <div class="focus-ring" aria-hidden="true">
+                    <div class="focus-ring-fill" id="focusRingFill" style="width: 100%;"></div>
+                </div>
+                <p class="focus-phase" id="focusPhase" role="status" aria-live="polite">Running. Nothing else needs you right now.</p>
+            </div>
+
+            <div class="focus-task">
+                <h2 class="focus-task-name" id="focusTaskName">&nbsp;</h2>
+                <p class="focus-task-why" id="focusTaskWhy">&nbsp;</p>
+            </div>
+
+            <div class="focus-actions">
+                <button type="button" class="btn btn-primary" id="focusDoneBtn">
+                    <i data-lucide="check" aria-hidden="true"></i><span>Done</span>
+                </button>
+                <button type="button" class="btn btn-secondary" id="focusPauseBtn">
+                    <i data-lucide="pause" aria-hidden="true"></i><span>Pause</span>
+                </button>
+                <button type="button" class="btn btn-secondary" id="focusParkTaskBtn">
+                    <i data-lucide="inbox" aria-hidden="true"></i><span>Park the whole task</span>
+                </button>
+            </div>
+
+            <div class="focus-park">
+                <label for="focusParkInput" class="focus-park-label">Park a thought</label>
+                <div class="capture-wrap focus-park-wrap">
+                    <i data-lucide="plus" aria-hidden="true"></i>
+                    <input type="text" id="focusParkInput" class="capture-input"
+                           placeholder="It goes to your inbox, not away" autocomplete="off">
+                    <span class="capture-hint">Enter to park</span>
+                </div>
+                <div class="focus-parked-list" id="focusParkedList" role="status" aria-live="polite"></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Toast. aria-hidden because the same text is sent to the shared live
+         region in a11y.js, and announcing it twice is worse than not at all. -->
+    <div id="toast" class="toast hidden" aria-hidden="true"></div>
+
+    <!-- Screen reader announcement regions (also created by a11y.js if absent) -->
+    <div id="a11yPoliteRegion" class="sr-only" role="status" aria-live="polite" aria-atomic="true"></div>
+    <div id="a11yAssertiveRegion" class="sr-only" role="alert" aria-live="assertive" aria-atomic="true"></div>
+
+    <!-- Supabase JS Client & Config -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="js/config.js"></script>
+
+    <!-- JS script loading -->
+    <script src="js/onboarding.js"></script>
+    <script src="js/app.js?v=5"></script>
+</body>
+</html>

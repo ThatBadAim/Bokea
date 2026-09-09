@@ -1,0 +1,194 @@
+{
+  "Boke\u00e0/Bokea.csproj": {
+    "mtime": 1788888926.2370565,
+    "seen": 1788958934.7355368,
+    "ast_hash": "657bdeb67c0a164829e7c678c49e1eb2",
+    "semantic_hash": "657bdeb67c0a164829e7c678c49e1eb2"
+  },
+  "Boke\u00e0/Database/AppDbContext.cs": {
+    "mtime": 1788970291.5386004,
+    "seen": 1788973725.3562946,
+    "ast_hash": "9d18b86cc757cc24a15fd46dc6795fbf",
+    "semantic_hash": "9d18b86cc757cc24a15fd46dc6795fbf"
+  },
+  "Boke\u00e0/Database/Models.cs": {
+    "mtime": 1788970291.537841,
+    "seen": 1788973725.3563032,
+    "ast_hash": "426a8ca95989b0ce76507efe672d8acd",
+    "semantic_hash": "426a8ca95989b0ce76507efe672d8acd"
+  },
+  "Boke\u00e0/Endpoints/AuthEndpoints.cs": {
+    "mtime": 1788959911.0429964,
+    "seen": 1788960440.467728,
+    "ast_hash": "f97344768d00b698a28c6818745d595c",
+    "semantic_hash": "f97344768d00b698a28c6818745d595c"
+  },
+  "Boke\u00e0/Endpoints/DigestEndpoints.cs": {
+    "mtime": 1781202952.0,
+    "seen": 1788885665.2367918,
+    "ast_hash": "1a0024ef9acca982aac132caf5bf742b",
+    "semantic_hash": "1a0024ef9acca982aac132caf5bf742b"
+  },
+  "Boke\u00e0/Endpoints/TaskEndpoints.cs": {
+    "mtime": 1788973130.0148556,
+    "seen": 1788973725.356582,
+    "ast_hash": "1245e7a10367cbd70c92e063c813b15a",
+    "semantic_hash": "1245e7a10367cbd70c92e063c813b15a"
+  },
+  "Boke\u00e0/Program.cs": {
+    "mtime": 1788974287.5162554,
+    "seen": 1788974482.5762916,
+    "ast_hash": "c833d71184f2caaab320d8e20897b1b0",
+    "semantic_hash": "c833d71184f2caaab320d8e20897b1b0"
+  },
+  "Boke\u00e0/Properties/launchSettings.json": {
+    "mtime": 1781034663.0,
+    "seen": 1788885665.2368062,
+    "ast_hash": "19406973143eca50077532b849956e66",
+    "semantic_hash": "19406973143eca50077532b849956e66"
+  },
+  "Boke\u00e0/Services/DigestService.cs": {
+    "mtime": 1788973135.8198793,
+    "seen": 1788973725.3567524,
+    "ast_hash": "b82ee05fed13d41b1888ab63a3580d46",
+    "semantic_hash": "b82ee05fed13d41b1888ab63a3580d46"
+  },
+  "Boke\u00e0/Services/TaskWatchdogService.cs": {
+    "mtime": 1788973144.4785073,
+    "seen": 1788973725.3568602,
+    "ast_hash": "a314ac8721dc5e33cbb4eb98980b99b7",
+    "semantic_hash": "a314ac8721dc5e33cbb4eb98980b99b7"
+  },
+  "Boke\u00e0/appsettings.json": {
+    "mtime": 1788906652.6102924,
+    "seen": 1788958934.735666,
+    "ast_hash": "c52f435e4bcaf2bd106befb5823b841e",
+    "semantic_hash": "c52f435e4bcaf2bd106befb5823b841e"
+  },
+  "Boke\u00e0/wwwroot/js/app.js": {
+    "mtime": 1788974435.9497914,
+    "seen": 1788974482.5770397,
+    "ast_hash": "0b2f5f66de8e0d5cb7fd121aa69ba7f1",
+    "semantic_hash": "0b2f5f66de8e0d5cb7fd121aa69ba7f1"
+  },
+  "Boke\u00e0/wwwroot/manifest.json": {
+    "mtime": 1788973935.0335922,
+    "seen": 1788974140.7785032,
+    "ast_hash": "e38e6347cfd75ae30017fa0ee340711d",
+    "semantic_hash": "e38e6347cfd75ae30017fa0ee340711d"
+  },
+  "Boke\u00e0/wwwroot/sw.js": {
+    "mtime": 1788973935.0313816,
+    "seen": 1788974140.7785065,
+    "ast_hash": "b2b07d28574ecce271c48a44bb2d32df",
+    "semantic_hash": "b2b07d28574ecce271c48a44bb2d32df"
+  },
+  "Boke\u00e0/task.md": {
+    "mtime": 1781641061.0,
+    "seen": 1788885665.2369149,
+    "ast_hash": "ee5d30fed6fc7b5cf480cd2ec867c659",
+    "semantic_hash": "ee5d30fed6fc7b5cf480cd2ec867c659"
+  },
+  "Boke\u00e0/Endpoints/PushEndpoints.cs": {
+    "mtime": 1788888987.3830833,
+    "seen": 1788958934.7355986,
+    "ast_hash": "dbe3d8dbe70d850671ecc2f3f2042071",
+    "semantic_hash": "dbe3d8dbe70d850671ecc2f3f2042071"
+  },
+  "Boke\u00e0/Services/PushNotificationService.cs": {
+    "mtime": 1788888960.9639115,
+    "seen": 1788958934.7356637,
+    "ast_hash": "8f4e72fbf4511191a6dee0c05abfe9ea",
+    "semantic_hash": "8f4e72fbf4511191a6dee0c05abfe9ea"
+  },
+  "AGENTS.md": {
+    "mtime": 1788886392.3201156,
+    "seen": 1788889167.5423546,
+    "ast_hash": "4253c9434380fe89993071cdba575923",
+    "semantic_hash": ""
+  },
+  "Boke\u00e0/wwwroot/index.html": {
+    "mtime": 1788973103.4854207,
+    "seen": 1788973170.2983263,
+    "ast_hash": "0c640ce3bf4bddd5fa56187c0753e6c0",
+    "semantic_hash": ""
+  },
+  "Boke\u00e0/wwwroot/assets/icon.svg": {
+    "mtime": 1781202150.0,
+    "seen": 1788889167.5423598,
+    "ast_hash": "4a7a33788bb4bcf6cf63401c16179256",
+    "semantic_hash": ""
+  },
+  "Boke\u00e0/wwwroot/js/config.js": {
+    "mtime": 1788897843.9885204,
+    "seen": 1788958934.7356696,
+    "ast_hash": "4f263aeb4836aa3b5fa9d859926cae85",
+    "semantic_hash": "4f263aeb4836aa3b5fa9d859926cae85"
+  },
+  "vercel.json": {
+    "mtime": 1788897830.898369,
+    "seen": 1788958934.735705,
+    "ast_hash": "9ca0514e575ee1c84530595c219c2d7d",
+    "semantic_hash": "9ca0514e575ee1c84530595c219c2d7d"
+  },
+  "design/canvas.json": {
+    "mtime": 1788956499.4774349,
+    "seen": 1788958934.7357037,
+    "ast_hash": "bbfbb663f7bc55b6f58f4d40f0f727e3",
+    "semantic_hash": "bbfbb663f7bc55b6f58f4d40f0f727e3"
+  },
+  "design/Focus.dc.html": {
+    "mtime": 1788901178.556523,
+    "seen": 1788902955.5970972,
+    "ast_hash": "71b9e03cd25cb6e81ed0bfc0e0b5aba5",
+    "semantic_hash": ""
+  },
+  "design/Insights.dc.html": {
+    "mtime": 1788901378.1300004,
+    "seen": 1788902955.597099,
+    "ast_hash": "b7ed2dc365fb34537c79de9d707ea5ec",
+    "semantic_hash": ""
+  },
+  "design/Main.dc.html": {
+    "mtime": 1788901102.6838512,
+    "seen": 1788902955.5971012,
+    "ast_hash": "ee483716d9b7eb756f20c4ed9d5b1155",
+    "semantic_hash": ""
+  },
+  "design/System.dc.html": {
+    "mtime": 1788901484.544088,
+    "seen": 1788902955.5971029,
+    "ast_hash": "6a17146c045464d6acf6bf170961d187",
+    "semantic_hash": ""
+  },
+  "design/Tasks.dc.html": {
+    "mtime": 1788901280.3449473,
+    "seen": 1788902955.5971057,
+    "ast_hash": "3e7063f3d1b9eb95063e34a37b30366c",
+    "semantic_hash": ""
+  },
+  "design/bokea-adhd-overhaul.html": {
+    "mtime": 1788956471.0483975,
+    "seen": 1788957633.8790386,
+    "ast_hash": "fe3ac5c6ebc53d1059f482bbe6c43feb",
+    "semantic_hash": ""
+  },
+  "Boke\u00e0/wwwroot/js/a11y.js": {
+    "mtime": 1788906736.6348913,
+    "seen": 1788958934.7356675,
+    "ast_hash": "f0d3ae379a59e951367ff6f3d9693bc4",
+    "semantic_hash": "f0d3ae379a59e951367ff6f3d9693bc4"
+  },
+  "Boke\u00e0/wwwroot/js/onboarding.js": {
+    "mtime": 1788969781.6198893,
+    "seen": 1788973725.357141,
+    "ast_hash": "18856a51c5717732a2d50f9e90ff3645",
+    "semantic_hash": "18856a51c5717732a2d50f9e90ff3645"
+  },
+  "design/Calendar.dc.html": {
+    "mtime": 1788956499.4774349,
+    "seen": 1788957633.8789666,
+    "ast_hash": "1b6069e5a8ae0da8f58633980e389f9e",
+    "semantic_hash": ""
+  }
+}

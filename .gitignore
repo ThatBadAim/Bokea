@@ -1,0 +1,35 @@
+# Build results
+[Dd]ebug/
+[Rr]elease/
+x64/
+x86/
+[Bb]in/
+[Oo]bj/
+
+# Visual Studio / VS Code
+.vscode/
+.idea/
+*.suo
+*.user
+*.userosscache
+*.sln.docstates
+
+# Database & SQLite files
+*.db
+*.db-shm
+*.db-wal
+
+# Archives & Temporary files
+*.zip
+*.tar.gz
+*.log
+
+# Sensitive environment configuration
+appsettings*.json
+!appsettings.json
+.env
+.env.local
+.env.*.local
+
+# Graphify cache
+graphify-out/cache/

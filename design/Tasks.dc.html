@@ -1,0 +1,335 @@
+<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Playfair+Display:wght@600;700;800&display=swap">
+  <style>
+    *{box-sizing:border-box}
+    body{margin:0;font-family:'Inter',-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;-webkit-font-smoothing:antialiased}
+    a{color:#4A7C59;text-decoration:none} a:hover{color:#3b6247}
+    .app{
+      --bg:#F8F7F5; --card:#ffffff; --line:#e4e4e7; --line-str:#1A1A1A;
+      --ink:#1A1A1A; --ink-2:#71717a; --ink-3:#a1a1aa;
+      --green:#4A7C59; --green-bg:#f0f4f1; --green-line:rgba(74,124,89,0.25);
+      --amber:#f59e0b; --amber-bg:#fef3c7; --amber-line:rgba(245,158,11,0.25);
+      --red:#ef4444; --red-bg:#fee2e2; --red-line:rgba(239,68,68,0.25);
+      --gray:#f4f4f5; --grid:rgba(0,0,0,0.08); --sunk:rgba(0,0,0,0.025);
+      --solid:#000000; --solid-fg:#ffffff; --solid-hi:#27272a;
+      --sans:'Inter',-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;
+      --disp:'Playfair Display',Georgia,serif;
+      --pad-row:16px;
+    }
+    .app[data-theme="dark"]{
+      --bg:#09090b; --card:#18181b; --line:#27272a; --line-str:#ffffff;
+      --ink:#ffffff; --ink-2:#a1a1aa; --ink-3:#71717a;
+      --green:#6c9a77; --green-bg:rgba(108,154,119,0.12); --green-line:rgba(108,154,119,0.35);
+      --amber-bg:rgba(245,158,11,0.12); --amber-line:rgba(245,158,11,0.35);
+      --red-bg:rgba(239,68,68,0.12); --red-line:rgba(239,68,68,0.35);
+      --gray:#18181b; --grid:rgba(255,255,255,0.08); --sunk:rgba(255,255,255,0.035);
+      --solid:#ffffff; --solid-fg:#09090b; --solid-hi:#e4e4e7;
+    }
+    .app[data-density="compact"]{--pad-row:10px}
+    .app[data-motion="off"] *{transition:none !important;animation:none !important}
+    .ic{fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;flex:0 0 auto}
+    .navitem{display:flex;align-items:center;gap:12px;padding:12px 14px;border-radius:6px;color:var(--ink-2);
+      font-weight:500;font-size:0.9rem;border:1px solid transparent;transition:all 0.15s ease;cursor:pointer}
+    .navitem:hover{color:var(--ink);background:var(--gray)}
+    .navitem[data-on="1"]{color:var(--solid-fg);background:var(--solid);border-color:var(--solid)}
+    .btn{font-family:var(--sans);font-weight:600;cursor:pointer;transition:all 0.15s ease;border:1px solid transparent}
+    .btn-solid{background:var(--solid);color:var(--solid-fg);border-color:var(--solid)}
+    .btn-solid:hover{background:var(--solid-hi);border-color:var(--solid-hi)}
+    .btn-quiet{background:var(--card);color:var(--ink);border-color:var(--line)}
+    .btn-quiet:hover{background:var(--gray);border-color:var(--line-str)}
+    /* One segmented control replaces nine look-alike chips */
+    .seg{display:inline-flex;align-items:center;gap:9px;height:44px;padding:0 18px;border-radius:9999px;border:1px solid var(--line);
+      background:var(--card);color:var(--ink-2);font-family:var(--sans);font-size:0.88rem;font-weight:600;cursor:pointer;transition:all 0.15s ease}
+    .seg:hover{border-color:var(--line-str);color:var(--ink)}
+    .seg[data-on="1"]{background:var(--solid);border-color:var(--solid);color:var(--solid-fg)}
+    .area{display:inline-flex;align-items:center;gap:8px;height:38px;padding:0 14px;border-radius:6px;border:1px solid var(--line);
+      background:transparent;color:var(--ink-2);font-family:var(--sans);font-size:0.82rem;font-weight:600;cursor:pointer;transition:all 0.15s ease}
+    .area:hover{color:var(--ink);background:var(--gray)}
+    .area[data-on="1"]{background:var(--gray);border-color:var(--line-str);color:var(--ink)}
+    .row{display:flex;align-items:center;gap:18px;padding:var(--pad-row) 20px;background:var(--card);
+      border:1px solid var(--line);border-radius:8px;transition:all 0.15s ease}
+    .row:hover{border-color:var(--line-str)}
+    .row[data-done="1"]{opacity:0.5}
+    .row[data-done="1"] .rowname{text-decoration:line-through;color:var(--ink-3)}
+    .tick{width:30px;height:30px;border-radius:6px;border:2px solid var(--ink-3);background:transparent;color:transparent;
+      display:flex;align-items:center;justify-content:center;cursor:pointer;flex:0 0 auto;transition:all 0.15s ease}
+    .tick:hover{border-color:var(--green);color:var(--green)}
+    .row[data-done="1"] .tick{background:var(--green);border-color:var(--green);color:#ffffff}
+    .search{width:100%;border:1px solid var(--line);border-radius:8px;background:var(--sunk);color:var(--ink);
+      font-family:var(--sans);font-size:0.92rem;padding:14px 16px 14px 46px;outline:none;transition:all 0.15s ease}
+    .search::placeholder{color:var(--ink-2);opacity:0.7}
+    .search:focus{background:var(--card);border-color:var(--line-str)}
+  </style>
+</helmet>
+
+<div class="app" data-theme="{{theme}}" data-density="{{density}}" data-motion="{{motion}}"
+     style="display:flex;min-height:100vh;background:var(--bg);color:var(--ink)">
+
+  <svg width="0" height="0" style="position:absolute" aria-hidden="true"><defs>
+    <symbol id="i-home" viewBox="0 0 24 24"><path d="M3 9.5 12 3l9 6.5V20a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1z"/><path d="M9 21v-7h6v7"/></symbol>
+    <symbol id="i-list" viewBox="0 0 24 24"><path d="M9 11l3 3 8-8"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></symbol>
+    <symbol id="i-chart" viewBox="0 0 24 24"><path d="M3 3v18h18"/><path d="M19 9l-5 5-4-4-3 3"/></symbol>
+    <symbol id="i-cal" viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="17" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/></symbol>
+    <symbol id="i-sliders" viewBox="0 0 24 24"><path d="M4 21v-6M4 11V3M12 21v-9M12 8V3M20 21v-5M20 12V3"/><path d="M1 15h6M9 8h6M17 12h6"/></symbol>
+    <symbol id="i-target" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="5"/><circle cx="12" cy="12" r="1.5"/></symbol>
+    <symbol id="i-clock" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3.5 2"/></symbol>
+    <symbol id="i-check" viewBox="0 0 24 24"><path d="M20 6 9 17l-5-5"/></symbol>
+    <symbol id="i-alert" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 7.5v5M12 16.2v.1"/></symbol>
+    <symbol id="i-plus" viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></symbol>
+    <symbol id="i-search" viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></symbol>
+    <symbol id="i-down" viewBox="0 0 24 24"><path d="m6 9 6 6 6-6"/></symbol>
+    <symbol id="i-play" viewBox="0 0 24 24"><path d="M7 4.5v15l12-7.5z"/></symbol>
+    <symbol id="i-repeat" viewBox="0 0 24 24"><path d="M21 5v6h-6"/><path d="M3.6 9.5A9 9 0 0 1 20 8"/><path d="M3 19v-6h6"/><path d="M20.4 14.5A9 9 0 0 1 4 16"/></symbol>
+    <symbol id="i-heart" viewBox="0 0 24 24"><path d="M12 20.5S3.5 15.3 3.5 9.6A4.6 4.6 0 0 1 12 7a4.6 4.6 0 0 1 8.5 2.6c0 5.7-8.5 10.9-8.5 10.9z"/></symbol>
+    <symbol id="i-wallet" viewBox="0 0 24 24"><path d="M3 7.5A2.5 2.5 0 0 1 5.5 5H19a2 2 0 0 1 2 2v11a2 2 0 0 1-2 2H5.5A2.5 2.5 0 0 1 3 17.5z"/><path d="M3 7.5V17M16.5 12.5h.01"/></symbol>
+    <symbol id="i-people" viewBox="0 0 24 24"><circle cx="9" cy="8" r="3.5"/><path d="M2.5 20a6.5 6.5 0 0 1 13 0"/><path d="M16.5 5.2a3.5 3.5 0 0 1 0 5.6M18 14.4a6.5 6.5 0 0 1 3.5 5.6"/></symbol>
+    <symbol id="i-leaf" viewBox="0 0 24 24"><path d="M4 20c0-8 5-14 16-15 1 11-5 16-12 16a4 4 0 0 1-4-1z"/><path d="M9 15c2-3 5-5 8-6"/></symbol>
+    <symbol id="i-grid" viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="3" width="7" height="7" rx="1.5"/><rect x="3" y="14" width="7" height="7" rx="1.5"/><rect x="14" y="14" width="7" height="7" rx="1.5"/></symbol>
+  </defs></svg>
+
+  <!-- ============ NAV RAIL ============ -->
+  <aside style="width:250px;flex:0 0 250px;background:var(--card);border-right:1px solid var(--line);display:flex;flex-direction:column;padding:30px 20px">
+    <div style="display:flex;flex-direction:column;align-items:center;text-align:center;gap:6px;margin-bottom:44px">
+      <h2 style="font-family:var(--disp);font-size:2.35rem;font-weight:700;letter-spacing:-0.6px;line-height:1.15;color:var(--ink);margin:0">Bokeà</h2>
+      <span style="font-size:0.8rem;text-transform:uppercase;letter-spacing:2px;color:var(--ink-2);font-weight:500;opacity:0.7">la vie est floue</span>
+    </div>
+    <nav style="display:flex;flex-direction:column;gap:6px;flex-grow:1">
+      <div class="navitem"><svg class="ic" width="18" height="18"><use href="#i-home"/></svg><span>Today</span></div>
+      <div class="navitem"><svg class="ic" width="18" height="18"><use href="#i-target"/></svg><span>Focus</span></div>
+      <div class="navitem" data-on="1" style="justify-content:space-between">
+        <span style="display:flex;align-items:center;gap:12px"><svg class="ic" width="18" height="18"><use href="#i-list"/></svg><span>Everything</span></span>
+        <span style="font-size:0.72rem;font-weight:700;padding:1px 7px;border-radius:9999px;background:var(--red-bg);color:var(--red);border:1px solid var(--red-line)">2</span>
+      </div>
+      <div class="navitem"><svg class="ic" width="18" height="18"><use href="#i-cal"/></svg><span>Calendar</span></div>
+      <div class="navitem"><svg class="ic" width="18" height="18"><use href="#i-chart"/></svg><span>Patterns</span></div>
+      <div class="navitem"><svg class="ic" width="18" height="18"><use href="#i-sliders"/></svg><span>Settings</span></div>
+    </nav>
+    <div style="border-top:1px solid var(--line);padding-top:18px;display:flex;align-items:center;gap:12px">
+      <div style="width:36px;height:36px;border-radius:50%;background:var(--gray);border:1px solid var(--line);display:flex;align-items:center;justify-content:center;font-weight:600;font-size:0.85rem;color:var(--ink)">U</div>
+      <div style="display:flex;flex-direction:column">
+        <span style="font-size:0.85rem;font-weight:600;color:var(--ink)">Productive Mind</span>
+        <span style="font-size:0.75rem;color:var(--ink-2);font-weight:500">2 done today</span>
+      </div>
+    </div>
+  </aside>
+
+  <!-- ============ MAIN ============ -->
+  <main style="flex:1 1 auto;min-width:0;padding:36px 40px 44px;display:flex;flex-direction:column;gap:26px">
+
+    <div style="display:flex;align-items:flex-end;justify-content:space-between;gap:24px">
+      <div style="display:flex;flex-direction:column;gap:6px">
+        <h1 style="font-family:var(--disp);font-size:2.6rem;font-weight:700;letter-spacing:-1px;line-height:1.1;margin:0;color:var(--ink)">Everything</h1>
+        <p style="margin:0;font-size:0.95rem;color:var(--ink-2)">Eight things exist. You are being shown {{shownCount}}.</p>
+      </div>
+      <button class="btn btn-solid" style="height:48px;padding:0 22px;border-radius:9999px;font-size:0.95rem;display:inline-flex;align-items:center;gap:10px">
+        <svg class="ic" width="18" height="18"><use href="#i-plus"/></svg>New task
+      </button>
+    </div>
+
+    <div style="position:relative;display:flex;align-items:center">
+      <svg class="ic" width="18" height="18" style="position:absolute;left:16px;color:var(--ink-2);pointer-events:none"><use href="#i-search"/></svg>
+      <input class="search" type="text" placeholder="Search by name" value="{{query}}" onInput="{{onQuery}}">
+    </div>
+
+    <!-- ============ ONE decision, then one optional narrowing ============ -->
+    <div style="display:flex;flex-direction:column;gap:14px">
+      <div style="display:flex;flex-wrap:wrap;gap:10px">
+        <sc-for list="{{segments}}" as="g" hint-placeholder-count="3">
+          <button class="seg" data-on="{{g.on}}" onClick="{{g.pick}}">
+            <svg class="ic" width="16" height="16"><use href="{{g.icon}}"/></svg>{{g.label}}
+            <span style="font-size:0.78rem;font-weight:700;opacity:0.75">{{g.count}}</span>
+          </button>
+        </sc-for>
+      </div>
+
+      <div style="display:flex;flex-wrap:wrap;align-items:center;gap:8px">
+        <span style="font-size:0.74rem;text-transform:uppercase;letter-spacing:1.2px;font-weight:700;color:var(--ink-3);margin-right:4px">Area</span>
+        <sc-for list="{{areas}}" as="a" hint-placeholder-count="5">
+          <button class="area" data-on="{{a.on}}" onClick="{{a.pick}}">
+            <svg class="ic" width="15" height="15"><use href="{{a.icon}}"/></svg>{{a.label}}
+          </button>
+        </sc-for>
+      </div>
+    </div>
+
+    <!-- ============ THE LIST ============ -->
+    <div style="display:flex;flex-direction:column;gap:12px">
+      <div style="display:flex;align-items:center;justify-content:space-between;gap:16px">
+        <span style="font-size:0.72rem;text-transform:uppercase;letter-spacing:1.2px;font-weight:700;color:var(--ink-2)">{{listHeading}}</span>
+        <button class="btn btn-quiet" style="height:36px;padding:0 14px;border-radius:6px;font-size:0.8rem;display:inline-flex;align-items:center;gap:8px" onClick="{{toggleCap}}">
+          <svg class="ic" width="15" height="15"><use href="{{capIcon}}"/></svg>{{capLabel}}
+        </button>
+      </div>
+
+      <div style="display:flex;flex-direction:column;gap:10px">
+        <sc-for list="{{rows}}" as="r" hint-placeholder-count="3">
+          <div class="row" data-done="{{r.done}}">
+            <button class="tick" onClick="{{r.toggle}}"><svg class="ic" width="17" height="17"><use href="#i-check"/></svg></button>
+
+            <span style="width:4px;align-self:stretch;border-radius:9999px;background:{{r.tone}};flex:0 0 auto"></span>
+
+            <span style="display:flex;flex-direction:column;gap:4px;flex:1 1 auto;min-width:0">
+              <span class="rowname" style="font-size:1rem;font-weight:600;color:var(--ink);line-height:1.3">{{r.name}}</span>
+              <span style="display:flex;align-items:center;gap:14px;font-size:0.78rem;color:var(--ink-2);font-weight:500">
+                <span style="display:inline-flex;align-items:center;gap:6px"><svg class="ic" width="13" height="13"><use href="{{r.areaIcon}}"/></svg>{{r.area}}</span>
+                <span style="display:inline-flex;align-items:center;gap:6px"><svg class="ic" width="13" height="13"><use href="{{r.cadenceIcon}}"/></svg>{{r.cadence}}</span>
+              </span>
+            </span>
+
+            <span style="display:inline-flex;align-items:center;gap:7px;padding:6px 12px;border-radius:9999px;font-size:0.74rem;font-weight:700;
+                         background:{{r.stateBg}};color:{{r.tone}};border:1px solid {{r.stateLine}};flex:0 0 auto;min-width:112px;justify-content:center">
+              <svg class="ic" width="13" height="13"><use href="{{r.stateIcon}}"/></svg>{{r.stateLabel}}
+            </span>
+
+            <span style="display:flex;align-items:baseline;gap:4px;flex:0 0 auto;min-width:66px;justify-content:flex-end">
+              <span style="font-size:1.05rem;font-weight:700;color:var(--ink)">{{r.mins}}</span>
+              <span style="font-size:0.76rem;font-weight:600;color:var(--ink-2)">min</span>
+            </span>
+
+            <span style="display:flex;gap:8px;flex:0 0 auto">
+              <button class="btn btn-solid" style="height:44px;padding:0 18px;border-radius:6px;font-size:0.85rem;display:inline-flex;align-items:center;gap:8px">
+                <svg class="ic" width="15" height="15"><use href="#i-play"/></svg>Do it
+              </button>
+              <button class="btn btn-quiet" style="height:44px;padding:0 16px;border-radius:6px;font-size:0.85rem;color:var(--ink-2)">Later</button>
+            </span>
+          </div>
+        </sc-for>
+      </div>
+
+      <sc-if value="{{hasMore}}" hint-placeholder-val="{{ true }}">
+        <button class="btn btn-quiet" style="height:48px;border-radius:8px;font-size:0.88rem;color:var(--ink-2);display:inline-flex;align-items:center;justify-content:center;gap:9px;width:100%" onClick="{{showAll}}">
+          <svg class="ic" width="16" height="16"><use href="#i-down"/></svg>{{moreLabel}}
+        </button>
+      </sc-if>
+
+      <sc-if value="{{empty}}" hint-placeholder-val="{{ false }}">
+        <div style="display:flex;flex-direction:column;align-items:center;justify-content:center;gap:10px;padding:56px 0;border:1px dashed var(--line);border-radius:8px">
+          <svg class="ic" width="26" height="26" style="color:var(--green)"><use href="#i-check"/></svg>
+          <span style="font-size:1rem;font-weight:600;color:var(--ink)">Nothing here</span>
+          <span style="font-size:0.85rem;color:var(--ink-2)">That is a finished list, not a mistake.</span>
+        </div>
+      </sc-if>
+    </div>
+
+    <p style="margin:0;font-size:0.82rem;line-height:1.5;color:var(--ink-3);max-width:70ch">
+      Late items keep their colour but not the whole card — the red is a 4px rail, never a wash. Nothing on this
+      screen counts how long something has been late.
+    </p>
+  </main>
+</div>
+</x-dc>
+
+<script data-dc-script data-props='{"theme":{"editor":"enum","options":["light","dark"],"default":"light","section":"Appearance"},"density":{"editor":"enum","options":["comfortable","compact"],"default":"comfortable","section":"Appearance"},"reduceMotion":{"editor":"boolean","default":false,"section":"Accessibility"},"$preview":{"width":1440,"height":1120}}'>
+class Component extends DCLogic {
+  constructor(props) {
+    super(props);
+    this.state = { seg: 'now', area: 'all', capped: true, query: '', done: {} };
+  }
+
+  all() {
+    return [
+      { id: 't2', name: 'Strength Training Routine', area: 'Health', areaIcon: '#i-heart', cadence: 'Every 3 days', repeats: true, mins: 27, state: 'red' },
+      { id: 't6', name: 'Organize Board Game Night', area: 'People', areaIcon: '#i-people', cadence: 'Was due yesterday', repeats: false, mins: 10, state: 'red' },
+      { id: 't7', name: '10-Minute Breath Mindfulness', area: 'Mind', areaIcon: '#i-leaf', cadence: 'Every day', repeats: true, mins: 10, state: 'amber' },
+      { id: 't3', name: 'Review Monthly Budget & Spending', area: 'Money', areaIcon: '#i-wallet', cadence: 'Every 7 days', repeats: true, mins: 20, state: 'amber' },
+      { id: 't4', name: 'Submit Monthly Freelance Invoices', area: 'Money', areaIcon: '#i-wallet', cadence: 'In 2 days', repeats: false, mins: 15, state: 'amber' },
+      { id: 't1', name: 'Daily Hydration & Morning Walk', area: 'Health', areaIcon: '#i-heart', cadence: 'Every day', repeats: true, mins: 15, state: 'green' },
+      { id: 't5', name: 'Weekly Call with Family', area: 'People', areaIcon: '#i-people', cadence: 'Every 7 days', repeats: true, mins: 25, state: 'green' },
+      { id: 't8', name: 'Tidy & Vacuum Workspace', area: 'Mind', areaIcon: '#i-leaf', cadence: 'Every 14 days', repeats: true, mins: 30, state: 'green' }
+    ];
+  }
+
+  tone(state) {
+    if (state === 'red') return { tone: 'var(--red)', stateBg: 'var(--red-bg)', stateLine: 'var(--red-line)', stateIcon: '#i-alert', stateLabel: 'Late' };
+    if (state === 'amber') return { tone: 'var(--amber)', stateBg: 'var(--amber-bg)', stateLine: 'var(--amber-line)', stateIcon: '#i-clock', stateLabel: 'Due today' };
+    return { tone: 'var(--green)', stateBg: 'var(--green-bg)', stateLine: 'var(--green-line)', stateIcon: '#i-check', stateLabel: 'Safe' };
+  }
+
+  bySeg(seg, list) {
+    if (seg === 'now') return list.filter((t) => t.state === 'red' || t.state === 'amber');
+    if (seg === 'week') return list.filter((t) => t.state === 'green');
+    return list;
+  }
+
+  renderVals() {
+    const list = this.all();
+    const q = this.state.query.trim().toLowerCase();
+
+    const segDefs = [
+      { id: 'now', label: 'Needs you', icon: '#i-alert' },
+      { id: 'week', label: 'Ticking along', icon: '#i-repeat' },
+      { id: 'all', label: 'Everything', icon: '#i-grid' }
+    ];
+    const areaDefs = [
+      { id: 'all', label: 'All', icon: '#i-grid' },
+      { id: 'Health', label: 'Health', icon: '#i-heart' },
+      { id: 'Money', label: 'Money', icon: '#i-wallet' },
+      { id: 'People', label: 'People', icon: '#i-people' },
+      { id: 'Mind', label: 'Mind', icon: '#i-leaf' }
+    ];
+
+    let filtered = this.bySeg(this.state.seg, list);
+    if (this.state.area !== 'all') filtered = filtered.filter((t) => t.area === this.state.area);
+    if (q) filtered = filtered.filter((t) => t.name.toLowerCase().indexOf(q) >= 0);
+
+    const cap = 3;
+    const capped = this.state.capped && filtered.length > cap;
+    const visible = capped ? filtered.slice(0, cap) : filtered;
+
+    const rows = visible.map((t) => Object.assign({}, t, this.tone(t.state), {
+      done: this.state.done[t.id] ? '1' : '0',
+      cadenceIcon: t.repeats ? '#i-repeat' : '#i-cal',
+      toggle: () => {
+        const d = Object.assign({}, this.state.done);
+        d[t.id] = !d[t.id];
+        this.setState({ done: d });
+      }
+    }));
+
+    const segments = segDefs.map((s) => ({
+      label: s.label, icon: s.icon,
+      count: this.bySeg(s.id, list).length,
+      on: this.state.seg === s.id ? '1' : '0',
+      pick: () => this.setState({ seg: s.id, capped: true })
+    }));
+
+    const areas = areaDefs.map((a) => ({
+      label: a.label, icon: a.icon,
+      on: this.state.area === a.id ? '1' : '0',
+      pick: () => this.setState({ area: a.id, capped: true })
+    }));
+
+    const headings = { now: 'Pick one of these', week: 'Running fine, nothing owed', all: 'All eight' };
+
+    return {
+      theme: this.props.theme ?? 'light',
+      density: this.props.density ?? 'comfortable',
+      motion: (this.props.reduceMotion ?? false) ? 'off' : 'on',
+      segments: segments,
+      areas: areas,
+      rows: rows,
+      shownCount: visible.length,
+      listHeading: headings[this.state.seg],
+      empty: filtered.length === 0,
+      hasMore: capped,
+      moreLabel: 'Show the other ' + Math.max(0, filtered.length - cap),
+      showAll: () => this.setState({ capped: false }),
+      capLabel: this.state.capped ? 'Three at a time' : 'Showing all',
+      capIcon: this.state.capped ? '#i-target' : '#i-grid',
+      toggleCap: () => this.setState({ capped: !this.state.capped }),
+      query: this.state.query,
+      onQuery: (e) => this.setState({ query: e.target.value, capped: true })
+    };
+  }
+}
+</script>
+</body>
+</html>

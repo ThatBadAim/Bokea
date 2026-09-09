@@ -1,0 +1,328 @@
+<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Playfair+Display:wght@600;700;800&display=swap">
+  <style>
+    *{box-sizing:border-box}
+    body{margin:0;font-family:'Inter',-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;-webkit-font-smoothing:antialiased}
+    a{color:#4A7C59;text-decoration:none} a:hover{color:#3b6247}
+    .app{
+      --bg:#F8F7F5; --card:#ffffff; --line:#e4e4e7; --line-str:#1A1A1A;
+      --ink:#1A1A1A; --ink-2:#71717a; --ink-3:#a1a1aa;
+      --green:#4A7C59; --green-bg:#f0f4f1; --green-line:rgba(74,124,89,0.25);
+      --amber:#f59e0b; --amber-bg:#fef3c7; --amber-line:rgba(245,158,11,0.25);
+      --red:#ef4444; --red-bg:#fee2e2; --red-line:rgba(239,68,68,0.25);
+      --gray:#f4f4f5; --sunk:rgba(0,0,0,0.025);
+      --solid:#000000; --solid-fg:#ffffff; --solid-hi:#27272a;
+      --sans:'Inter',-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;
+      --disp:'Playfair Display',Georgia,serif;
+    }
+    .app[data-theme="dark"]{
+      --bg:#09090b; --card:#18181b; --line:#27272a; --line-str:#ffffff;
+      --ink:#ffffff; --ink-2:#a1a1aa; --ink-3:#71717a;
+      --green:#6c9a77; --green-bg:rgba(108,154,119,0.12); --green-line:rgba(108,154,119,0.35);
+      --amber-bg:rgba(245,158,11,0.12); --amber-line:rgba(245,158,11,0.35);
+      --red-bg:rgba(239,68,68,0.12); --red-line:rgba(239,68,68,0.35);
+      --gray:#18181b; --sunk:rgba(255,255,255,0.035);
+      --solid:#ffffff; --solid-fg:#09090b; --solid-hi:#e4e4e7;
+    }
+    .ic{fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;flex:0 0 auto}
+    .panel{background:var(--card);border:1px solid var(--line);border-radius:8px;overflow:hidden}
+    .phead{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:16px 22px;border-bottom:1px solid var(--line)}
+    .ptitle{font-family:var(--disp);font-size:1.05rem;font-weight:700;letter-spacing:-0.2px;margin:0;color:var(--ink)}
+    .pbody{padding:22px}
+    .mono{font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;font-size:0.74rem;letter-spacing:-0.2px}
+    .btn{font-family:var(--sans);font-weight:600;cursor:pointer;transition:all 0.15s ease;border:1px solid transparent}
+    .btn-solid{background:var(--solid);color:var(--solid-fg);border-color:var(--solid)}
+    .btn-quiet{background:var(--card);color:var(--ink);border-color:var(--line)}
+    .seg{display:inline-flex;align-items:center;gap:9px;height:44px;padding:0 18px;border-radius:9999px;border:1px solid var(--line);
+      background:var(--card);color:var(--ink-2);font-family:var(--sans);font-size:0.88rem;font-weight:600}
+    .seg[data-on="1"]{background:var(--solid);border-color:var(--solid);color:var(--solid-fg)}
+    .rule{display:flex;gap:14px;align-items:flex-start}
+    .num{width:26px;height:26px;flex:0 0 26px;border-radius:50%;border:1px solid var(--line);background:var(--bg);
+      display:flex;align-items:center;justify-content:center;font-size:0.74rem;font-weight:700;color:var(--ink-2)}
+  </style>
+</helmet>
+
+<div class="app" data-theme="{{theme}}"
+     style="min-height:100vh;background:var(--bg);color:var(--ink);padding:44px 48px 52px;display:flex;flex-direction:column;gap:26px">
+
+  <svg width="0" height="0" style="position:absolute" aria-hidden="true"><defs>
+    <symbol id="i-alert" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 7.5v5M12 16.2v.1"/></symbol>
+    <symbol id="i-clock" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3.5 2"/></symbol>
+    <symbol id="i-check" viewBox="0 0 24 24"><path d="M20 6 9 17l-5-5"/></symbol>
+    <symbol id="i-play" viewBox="0 0 24 24"><path d="M7 4.5v15l12-7.5z"/></symbol>
+    <symbol id="i-target" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="5"/><circle cx="12" cy="12" r="1.5"/></symbol>
+    <symbol id="i-heart" viewBox="0 0 24 24"><path d="M12 20.5S3.5 15.3 3.5 9.6A4.6 4.6 0 0 1 12 7a4.6 4.6 0 0 1 8.5 2.6c0 5.7-8.5 10.9-8.5 10.9z"/></symbol>
+    <symbol id="i-wallet" viewBox="0 0 24 24"><path d="M3 7.5A2.5 2.5 0 0 1 5.5 5H19a2 2 0 0 1 2 2v11a2 2 0 0 1-2 2H5.5A2.5 2.5 0 0 1 3 17.5z"/><path d="M3 7.5V17M16.5 12.5h.01"/></symbol>
+    <symbol id="i-people" viewBox="0 0 24 24"><circle cx="9" cy="8" r="3.5"/><path d="M2.5 20a6.5 6.5 0 0 1 13 0"/><path d="M16.5 5.2a3.5 3.5 0 0 1 0 5.6M18 14.4a6.5 6.5 0 0 1 3.5 5.6"/></symbol>
+    <symbol id="i-leaf" viewBox="0 0 24 24"><path d="M4 20c0-8 5-14 16-15 1 11-5 16-12 16a4 4 0 0 1-4-1z"/><path d="M9 15c2-3 5-5 8-6"/></symbol>
+  </defs></svg>
+
+  <!-- ============ HEADER ============ -->
+  <header style="display:flex;align-items:flex-end;justify-content:space-between;gap:32px;flex-wrap:wrap">
+    <div style="display:flex;flex-direction:column;gap:8px;max-width:76ch">
+      <span style="font-size:0.72rem;text-transform:uppercase;letter-spacing:1.8px;font-weight:700;color:var(--ink-2)">Bokeà — design system</span>
+      <h1 style="font-family:var(--disp);font-size:3rem;font-weight:700;letter-spacing:-1.4px;line-height:1.05;margin:0;color:var(--ink)">One thing, now</h1>
+      <p style="margin:4px 0 0;font-size:1rem;line-height:1.55;color:var(--ink-2)">
+        Same eleven colours as the app ships today, same Playfair and Inter, same 8/6/4px radii. What changed is how much
+        of the screen is allowed to ask for a decision at once.
+      </p>
+    </div>
+    <div style="display:flex;flex-direction:column;gap:6px;text-align:right">
+      <span style="font-family:var(--disp);font-size:2.35rem;font-weight:700;letter-spacing:-0.6px;line-height:1.15;color:var(--ink)">Bokeà</span>
+      <span style="font-size:0.8rem;text-transform:uppercase;letter-spacing:2px;color:var(--ink-2);font-weight:500;opacity:0.7">la vie est floue</span>
+    </div>
+  </header>
+
+  <!-- ============ PALETTE — unchanged, listed so it stays unchanged ============ -->
+  <section class="panel">
+    <div class="phead">
+      <h3 class="ptitle">Palette — carried over exactly</h3>
+      <span class="mono" style="color:var(--ink-3)">light &nbsp;/&nbsp; dark</span>
+    </div>
+    <div class="pbody" style="display:grid;grid-template-columns:repeat(6, minmax(0, 1fr));gap:14px">
+
+      <div style="display:flex;flex-direction:column;gap:8px">
+        <div style="height:56px;border-radius:6px;border:1px solid var(--line);background:#F8F7F5"></div>
+        <span style="font-size:0.78rem;font-weight:600;color:var(--ink)">Ground</span>
+        <span class="mono" style="color:var(--ink-2)">#F8F7F5 / #09090b</span>
+      </div>
+      <div style="display:flex;flex-direction:column;gap:8px">
+        <div style="height:56px;border-radius:6px;border:1px solid var(--line);background:#ffffff"></div>
+        <span style="font-size:0.78rem;font-weight:600;color:var(--ink)">Card</span>
+        <span class="mono" style="color:var(--ink-2)">#ffffff / #18181b</span>
+      </div>
+      <div style="display:flex;flex-direction:column;gap:8px">
+        <div style="height:56px;border-radius:6px;border:1px solid var(--line);background:#e4e4e7"></div>
+        <span style="font-size:0.78rem;font-weight:600;color:var(--ink)">Line</span>
+        <span class="mono" style="color:var(--ink-2)">#e4e4e7 / #27272a</span>
+      </div>
+      <div style="display:flex;flex-direction:column;gap:8px">
+        <div style="height:56px;border-radius:6px;border:1px solid var(--line);background:#1A1A1A"></div>
+        <span style="font-size:0.78rem;font-weight:600;color:var(--ink)">Ink</span>
+        <span class="mono" style="color:var(--ink-2)">#1A1A1A / #ffffff</span>
+      </div>
+      <div style="display:flex;flex-direction:column;gap:8px">
+        <div style="height:56px;border-radius:6px;border:1px solid var(--line);background:#71717a"></div>
+        <span style="font-size:0.78rem;font-weight:600;color:var(--ink)">Ink secondary</span>
+        <span class="mono" style="color:var(--ink-2)">#71717a / #a1a1aa</span>
+      </div>
+      <div style="display:flex;flex-direction:column;gap:8px">
+        <div style="height:56px;border-radius:6px;border:1px solid var(--line);background:#a1a1aa"></div>
+        <span style="font-size:0.78rem;font-weight:600;color:var(--ink)">Ink muted</span>
+        <span class="mono" style="color:var(--ink-2)">#a1a1aa / #71717a</span>
+      </div>
+
+      <div style="display:flex;flex-direction:column;gap:8px">
+        <div style="height:56px;border-radius:6px;border:1px solid var(--line);background:#4A7C59"></div>
+        <span style="font-size:0.78rem;font-weight:600;color:var(--ink)">Green</span>
+        <span class="mono" style="color:var(--ink-2)">#4A7C59 / #6c9a77</span>
+      </div>
+      <div style="display:flex;flex-direction:column;gap:8px">
+        <div style="height:56px;border-radius:6px;border:1px solid var(--line);background:#f59e0b"></div>
+        <span style="font-size:0.78rem;font-weight:600;color:var(--ink)">Amber</span>
+        <span class="mono" style="color:var(--ink-2)">#f59e0b / #f59e0b</span>
+      </div>
+      <div style="display:flex;flex-direction:column;gap:8px">
+        <div style="height:56px;border-radius:6px;border:1px solid var(--line);background:#ef4444"></div>
+        <span style="font-size:0.78rem;font-weight:600;color:var(--ink)">Red</span>
+        <span class="mono" style="color:var(--ink-2)">#ef4444 / #ef4444</span>
+      </div>
+      <div style="display:flex;flex-direction:column;gap:8px">
+        <div style="height:56px;border-radius:6px;border:1px solid var(--line);background:#f0f4f1"></div>
+        <span style="font-size:0.78rem;font-weight:600;color:var(--ink)">Green wash</span>
+        <span class="mono" style="color:var(--ink-2)">#f0f4f1 / 12% green</span>
+      </div>
+      <div style="display:flex;flex-direction:column;gap:8px">
+        <div style="height:56px;border-radius:6px;border:1px solid var(--line);background:#fef3c7"></div>
+        <span style="font-size:0.78rem;font-weight:600;color:var(--ink)">Amber wash</span>
+        <span class="mono" style="color:var(--ink-2)">#fef3c7 / 12% amber</span>
+      </div>
+      <div style="display:flex;flex-direction:column;gap:8px">
+        <div style="height:56px;border-radius:6px;border:1px solid var(--line);background:#fee2e2"></div>
+        <span style="font-size:0.78rem;font-weight:600;color:var(--ink)">Red wash</span>
+        <span class="mono" style="color:var(--ink-2)">#fee2e2 / 12% red</span>
+      </div>
+    </div>
+  </section>
+
+  <div style="display:grid;grid-template-columns:minmax(0, 1.2fr) minmax(0, 1fr);gap:26px;align-items:start">
+
+    <!-- ============ STATE VOCABULARY ============ -->
+    <section class="panel">
+      <div class="phead">
+        <h3 class="ptitle">Three states, never colour alone</h3>
+        <span style="font-size:0.76rem;color:var(--ink-3);font-weight:500">rail + shape + word</span>
+      </div>
+      <div class="pbody" style="display:flex;flex-direction:column;gap:16px">
+
+        <div style="display:flex;align-items:center;gap:16px;padding:16px 18px;border:1px solid var(--line);border-radius:8px;background:var(--bg)">
+          <span style="width:4px;align-self:stretch;border-radius:9999px;background:var(--red)"></span>
+          <span style="display:inline-flex;align-items:center;gap:7px;padding:6px 12px;border-radius:9999px;font-size:0.74rem;font-weight:700;
+                       background:var(--red-bg);color:var(--red);border:1px solid var(--red-line);min-width:104px;justify-content:center">
+            <svg class="ic" width="13" height="13"><use href="#i-alert"/></svg>Late
+          </span>
+          <span style="flex:1 1 auto;font-size:0.86rem;line-height:1.5;color:var(--ink-2)">
+            Was <span style="color:var(--ink);font-weight:600">Red / Overdue</span>. Now a 4px rail and one word — the wash is gone,
+            and no screen counts the days.
+          </span>
+        </div>
+
+        <div style="display:flex;align-items:center;gap:16px;padding:16px 18px;border:1px solid var(--line);border-radius:8px;background:var(--bg)">
+          <span style="width:4px;align-self:stretch;border-radius:9999px;background:var(--amber)"></span>
+          <span style="display:inline-flex;align-items:center;gap:7px;padding:6px 12px;border-radius:9999px;font-size:0.74rem;font-weight:700;
+                       background:var(--amber-bg);color:var(--amber);border:1px solid var(--amber-line);min-width:104px;justify-content:center">
+            <svg class="ic" width="13" height="13"><use href="#i-clock"/></svg>Due today
+          </span>
+          <span style="flex:1 1 auto;font-size:0.86rem;line-height:1.5;color:var(--ink-2)">
+            Was <span style="color:var(--ink);font-weight:600">Amber / Due Soon</span>. A clock face, so it reads at a glance in
+            greyscale and for red-green colour blindness.
+          </span>
+        </div>
+
+        <div style="display:flex;align-items:center;gap:16px;padding:16px 18px;border:1px solid var(--line);border-radius:8px;background:var(--bg)">
+          <span style="width:4px;align-self:stretch;border-radius:9999px;background:var(--green)"></span>
+          <span style="display:inline-flex;align-items:center;gap:7px;padding:6px 12px;border-radius:9999px;font-size:0.74rem;font-weight:700;
+                       background:var(--green-bg);color:var(--green);border:1px solid var(--green-line);min-width:104px;justify-content:center">
+            <svg class="ic" width="13" height="13"><use href="#i-check"/></svg>Safe
+          </span>
+          <span style="flex:1 1 auto;font-size:0.86rem;line-height:1.5;color:var(--ink-2)">
+            Was <span style="color:var(--ink);font-weight:600">Green</span>. Filed under <em>Ticking along</em> and kept off the
+            Today screen entirely — safe things do not need looking at.
+          </span>
+        </div>
+
+        <div style="display:flex;flex-wrap:wrap;gap:10px;padding-top:4px">
+          <span style="display:inline-flex;align-items:center;gap:8px;height:38px;padding:0 14px;border-radius:6px;border:1px solid var(--line);color:var(--ink-2);font-size:0.82rem;font-weight:600">
+            <svg class="ic" width="15" height="15"><use href="#i-heart"/></svg>Health
+          </span>
+          <span style="display:inline-flex;align-items:center;gap:8px;height:38px;padding:0 14px;border-radius:6px;border:1px solid var(--line);color:var(--ink-2);font-size:0.82rem;font-weight:600">
+            <svg class="ic" width="15" height="15"><use href="#i-wallet"/></svg>Money
+          </span>
+          <span style="display:inline-flex;align-items:center;gap:8px;height:38px;padding:0 14px;border-radius:6px;border:1px solid var(--line);color:var(--ink-2);font-size:0.82rem;font-weight:600">
+            <svg class="ic" width="15" height="15"><use href="#i-people"/></svg>People
+          </span>
+          <span style="display:inline-flex;align-items:center;gap:8px;height:38px;padding:0 14px;border-radius:6px;border:1px solid var(--line);color:var(--ink-2);font-size:0.82rem;font-weight:600">
+            <svg class="ic" width="15" height="15"><use href="#i-leaf"/></svg>Mind
+          </span>
+          <span style="display:inline-flex;align-items:center;font-size:0.8rem;color:var(--ink-3);line-height:1.4;max-width:38ch">
+            Life areas are told apart by icon and word only — colour stays reserved for urgency.
+          </span>
+        </div>
+      </div>
+    </section>
+
+    <!-- ============ TYPE ============ -->
+    <section class="panel">
+      <div class="phead">
+        <h3 class="ptitle">Type</h3>
+        <span style="font-size:0.76rem;color:var(--ink-3);font-weight:500">Playfair Display · Inter</span>
+      </div>
+      <div class="pbody" style="display:flex;flex-direction:column;gap:18px">
+        <div style="display:flex;align-items:baseline;justify-content:space-between;gap:16px;border-bottom:1px solid var(--line);padding-bottom:14px">
+          <span style="font-family:var(--disp);font-size:2.5rem;font-weight:700;letter-spacing:-0.8px;line-height:1.1;color:var(--ink)">Right now</span>
+          <span class="mono" style="color:var(--ink-2);text-align:right">Playfair 700<br>40px / -0.8</span>
+        </div>
+        <div style="display:flex;align-items:baseline;justify-content:space-between;gap:16px;border-bottom:1px solid var(--line);padding-bottom:14px">
+          <span style="font-family:var(--disp);font-size:1.1rem;font-weight:700;letter-spacing:-0.2px;color:var(--ink)">Panel heading</span>
+          <span class="mono" style="color:var(--ink-2);text-align:right">Playfair 700<br>17.6px</span>
+        </div>
+        <div style="display:flex;align-items:baseline;justify-content:space-between;gap:16px;border-bottom:1px solid var(--line);padding-bottom:14px">
+          <span style="font-size:1rem;font-weight:600;color:var(--ink)">Task name</span>
+          <span class="mono" style="color:var(--ink-2);text-align:right">Inter 600<br>16px</span>
+        </div>
+        <div style="display:flex;align-items:baseline;justify-content:space-between;gap:16px;border-bottom:1px solid var(--line);padding-bottom:14px">
+          <span style="font-size:0.86rem;color:var(--ink-2);line-height:1.5">Supporting line, one sentence, never two</span>
+          <span class="mono" style="color:var(--ink-2);text-align:right">Inter 400<br>13.8px</span>
+        </div>
+        <div style="display:flex;align-items:baseline;justify-content:space-between;gap:16px">
+          <span style="font-size:0.72rem;text-transform:uppercase;letter-spacing:1.2px;font-weight:700;color:var(--ink-2)">Section label</span>
+          <span class="mono" style="color:var(--ink-2);text-align:right">Inter 700<br>11.5px / 1.2</span>
+        </div>
+      </div>
+    </section>
+  </div>
+
+  <div style="display:grid;grid-template-columns:minmax(0, 1fr) minmax(0, 1.2fr);gap:26px;align-items:start">
+
+    <!-- ============ CONTROLS ============ -->
+    <section class="panel">
+      <div class="phead">
+        <h3 class="ptitle">Controls</h3>
+        <span style="font-size:0.76rem;color:var(--ink-3);font-weight:500">44px minimum, at real size</span>
+      </div>
+      <div class="pbody" style="display:flex;flex-direction:column;gap:20px">
+        <div style="display:flex;flex-wrap:wrap;gap:12px;align-items:center">
+          <button class="btn btn-solid" style="height:54px;padding:0 30px;border-radius:8px;font-size:1.02rem;display:inline-flex;align-items:center;gap:10px">
+            <svg class="ic" width="19" height="19"><use href="#i-play"/></svg>Start — 27 min
+          </button>
+          <button class="btn btn-quiet" style="height:54px;padding:0 20px;border-radius:8px;font-size:0.92rem;color:var(--ink-2)">Not this one</button>
+        </div>
+        <p style="margin:0;font-size:0.82rem;line-height:1.5;color:var(--ink-2)">
+          One filled button per screen. Everything competing with it is outlined, grey, and smaller.
+        </p>
+
+        <div style="display:flex;flex-wrap:wrap;gap:10px;padding-top:4px;border-top:1px solid var(--line)">
+          <span class="seg" data-on="1" style="margin-top:20px">Needs you <span style="font-size:0.78rem;font-weight:700;opacity:0.75">5</span></span>
+          <span class="seg" style="margin-top:20px">Ticking along <span style="font-size:0.78rem;font-weight:700;opacity:0.75">3</span></span>
+          <span class="seg" style="margin-top:20px">Everything <span style="font-size:0.78rem;font-weight:700;opacity:0.75">8</span></span>
+        </div>
+        <p style="margin:0;font-size:0.82rem;line-height:1.5;color:var(--ink-2)">
+          Three segments replace the nine near-identical filter chips. Counts sit in the control so nothing has to be
+          scanned to be counted.
+        </p>
+
+        <div style="display:flex;align-items:center;gap:14px;padding:14px 16px;border:1px solid var(--line);border-radius:6px;background:var(--bg)">
+          <span style="width:22px;height:22px;border-radius:4px;background:var(--green);border:2px solid var(--green);display:flex;align-items:center;justify-content:center;color:#ffffff">
+            <svg class="ic" width="14" height="14"><use href="#i-check"/></svg>
+          </span>
+          <span style="flex:1 1 auto;font-size:0.9rem;font-weight:600;color:var(--ink-3);text-decoration:line-through">Change into kit</span>
+          <span style="font-size:0.8rem;font-weight:600;color:var(--ink-2)">2 min</span>
+        </div>
+        <p style="margin:0;font-size:0.82rem;line-height:1.5;color:var(--ink-2)">
+          Every task carries two to six steps with minutes on them. The first step is always small enough to do
+          standing up.
+        </p>
+      </div>
+    </section>
+
+    <!-- ============ THE RULES ============ -->
+    <section class="panel">
+      <div class="phead">
+        <h3 class="ptitle">Why the screens look like this</h3>
+        <span style="font-size:0.76rem;color:var(--ink-3);font-weight:500">the ten rules</span>
+      </div>
+      <div class="pbody" style="display:flex;flex-direction:column;gap:14px">
+
+        <div class="rule"><span class="num">1</span><p style="margin:0;font-size:0.88rem;line-height:1.5;color:var(--ink-2)"><span style="color:var(--ink);font-weight:600">One thing is asked of you at a time.</span> Today shows a single task at full size. Everything else is smaller, greyer, or folded away.</p></div>
+        <div class="rule"><span class="num">2</span><p style="margin:0;font-size:0.88rem;line-height:1.5;color:var(--ink-2)"><span style="color:var(--ink);font-weight:600">Time is always on screen.</span> A live clock, a day bar, minutes on every task, a ring in Focus. Nothing says "soon".</p></div>
+        <div class="rule"><span class="num">3</span><p style="margin:0;font-size:0.88rem;line-height:1.5;color:var(--ink-2)"><span style="color:var(--ink);font-weight:600">Starting is pre-decided.</span> Tasks arrive already broken into steps, so the first move is two minutes long and needs no planning.</p></div>
+        <div class="rule"><span class="num">4</span><p style="margin:0;font-size:0.88rem;line-height:1.5;color:var(--ink-2)"><span style="color:var(--ink);font-weight:600">Lists are capped at three.</span> The rest are one tap away. A list you can see the end of gets started.</p></div>
+        <div class="rule"><span class="num">5</span><p style="margin:0;font-size:0.88rem;line-height:1.5;color:var(--ink-2)"><span style="color:var(--ink);font-weight:600">Capture never costs a modal.</span> A single input sits on Today and inside Focus; a thought goes down in one keystroke and is sorted later.</p></div>
+        <div class="rule"><span class="num">6</span><p style="margin:0;font-size:0.88rem;line-height:1.5;color:var(--ink-2)"><span style="color:var(--ink);font-weight:600">Focus removes the app, not just the noise.</span> No nav, no search, no counts — one task, one timer, one valve for intrusive thoughts.</p></div>
+        <div class="rule"><span class="num">7</span><p style="margin:0;font-size:0.88rem;line-height:1.5;color:var(--ink-2)"><span style="color:var(--ink);font-weight:600">Nothing shames you.</span> No days-late counter, no broken-streak banner, streaks off by default. Late is a state, not a verdict.</p></div>
+        <div class="rule"><span class="num">8</span><p style="margin:0;font-size:0.88rem;line-height:1.5;color:var(--ink-2)"><span style="color:var(--ink);font-weight:600">Colour never carries meaning alone.</span> Each state has a rail, an icon and a word, so it survives greyscale and colour blindness.</p></div>
+        <div class="rule"><span class="num">9</span><p style="margin:0;font-size:0.88rem;line-height:1.5;color:var(--ink-2)"><span style="color:var(--ink);font-weight:600">Charts hand you a sentence.</span> Patterns says "Fridays are thin" in words; the bars are the evidence, not the point.</p></div>
+        <div class="rule"><span class="num">10</span><p style="margin:0;font-size:0.88rem;line-height:1.5;color:var(--ink-2)"><span style="color:var(--ink);font-weight:600">The room is adjustable.</span> Motion off, spacing tight, three-at-a-time on or off — set once, applies everywhere.</p></div>
+      </div>
+    </section>
+  </div>
+</div>
+</x-dc>
+
+<script data-dc-script data-props='{"theme":{"editor":"enum","options":["light","dark"],"default":"light","section":"Appearance"},"$preview":{"width":1440,"height":1460}}'>
+class Component extends DCLogic {
+  renderVals() {
+    return { theme: this.props.theme ?? 'light' };
+  }
+}
+</script>
+</body>
+</html>
