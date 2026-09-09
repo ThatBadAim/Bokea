@@ -1,9 +1,8 @@
-const CACHE_NAME = 'bokea-v12';
+const CACHE_NAME = 'bokea-v13';
 const ASSETS_TO_CACHE = [
   '/',
   '/index.html',
   '/css/style.css',
-  '/js/config.js',
   '/js/a11y.js',
   '/js/onboarding.js',
   '/js/app.js',
@@ -39,6 +38,24 @@ self.addEventListener('activate', (event) => {
 self.addEventListener('fetch', (event) => {
   // Only intercept GET requests
   if (event.request.method !== 'GET') return;
+
+  const url = new URL(event.request.url);
+
+  // Network-first policy for runtime configuration to prevent stale credentials
+  if (url.pathname.endsWith('config.js') || url.pathname.includes('/js/config.js')) {
+    event.respondWith(
+      fetch(event.request)
+        .then((networkResponse) => {
+          if (networkResponse && networkResponse.status === 200) {
+            const responseToCache = networkResponse.clone();
+            caches.open(CACHE_NAME).then((cache) => cache.put(event.request, responseToCache));
+          }
+          return networkResponse;
+        })
+        .catch(() => caches.match(event.request))
+    );
+    return;
+  }
 
   // Stale-while-revalidate strategy for the app shell
   event.respondWith(

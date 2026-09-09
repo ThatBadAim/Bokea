@@ -78,10 +78,10 @@
     "semantic_hash": "e38e6347cfd75ae30017fa0ee340711d"
   },
   "Boke\u00e0/wwwroot/sw.js": {
-    "mtime": 1788973935.0313816,
-    "seen": 1788974140.7785065,
-    "ast_hash": "b2b07d28574ecce271c48a44bb2d32df",
-    "semantic_hash": "b2b07d28574ecce271c48a44bb2d32df"
+    "mtime": 1788984258.4283953,
+    "seen": 1788984272.0612614,
+    "ast_hash": "56355e97bd18cc948158599f03954ad0",
+    "semantic_hash": ""
   },
   "Boke\u00e0/task.md": {
     "mtime": 1781641061.0,
@@ -108,9 +108,9 @@
     "semantic_hash": ""
   },
   "Boke\u00e0/wwwroot/index.html": {
-    "mtime": 1788975437.6403298,
-    "seen": 1788975696.9684741,
-    "ast_hash": "cd8b04a802c3b2c16cc4a9e636662410",
+    "mtime": 1788984267.203275,
+    "seen": 1788984272.061323,
+    "ast_hash": "e2dfaeb887fe5874d13aa61262fea1a6",
     "semantic_hash": ""
   },
   "Boke\u00e0/wwwroot/assets/icon.svg": {
@@ -120,9 +120,9 @@
     "semantic_hash": ""
   },
   "Boke\u00e0/wwwroot/js/config.js": {
-    "mtime": 1788975724.423329,
-    "seen": 1788976472.9841552,
-    "ast_hash": "c9e746406f16824b78274790fbac59bf",
+    "mtime": 1788984246.8430474,
+    "seen": 1788984272.061226,
+    "ast_hash": "bb13a42bad4f9ad5883765af1220f12f",
     "semantic_hash": ""
   },
   "vercel.json": {
