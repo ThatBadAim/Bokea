@@ -1,4 +1,4 @@
-const CACHE_NAME = 'bokea-v22';
+const CACHE_NAME = 'bokea-v23';
 const ASSETS_TO_CACHE = [
   '/',
   '/index.html',
@@ -57,11 +57,32 @@ self.addEventListener('fetch', (event) => {
     return;
   }
 
-  // Stale-while-revalidate strategy for the app shell
+  // Same-origin app shell files (HTML/CSS/JS) change on every deploy during
+  // active development. Stale-while-revalidate kept serving whatever was
+  // cached first and never caught up, so a fix could sit on disk for days
+  // without ever reaching an already-open tab. Network-first fixes that:
+  // always try the live file, and only fall back to the cache when offline.
+  if (url.origin === self.location.origin) {
+    event.respondWith(
+      fetch(event.request)
+        .then((networkResponse) => {
+          if (networkResponse && networkResponse.status === 200) {
+            const responseToCache = networkResponse.clone();
+            caches.open(CACHE_NAME).then((cache) => cache.put(event.request, responseToCache));
+          }
+          return networkResponse;
+        })
+        .catch(() => caches.match(event.request))
+    );
+    return;
+  }
+
+  // Stale-while-revalidate for third-party CDN assets (fonts, icon library,
+  // Supabase client) - these don't change on our deploys, so serving the
+  // cached copy immediately and refreshing in the background is fine.
   event.respondWith(
     caches.match(event.request).then((cachedResponse) => {
       const fetchPromise = fetch(event.request).then((networkResponse) => {
-        // Cache valid same-origin and CORS responses (e.g. CDNs and Google Fonts)
         if (networkResponse && networkResponse.status === 200 && (networkResponse.type === 'basic' || networkResponse.type === 'cors')) {
           const responseToCache = networkResponse.clone();
           caches.open(CACHE_NAME).then((cache) => {

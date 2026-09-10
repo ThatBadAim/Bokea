@@ -4778,6 +4778,7 @@ document.addEventListener('DOMContentLoaded', () => {
         const timeElBig = document.getElementById('currentTimeBig');
         if (timeElBig) timeElBig.textContent = formatAppTime(mins);
     }
+    window.updateLiveClock = updateLiveClock;
     updateLiveClock();
 
     // The marks that say where in the day you are and the live clock move on the minute.
