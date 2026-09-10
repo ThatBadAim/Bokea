@@ -7163,7 +7163,8 @@ body.motion-off .tick-btn:active {
 }
 
 .task-more-body input[type="time"],
-.task-more-body input[type="number"] {
+.task-more-body input[type="number"],
+.task-more-body #taskDueTime {
     width: 100%;
     padding: 9px 12px;
     border-radius: var(--border-radius-md);

@@ -2467,7 +2467,16 @@ document.addEventListener('DOMContentLoaded', () => {
     });
 
     const dueTimeEl = document.getElementById('taskDueTime');
-    if (dueTimeEl) dueTimeEl.addEventListener('input', syncWhenUI);
+    if (dueTimeEl) {
+        dueTimeEl.addEventListener('input', syncWhenUI);
+        // Reformat to the app's clock format once typing is done, rather than
+        // fighting the user's cursor on every keystroke.
+        dueTimeEl.addEventListener('blur', () => {
+            const mins = parseTimeFieldValue(dueTimeEl.value);
+            if (mins !== null) dueTimeEl.value = formatAppTime(mins);
+            syncWhenUI();
+        });
+    }
 
     // Template select auto-fill
     const selectTemplateEl = document.getElementById('taskNameSelect');
@@ -2619,8 +2628,8 @@ function syncWhenUI() {
     const hidden = document.getElementById('taskTimeSlot');
     if (!timeInput) return;
 
-    const value = timeInput.value;
-    const exact = /^\d{1,2}:\d{2}$/.test(value) ? parseHM(value, null) : null;
+    const rawValue = timeInput.value;
+    const exact = parseTimeFieldValue(rawValue);
 
     // One place decides which button is lit, and says so out loud as well as
     // in the styling, so the choice is not carried by a border alone.
@@ -2637,7 +2646,7 @@ function syncWhenUI() {
     };
 
     if (exact === null) {
-        if (hint) hint.textContent = '';
+        if (hint) hint.textContent = rawValue.trim() ? `Couldn't read that as a time. Try something like ${formatAppTime(13 * 60 + 30)}.` : '';
         mark(hidden ? hidden.value : 'anytime', false);
         return;
     }
@@ -2748,7 +2757,10 @@ function openEditTaskModal(id) {
     if (durInput) durInput.value = duration;
     
     const dueTimeInput = document.getElementById('taskDueTime');
-    if (dueTimeInput) dueTimeInput.value = task.dueTime || "";
+    if (dueTimeInput) {
+        const savedMins = task.dueTime ? parseHM(task.dueTime, null) : null;
+        dueTimeInput.value = savedMins !== null ? formatAppTime(savedMins) : "";
+    }
     
     const timeSlot = task.timeSlot || 'anytime';
     document.getElementById('taskTimeSlot').value = timeSlot;
@@ -2900,7 +2912,9 @@ taskForm.addEventListener('submit', async (e) => {
     const type = document.getElementById('taskType').value;
     const intervalDays = document.getElementById('taskInterval').value;
     const dueDate = document.getElementById('taskDueDate').value;
-    const dueTime = document.getElementById('taskDueTime') ? document.getElementById('taskDueTime').value : null;
+    const dueTimeFieldEl = document.getElementById('taskDueTime');
+    const dueTimeMins = dueTimeFieldEl ? parseTimeFieldValue(dueTimeFieldEl.value) : null;
+    const dueTime = dueTimeMins !== null ? minutesToCanonicalHM(dueTimeMins) : null;
     const timeSlot = document.getElementById('taskTimeSlot') ? document.getElementById('taskTimeSlot').value : 'anytime';
     const durationMinutes = document.getElementById('taskDurationInput') ? (parseInt(document.getElementById('taskDurationInput').value) || 15) : 15;
     const notifyPref = document.getElementById('taskNotify') ? document.getElementById('taskNotify').value : 'digest';
@@ -6228,6 +6242,38 @@ function parseHM(value, fallback) {
     if (!m) return fallback;
     return parseInt(m[1], 10) * 60 + parseInt(m[2], 10);
 }
+
+// The Exact-time field is free text, not a native time control, so whatever
+// the app's clock format setting is, this reads back either style the user
+// might type or paste in - "14:30" or "2:30 pm" - rather than only the one
+// currently on display.
+function parseTimeFieldValue(str) {
+    const s = String(str || '').trim();
+    if (!s) return null;
+    let m = /^(\d{1,2}):([0-5]\d)\s*(am|pm)?$/i.exec(s);
+    if (!m) m = /^(\d{1,2})([0-5]\d)\s*(am|pm)?$/i.exec(s);
+    if (!m) return null;
+
+    let hour = parseInt(m[1], 10);
+    const mins = parseInt(m[2], 10);
+    const meridiem = m[3] ? m[3].toLowerCase() : null;
+    if (meridiem) {
+        if (hour < 1 || hour > 12) return null;
+        if (meridiem === 'pm' && hour !== 12) hour += 12;
+        if (meridiem === 'am' && hour === 12) hour = 0;
+    } else if (hour > 23) {
+        return null;
+    }
+    return hour * 60 + mins;
+}
+window.parseTimeFieldValue = parseTimeFieldValue;
+
+function minutesToCanonicalHM(mins) {
+    const h = Math.floor(mins / 60);
+    const m = mins % 60;
+    return `${h < 10 ? '0' : ''}${h}:${m < 10 ? '0' : ''}${m}`;
+}
+window.minutesToCanonicalHM = minutesToCanonicalHM;
 
 // Centralized time-formatting utility function for the entire application.
 // Supports minute-of-day numbers (0..1440), Date instances, ISO strings,
