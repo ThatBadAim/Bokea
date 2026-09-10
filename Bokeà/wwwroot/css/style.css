@@ -4285,6 +4285,10 @@ body.dark-theme .capture-input {
     padding-right: 4px;
 }
 
+.cal-day-list > * {
+    flex-shrink: 0;
+}
+
 .cal-day-empty {
     padding: 34px 0;
     text-align: center;
@@ -7077,6 +7081,10 @@ body.motion-off .tick-btn:active {
     border-top: 1px solid var(--border-color);
 }
 
+.task-more-body > * {
+    flex-shrink: 0;
+}
+
 .task-more-pair {
     display: grid;
     grid-template-columns: 1fr 1fr;
@@ -7126,6 +7134,10 @@ body.focus-open { overflow: hidden; }
     flex-direction: column;
     gap: 26px;
     margin: auto;
+}
+
+.focus-sheet > * {
+    flex-shrink: 0;
 }
 
 .focus-top {
