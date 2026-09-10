@@ -742,7 +742,7 @@ body.dark-theme .chart-tooltip {
     margin-bottom: 16px;
     display: flex;
     flex-direction: column;
-    gap: 6px;
+    gap: 8px;
 }
 
 .form-row {
@@ -755,11 +755,14 @@ body.dark-theme .chart-tooltip {
 }
 
 label {
+    display: block;
     font-size: 0.75rem;
     font-weight: 600;
+    line-height: 1.4;
     color: var(--text-main);
     letter-spacing: 0.3px;
     text-transform: uppercase;
+    margin-bottom: 2px;
 }
 
 input[type="text"],
@@ -4113,6 +4116,20 @@ body.dark-theme .capture-input {
     box-shadow: inset 0 0 0 1px var(--solid);
 }
 
+/* Subtle grey background for weekends so they stand out clearly */
+.cal-cell.is-weekend:not(.is-outside) {
+    background: #f4f4f6;
+}
+
+body.dark-theme .cal-cell.is-weekend:not(.is-outside) {
+    background: #18181d;
+}
+
+.cal-weekday-weekend {
+    color: var(--text-secondary);
+    font-weight: 700;
+}
+
 .cal-cell-top {
     display: flex;
     align-items: baseline;
@@ -4402,6 +4419,36 @@ body.dark-theme .capture-input {
 .dark-theme :focus-visible {
     outline-color: #93c5fd;
     box-shadow: 0 0 0 6px rgba(0, 0, 0, 0.85);
+}
+
+/* Contained focus ring for text/form inputs to avoid overlapping adjacent labels or controls */
+input[type="text"]:focus-visible,
+input[type="number"]:focus-visible,
+input[type="date"]:focus-visible,
+input[type="email"]:focus-visible,
+input[type="password"]:focus-visible,
+input[type="time"]:focus-visible,
+input[type="search"]:focus-visible,
+.form-control:focus-visible,
+select:focus-visible,
+textarea:focus-visible {
+    outline: 2px solid var(--border-color-dark);
+    outline-offset: 0;
+    box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.25);
+}
+
+.dark-theme input[type="text"]:focus-visible,
+.dark-theme input[type="number"]:focus-visible,
+.dark-theme input[type="date"]:focus-visible,
+.dark-theme input[type="email"]:focus-visible,
+.dark-theme input[type="password"]:focus-visible,
+.dark-theme input[type="time"]:focus-visible,
+.dark-theme input[type="search"]:focus-visible,
+.dark-theme .form-control:focus-visible,
+.dark-theme select:focus-visible,
+.dark-theme textarea:focus-visible {
+    outline-color: #93c5fd;
+    box-shadow: 0 0 0 3px rgba(147, 197, 253, 0.25);
 }
 
 /* Checkbox and radio inputs that are visually replaced by a pill still need
@@ -7033,6 +7080,30 @@ body.motion-off .tick-btn:active {
     color: var(--text-secondary);
 }
 
+.task-form-stack .form-group {
+    flex-shrink: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.task-form-stack .form-group label {
+    display: block;
+    margin-bottom: 4px;
+    font-size: 0.78rem;
+    font-weight: 700;
+    letter-spacing: 0.5px;
+    text-transform: uppercase;
+    color: var(--text-secondary);
+    flex-shrink: 0;
+}
+
+.task-form-stack input,
+.task-form-stack select,
+.task-form-stack textarea {
+    scroll-margin-top: 16px;
+}
+
 .task-form-stack #taskName {
     font-size: 1.05rem;
     min-height: 52px;
@@ -7550,6 +7621,21 @@ body.motion-off .focus-ring-fill { transition: none; }
         max-width: none !important;
         justify-content: center;
         z-index: 1200 !important;
+    }
+
+    /* Prevent mobile browser auto-zoom that skews modal layout on click */
+    input[type="text"],
+    input[type="number"],
+    input[type="date"],
+    input[type="email"],
+    input[type="password"],
+    input[type="time"],
+    input[type="search"],
+    .form-control,
+    .settings-input,
+    select,
+    textarea {
+        font-size: 16px !important;
     }
 }
 

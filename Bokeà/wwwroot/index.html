@@ -10,7 +10,7 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Outfit:wght@300;400;500;600;700&family=Playfair+Display:ital,wght@0,400..900;1,400..900&display=swap" rel="stylesheet">
     <!-- CSS -->
-    <link rel="stylesheet" href="css/style.css?v=15">
+    <link rel="stylesheet" href="css/style.css?v=16">
     <!-- PWA Settings -->
     <link rel="manifest" href="manifest.json">
     <meta name="theme-color" content="#09090b">
@@ -122,11 +122,11 @@
                     <div style="display: flex; gap: 15px; margin-bottom: 1rem;">
                         <div style="flex: 1;">
                             <label for="setupBedTime" class="input-label" style="display: block; margin-bottom: 5px;">Go to bed</label>
-                            <input type="time" id="setupBedTime" name="bedTime" class="form-control" value="22:30" required>
+                            <input type="time" id="setupBedTime" name="bedTime" class="form-control" value="22:30" lang="en-GB" step="60" required>
                         </div>
                         <div style="flex: 1;">
                             <label for="setupWakeUpTime" class="input-label" style="display: block; margin-bottom: 5px;">Wake up</label>
-                            <input type="time" id="setupWakeUpTime" name="wakeUpTime" class="form-control" value="06:30" required>
+                            <input type="time" id="setupWakeUpTime" name="wakeUpTime" class="form-control" value="06:30" lang="en-GB" step="60" required>
                         </div>
                     </div>
 
@@ -160,11 +160,11 @@
                     <div style="display: flex; gap: 15px; margin-bottom: 1.2rem;">
                         <div style="flex: 1;">
                             <label for="setupWorkStart" class="input-label" style="display: block; margin-bottom: 5px;">Work starts</label>
-                            <input type="time" id="setupWorkStart" name="workStart" class="form-control" value="09:00" required>
+                            <input type="time" id="setupWorkStart" name="workStart" class="form-control" value="09:00" lang="en-GB" step="60" required>
                         </div>
                         <div style="flex: 1;">
                             <label for="setupWorkEnd" class="input-label" style="display: block; margin-bottom: 5px;">Work ends</label>
-                            <input type="time" id="setupWorkEnd" name="workEnd" class="form-control" value="17:00" required>
+                            <input type="time" id="setupWorkEnd" name="workEnd" class="form-control" value="17:00" lang="en-GB" step="60" required>
                         </div>
                     </div>
 
@@ -411,11 +411,7 @@
                                         <!-- segments injected dynamically -->
                                     </div>
                                     <div class="timeline-markers" id="timelineMarkers" style="display: flex; justify-content: space-between; font-size: 0.7rem; color: var(--text-secondary); margin-top: 8px; padding: 0 4px;">
-                                        <span>12 AM</span>
-                                        <span>6 AM</span>
-                                        <span>12 PM</span>
-                                        <span>6 PM</span>
-                                        <span>12 AM</span>
+                                        <!-- populated dynamically based on 12h/24h setting -->
                                     </div>
                                 </div>
                                 <div id="timelineLegend" style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 10px; width: 100%;">
@@ -485,7 +481,7 @@
                         <section class="cal-month">
                             <div class="cal-weekdays" aria-hidden="true">
                                 <span>Mon</span><span>Tue</span><span>Wed</span>
-                                <span>Thu</span><span>Fri</span><span>Sat</span><span>Sun</span>
+                                <span>Thu</span><span>Fri</span><span class="cal-weekday-weekend">Sat</span><span class="cal-weekday-weekend">Sun</span>
                             </div>
 
                             <!-- A group rather than a grid: the cells are self-labelling buttons laid
@@ -745,8 +741,8 @@
                                     <div class="set-field">
                                         <label for="settingsClockFormat" class="settings-label">Clock</label>
                                         <select id="settingsClockFormat" class="settings-select">
-                                            <option value="12h">12-hour (2:30 PM)</option>
-                                            <option value="24h">24-hour (14:30)</option>
+                                            <option value="12h">12-hour</option>
+                                            <option value="24h">24-hour</option>
                                         </select>
                                         <span class="field-hint">The clock in the top bar never goes away. That is deliberate.</span>
                                     </div>
@@ -779,11 +775,11 @@
                                         <div class="set-pair">
                                             <div class="set-field">
                                                 <label for="settingsBedTime" class="settings-label">Bed</label>
-                                                <input type="time" id="settingsBedTime" class="settings-input">
+                                                <input type="time" id="settingsBedTime" class="settings-input" lang="en-GB" step="60">
                                             </div>
                                             <div class="set-field">
                                                 <label for="settingsWakeUpTime" class="settings-label">Awake</label>
-                                                <input type="time" id="settingsWakeUpTime" class="settings-input">
+                                                <input type="time" id="settingsWakeUpTime" class="settings-input" lang="en-GB" step="60">
                                             </div>
                                         </div>
 
@@ -803,11 +799,11 @@
                                         <div class="set-pair">
                                             <div class="set-field">
                                                 <label for="settingsWorkStart" class="settings-label">Starts</label>
-                                                <input type="time" id="settingsWorkStart" class="settings-input">
+                                                <input type="time" id="settingsWorkStart" class="settings-input" lang="en-GB" step="60">
                                             </div>
                                             <div class="set-field">
                                                 <label for="settingsWorkEnd" class="settings-label">Ends</label>
-                                                <input type="time" id="settingsWorkEnd" class="settings-input">
+                                                <input type="time" id="settingsWorkEnd" class="settings-input" lang="en-GB" step="60">
                                             </div>
                                         </div>
 
@@ -1116,18 +1112,18 @@
                                         <label for="profPronouns" class="settings-label">Pronouns</label>
                                         <select id="profPronouns" class="settings-select">
                                             <option value="">Not saying</option>
-                                            <option value="she/her">she/her</option>
-                                            <option value="he/him">he/him</option>
-                                            <option value="they/them">they/them</option>
-                                            <option value="she/they">she/they</option>
-                                            <option value="he/they">he/they</option>
+                                            <option value="She/Her">She/Her</option>
+                                            <option value="He/Him">He/Him</option>
+                                            <option value="They/Them">They/Them</option>
+                                            <option value="She/They">She/They</option>
+                                            <option value="He/They">He/They</option>
                                             <option value="__custom">Other&hellip;</option>
                                         </select>
                                     </div>
 
                                     <div class="set-field" id="profPronounsCustomField" hidden>
                                         <label for="profPronounsCustom" class="settings-label">Your pronouns</label>
-                                        <input type="text" id="profPronounsCustom" class="settings-input" maxlength="40" placeholder="e.g. xe/xem">
+                                        <input type="text" id="profPronounsCustom" class="settings-input" maxlength="40" placeholder="e.g. Xe/Xem">
                                     </div>
 
                                     <div class="set-field">
@@ -1410,7 +1406,7 @@
                             <div class="task-more-pair">
                                 <div class="form-group" id="dueTimeGroup">
                                     <label for="taskDueTime">Exact time <span class="label-optional">optional</span></label>
-                                    <input type="time" id="taskDueTime" aria-describedby="taskDueTimeHint">
+                                    <input type="time" id="taskDueTime" aria-describedby="taskDueTimeHint" lang="en-GB" step="60">
                                     <p class="field-hint" id="taskDueTimeHint"></p>
                                 </div>
                                 <div class="form-group" id="durationInputGroup">

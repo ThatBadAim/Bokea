@@ -3956,8 +3956,15 @@ document.addEventListener('DOMContentLoaded', () => {
         profPhone: 'profSavedContact'
     };
 
-    const PRONOUN_PRESETS = ['she/her', 'he/him', 'they/them', 'she/they', 'he/they'];
+    const PRONOUN_PRESETS = ['She/Her', 'He/Him', 'They/Them', 'She/They', 'He/They'];
     const GENDER_OPTIONS = ['Male', 'Female', 'Non-Binary', 'Prefer Not to Say'];
+
+    function normalizePronouns(val) {
+        if (!val) return '';
+        const clean = String(val).trim();
+        const match = PRONOUN_PRESETS.find(opt => opt.toLowerCase() === clean.toLowerCase());
+        return match || clean;
+    }
 
     function normalizeGender(val) {
         if (!val) return '';
@@ -4167,6 +4174,9 @@ document.addEventListener('DOMContentLoaded', () => {
         } else {
             profile.pronouns = select ? select.value : '';
         }
+        if (profile.pronouns) {
+            profile.pronouns = normalizePronouns(profile.pronouns);
+        }
 
         // The picture is not an input, so it is carried on the form itself.
         const form = profEl('profileForm');
@@ -4208,7 +4218,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
         const pronounsEl = profEl('profCardPronouns');
         if (pronounsEl) {
-            pronounsEl.textContent = profile.pronouns || '';
+            pronounsEl.textContent = normalizePronouns(profile.pronouns) || '';
             pronounsEl.hidden = !profile.pronouns;
         }
 
@@ -4363,10 +4373,11 @@ document.addEventListener('DOMContentLoaded', () => {
         const custom = profEl('profPronounsCustom');
         const pronouns = profile.pronouns || '';
         if (select) {
+            const norm = normalizePronouns(pronouns);
             if (!pronouns) {
                 select.value = '';
-            } else if (PRONOUN_PRESETS.indexOf(pronouns) !== -1) {
-                select.value = pronouns;
+            } else if (PRONOUN_PRESETS.indexOf(norm) !== -1) {
+                select.value = norm;
             } else {
                 select.value = '__custom';
                 if (custom) custom.value = pronouns;
@@ -4461,8 +4472,9 @@ document.addEventListener('DOMContentLoaded', () => {
 
         const select = profEl('profPronouns');
         if (select && !select.value && remote.pronouns) {
-            if (PRONOUN_PRESETS.indexOf(remote.pronouns) !== -1) {
-                select.value = remote.pronouns;
+            const norm = normalizePronouns(remote.pronouns);
+            if (PRONOUN_PRESETS.indexOf(norm) !== -1) {
+                select.value = norm;
             } else {
                 select.value = '__custom';
                 const custom = profEl('profPronounsCustom');
@@ -5794,10 +5806,12 @@ function renderCalendarMonth() {
             monthUrgent += list.filter(t => t._calculatedState === 'Red').length;
         }
 
+        const isWeekend = d.getDay() === 0 || d.getDay() === 6;
         const classes = ['cal-cell'];
         if (!inMonth) classes.push('is-outside');
         if (dateStr === todayStr) classes.push('is-today');
         if (dateStr === calOpenStr) classes.push('is-selected');
+        if (isWeekend) classes.push('is-weekend');
 
         // The chips carry the names; the rail only repeats the urgency the
         // words already state, so nothing here depends on seeing colour.
@@ -5888,8 +5902,7 @@ function renderCalendarDay(dateStr) {
         titleEl.textContent = `${when} · ${d.getDate()} ${CAL_MONTHS[d.getMonth()]}`;
     }
 
-    const list = getTasksForDate(dateStr)
-        .map(t => Object.assign({}, t, { _calculatedState: t.state || calculateTaskState(t) }));
+    const list = calDatedTasksForDate(dateStr);
 
     // A day runs forwards. Sorting it by urgency turned it into a ranked
     // list that happened to share a date; sorting it by the clock makes it
@@ -6273,12 +6286,26 @@ function fmtHM(mins) {
 }
 window.fmtHM = fmtHM;
 
+function syncTimeInputsClockFormat() {
+    const is24 = (localStorage.getItem('bokea_clock_format') || '12h') === '24h';
+    document.querySelectorAll('input[type="time"]').forEach(input => {
+        if (is24) {
+            input.setAttribute('lang', 'en-GB');
+            input.setAttribute('step', '60');
+        } else {
+            input.removeAttribute('lang');
+        }
+    });
+}
+window.syncTimeInputsClockFormat = syncTimeInputsClockFormat;
+
 // Propagates 12h/24h clock format changes across all time-of-day badges, clocks,
 // schedule cards, and timestamp labels across the interface without a page reload.
 function propagateClockFormatChange(newFormat) {
     if (newFormat) {
         try { localStorage.setItem('bokea_clock_format', newFormat); } catch(e) {}
     }
+    syncTimeInputsClockFormat();
     updateLiveClock(nowMinutes(), true);
     renderDailyScheduleTimeline();
     renderNowBlock();
@@ -7017,4 +7044,7 @@ function wireAccessibilityBehaviour() {
         const el = document.getElementById(id);
         if (el) el.addEventListener('change', () => applyUiPrefs());
     });
+
+    syncTimeInputsClockFormat();
+    renderDailyScheduleTimeline();
 }
