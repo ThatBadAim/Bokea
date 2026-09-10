@@ -670,6 +670,9 @@ body.dark-theme .chart-tooltip {
     opacity: 0;
     pointer-events: none;
     transition: opacity 0.25s ease;
+    padding: 20px;
+    box-sizing: border-box;
+    overflow-y: auto;
 }
 
 .modal-overlay.open {
@@ -680,6 +683,10 @@ body.dark-theme .chart-tooltip {
 .modal-content {
     width: 90%;
     max-width: 620px;
+    max-height: calc(100vh - 40px);
+    max-height: calc(100dvh - 40px);
+    display: flex;
+    flex-direction: column;
     background: var(--bg-card);
     border: 1px solid var(--border-color);
     border-radius: var(--border-radius-lg);
@@ -687,6 +694,7 @@ body.dark-theme .chart-tooltip {
     transform: translateY(-10px);
     opacity: 0;
     transition: opacity 0.25s ease, transform 0.25s ease;
+    overflow: hidden;
 }
 
 .modal-overlay.open .modal-content {
@@ -700,6 +708,7 @@ body.dark-theme .chart-tooltip {
     align-items: center;
     padding: 16px 20px;
     border-bottom: 1px solid var(--border-color);
+    flex-shrink: 0;
 }
 
 .modal-header h3 {
@@ -722,6 +731,11 @@ body.dark-theme .chart-tooltip {
 
 #taskForm {
     padding: 20px;
+    display: flex;
+    flex-direction: column;
+    flex: 1;
+    min-height: 0;
+    overflow: hidden;
 }
 
 .form-group {
@@ -4180,6 +4194,8 @@ body.dark-theme .capture-input {
 .cal-day-overlay .cal-day {
     width: 100%;
     max-width: 640px;
+    max-height: calc(100vh - 48px);
+    max-height: calc(100dvh - 48px);
     margin: auto;
     background: var(--bg-card);
     border: 1px solid var(--border-color);
@@ -4189,9 +4205,16 @@ body.dark-theme .capture-input {
     display: flex;
     flex-direction: column;
     gap: 18px;
+    overflow: hidden;
     transform: translateY(-8px);
     opacity: 0;
     transition: opacity 0.2s ease, transform 0.2s ease;
+}
+
+.cal-day-head,
+.cal-day-progress,
+.cal-day-capture {
+    flex-shrink: 0;
 }
 
 .cal-day-overlay.open .cal-day {
@@ -4254,6 +4277,12 @@ body.dark-theme .capture-input {
     display: flex;
     flex-direction: column;
     gap: 8px;
+    overflow-y: auto;
+    overflow-x: hidden;
+    flex: 1;
+    min-height: 0;
+    overscroll-behavior: contain;
+    padding-right: 4px;
 }
 
 .cal-day-empty {
@@ -6326,6 +6355,10 @@ span.settings-label {
     box-shadow: 0 12px 28px rgba(0, 0, 0, 0.16);
 }
 
+.row-more-wrap.open {
+    z-index: 50;
+}
+
 .row-more-wrap.open .row-menu {
     display: flex;
 }
@@ -6896,7 +6929,69 @@ body.motion-off .tick-btn:active {
 .task-form-stack {
     display: flex;
     flex-direction: column;
-    gap: 20px;
+    gap: 16px;
+    overflow-y: auto;
+    overflow-x: hidden;
+    flex: 1;
+    min-height: 0;
+    padding-right: 6px;
+    overscroll-behavior: contain;
+}
+
+#taskForm .modal-footer {
+    display: flex;
+    justify-content: flex-end;
+    align-items: center;
+    gap: 12px;
+    margin-top: 16px !important;
+    padding-top: 14px;
+    border-top: 1px solid var(--border-color);
+    flex-shrink: 0;
+    background: var(--bg-card);
+}
+
+.task-form-stack .wizard-button-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 10px;
+    margin-bottom: 5px;
+}
+
+.task-form-stack .wizard-button-grid.freq-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 8px;
+}
+
+@media (max-width: 580px) {
+    .task-form-stack .wizard-button-grid.freq-grid {
+        grid-template-columns: repeat(2, 1fr);
+    }
+}
+
+.task-form-stack .wizard-option-btn {
+    padding: 10px 14px;
+    min-height: 48px;
+    border-radius: var(--border-radius-md);
+    gap: 10px;
+}
+
+.task-form-stack .wizard-option-btn i,
+.task-form-stack .wizard-option-btn svg {
+    width: 18px;
+    height: 18px;
+    flex-shrink: 0;
+}
+
+.task-form-stack .wizard-option-btn span {
+    font-size: 0.84rem;
+    padding-right: 22px;
+}
+
+.task-form-stack .wizard-option-btn::after {
+    width: 14px;
+    height: 14px;
+    right: 12px;
 }
 
 /* Every group is on screen at once, so the slider positioning that used to
@@ -7013,6 +7108,8 @@ body.motion-off .task-more-chevron { transition: none; }
     justify-content: center;
     padding: 24px;
     background: var(--bg-body);
+    overflow-y: auto;
+    box-sizing: border-box;
 }
 
 .focus-overlay.hidden { display: none; }
@@ -7024,6 +7121,7 @@ body.focus-open { overflow: hidden; }
     display: flex;
     flex-direction: column;
     gap: 26px;
+    margin: auto;
 }
 
 .focus-top {
@@ -7354,11 +7452,12 @@ body.motion-off .focus-ring-fill { transition: none; }
         width: 100% !important;
         max-width: 100% !important;
         border-radius: 20px 20px 0 0 !important;
-        max-height: 88vh;
-        max-height: 88dvh;
-        overflow-y: auto;
-        -webkit-overflow-scrolling: touch;
-        padding: 16px 18px calc(24px + env(safe-area-inset-bottom, 0px)) 18px !important;
+        max-height: 90vh;
+        max-height: 90dvh;
+        display: flex;
+        flex-direction: column;
+        overflow: hidden !important;
+        padding: 0 !important;
         box-shadow: 0 -10px 40px rgba(0, 0, 0, 0.25) !important;
         transform: translateY(100%);
         transition: transform 0.28s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.2s ease;
@@ -7368,10 +7467,32 @@ body.motion-off .focus-ring-fill { transition: none; }
         transform: translateY(0);
     }
 
+    .cal-day-overlay .cal-day {
+        width: 100% !important;
+        max-width: 100% !important;
+        border-radius: 20px 20px 0 0 !important;
+        max-height: 90vh !important;
+        max-height: 90dvh !important;
+        margin: 0 !important;
+        padding: 18px 18px calc(20px + env(safe-area-inset-bottom, 0px)) 18px !important;
+        box-shadow: 0 -10px 40px rgba(0, 0, 0, 0.25) !important;
+        transform: translateY(100%);
+        transition: transform 0.28s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.2s ease;
+    }
+
+    .cal-day-overlay.open .cal-day {
+        transform: translateY(0);
+    }
+
     .modal-header {
         position: relative;
-        padding: 6px 4px 14px 4px;
+        padding: 16px 18px 12px 18px;
         border-bottom: 1px solid var(--border-color);
+        flex-shrink: 0;
+    }
+
+    #taskForm {
+        padding: 14px 16px calc(20px + env(safe-area-inset-bottom, 0px)) 16px !important;
     }
 
     .modal-header::before {

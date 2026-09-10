@@ -2227,7 +2227,12 @@ function openSnoozeMenu(id, anchor) {
 
     document.body.appendChild(menu);
     const r = el.getBoundingClientRect();
-    menu.style.top = `${Math.round(r.bottom + window.scrollY + 6)}px`;
+    const menuH = menu.offsetHeight || 180;
+    let top = r.bottom + window.scrollY + 6;
+    if (r.bottom + menuH + 12 > window.innerHeight && r.top - menuH - 6 > 0) {
+        top = r.top + window.scrollY - menuH - 6;
+    }
+    menu.style.top = `${Math.round(top)}px`;
     // Keep it on screen on a narrow phone rather than running off the edge.
     const left = Math.min(r.left + window.scrollX, window.innerWidth - menu.offsetWidth - 12);
     menu.style.left = `${Math.round(Math.max(12, left))}px`;
