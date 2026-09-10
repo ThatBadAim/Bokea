@@ -6927,9 +6927,7 @@ body.motion-off .tick-btn:active {
 
 /* ---------- The task form, now one screen ---------- */
 .task-form-stack {
-    display: flex;
-    flex-direction: column;
-    gap: 16px;
+    display: block;
     overflow-y: auto;
     overflow-x: hidden;
     flex: 1;
@@ -6938,12 +6936,12 @@ body.motion-off .tick-btn:active {
     overscroll-behavior: contain;
 }
 
-/* The stack scrolls; nothing inside it shrinks. Without this a flex column
-   under pressure takes the height out of its children - opening "More" made
-   the name and cadence groups collapse to zero and overlap everything else -
-   rather than handing the overflow to the scrollbar. */
 .task-form-stack > * {
-    flex-shrink: 0;
+    margin-bottom: 20px;
+}
+
+.task-form-stack > *:last-child {
+    margin-bottom: 0;
 }
 
 #taskForm .modal-footer {
@@ -7005,23 +7003,17 @@ body.motion-off .tick-btn:active {
 /* Every group is on screen at once, so the slider positioning that used to
    move them in and out has to be unwound explicitly. */
 .task-form-stack .wizard-step,
-.task-form-stack .wizard-step-active,
+.task-form-stack .wizard-step.wizard-step-active,
 .task-more .wizard-step,
-.task-more .wizard-step-active {
-    position: static;
-    display: block;
-    width: 100%;
-    /* The 380px floor belonged to the slider, which needed every step to be
-       the same height to animate between them. On one screen it is just a
-       hole between the question and the next one. `auto` - not 0 - because
-       these are flex items in the scrolling column below: min-height:0 lets
-       the browser squash them to nothing the moment the content is taller
-       than the box, and their fields then draw on top of each other instead
-       of the box scrolling. */
-    min-height: auto;
-    transform: none;
-    opacity: 1;
-    animation: none;
+.task-more .wizard-step.wizard-step-active {
+    position: static !important;
+    display: block !important;
+    width: 100% !important;
+    min-height: auto !important;
+    height: auto !important;
+    transform: none !important;
+    opacity: 1 !important;
+    animation: none !important;
 }
 
 /* One voice for the questions. The form-group labels are uppercase, so the
