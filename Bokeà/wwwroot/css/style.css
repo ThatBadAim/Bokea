@@ -6938,6 +6938,14 @@ body.motion-off .tick-btn:active {
     overscroll-behavior: contain;
 }
 
+/* The stack scrolls; nothing inside it shrinks. Without this a flex column
+   under pressure takes the height out of its children - opening "More" made
+   the name and cadence groups collapse to zero and overlap everything else -
+   rather than handing the overflow to the scrollbar. */
+.task-form-stack > * {
+    flex-shrink: 0;
+}
+
 #taskForm .modal-footer {
     display: flex;
     justify-content: flex-end;
@@ -7005,8 +7013,12 @@ body.motion-off .tick-btn:active {
     width: 100%;
     /* The 380px floor belonged to the slider, which needed every step to be
        the same height to animate between them. On one screen it is just a
-       hole between the question and the next one. */
-    min-height: 0;
+       hole between the question and the next one. `auto` - not 0 - because
+       these are flex items in the scrolling column below: min-height:0 lets
+       the browser squash them to nothing the moment the content is taller
+       than the box, and their fields then draw on top of each other instead
+       of the box scrolling. */
+    min-height: auto;
     transform: none;
     opacity: 1;
     animation: none;
