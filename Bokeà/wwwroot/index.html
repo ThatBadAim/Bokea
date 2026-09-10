@@ -10,7 +10,7 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Outfit:wght@300;400;500;600;700&family=Playfair+Display:ital,wght@0,400..900;1,400..900&display=swap" rel="stylesheet">
     <!-- CSS -->
-    <link rel="stylesheet" href="css/style.css?v=10">
+    <link rel="stylesheet" href="css/style.css?v=12">
     <!-- PWA Settings -->
     <link rel="manifest" href="manifest.json">
     <meta name="theme-color" content="#09090b">
@@ -39,12 +39,12 @@
                 <!-- Real autocomplete tokens: password managers are assistive
                      technology, and the old hidden "autofill trap" fields broke
                      them as well as adding noise for screen readers. -->
-                <form id="loginFormSection" onsubmit="event.preventDefault();" aria-labelledby="loginFormHeading">
+                <form id="loginFormSection" method="post" action="#" aria-labelledby="loginFormHeading">
                     <h2 id="loginFormHeading" class="sr-only">Log in to your account</h2>
 
                     <div class="input-group" style="margin-bottom: 15px;">
                         <label for="loginEmailInput" class="input-label" style="text-align: left; display: block; margin-bottom: 5px;">Email</label>
-                        <input type="email" id="loginEmailInput" name="email" class="form-control"
+                        <input type="email" id="loginEmailInput" name="username" class="form-control"
                                autocomplete="username" autocapitalize="none" spellcheck="false"
                                inputmode="email" required aria-describedby="loginEmailHint">
                         <span id="loginEmailHint" class="field-hint">For example: name@example.com</span>
@@ -58,30 +58,30 @@
                                     aria-pressed="false">Show<span class="sr-only"> password</span></button>
                         </span>
                     </div>
-                    <button type="button" id="loginBtn" class="btn btn-primary" style="width: 100%; margin-bottom: 15px;">Log in</button>
+                    <button type="submit" id="loginBtn" class="btn btn-primary" style="width: 100%; margin-bottom: 15px;">Log in</button>
                     <p style="font-size: 0.9rem; color: var(--text-secondary);">Don't have an account? <button type="button" id="showRegisterLink" class="link-button">Sign up</button></p>
                 </form>
 
-                <form id="registerFormSection" class="hidden" onsubmit="event.preventDefault();" aria-labelledby="registerFormHeading">
+                <form id="registerFormSection" class="hidden" method="post" action="#" aria-labelledby="registerFormHeading">
                     <h2 id="registerFormHeading" class="sr-only">Create an account</h2>
 
                     <div class="input-group" style="margin-bottom: 15px;">
                         <label for="registerNameInput" class="input-label" style="text-align: left; display: block; margin-bottom: 5px;">First name</label>
-                        <input type="text" id="registerNameInput" name="given-name" class="form-control"
+                        <input type="text" id="registerNameInput" name="name" class="form-control"
                                autocomplete="given-name" required aria-describedby="registerNameHint">
                         <span id="registerNameHint" class="field-hint">Only used to greet you. Nothing else is filled in for you.</span>
                     </div>
                     <div class="input-group" style="margin-bottom: 15px;">
                         <label for="registerEmailInput" class="input-label" style="text-align: left; display: block; margin-bottom: 5px;">Email</label>
-                        <input type="email" id="registerEmailInput" name="email" class="form-control"
-                               autocomplete="email" autocapitalize="none" spellcheck="false"
+                        <input type="email" id="registerEmailInput" name="username" class="form-control"
+                               autocomplete="username" autocapitalize="none" spellcheck="false"
                                inputmode="email" required aria-describedby="registerEmailHint">
                         <span id="registerEmailHint" class="field-hint">For example: name@example.com</span>
                     </div>
                     <div class="input-group" style="margin-bottom: 20px;">
                         <label for="registerPasswordInput" class="input-label" style="text-align: left; display: block; margin-bottom: 5px;">Password</label>
                         <span class="password-field">
-                            <input type="password" id="registerPasswordInput" name="new-password" class="form-control"
+                            <input type="password" id="registerPasswordInput" name="password" class="form-control"
                                    autocomplete="new-password" required
                                    aria-describedby="registerPasswordHint">
                             <button type="button" class="password-reveal" data-reveals="registerPasswordInput"
@@ -89,7 +89,7 @@
                         </span>
                         <span id="registerPasswordHint" class="field-hint">At least 8 characters.</span>
                     </div>
-                    <button type="button" id="registerBtn" class="btn btn-primary" style="width: 100%; margin-bottom: 15px;">Create account</button>
+                    <button type="submit" id="registerBtn" class="btn btn-primary" style="width: 100%; margin-bottom: 15px;">Create account</button>
                     <p style="font-size: 0.9rem; color: var(--text-secondary);">Already have an account? <button type="button" id="showLoginLink" class="link-button">Log in</button></p>
                 </form>
 
@@ -212,13 +212,6 @@
                 </button>
             </form>
         </div>
-    </div>
-
-    <!-- Background glowing orbs for glassmorphism -->
-    <div class="orb-container" aria-hidden="true">
-        <div class="orb orb-1"></div>
-        <div class="orb orb-2"></div>
-        <div class="orb orb-3"></div>
     </div>
 
     <div class="app-container">
@@ -510,7 +503,7 @@
                             <h1 class="welcome-text" style="font-size: 2.6rem; margin-bottom: 0;">Everything</h1>
                             <p style="margin: 0; font-size: 0.95rem; color: var(--text-secondary);" id="tasksShownLine" role="status" aria-live="polite">&nbsp;</p>
                         </div>
-                        <button class="btn btn-primary" onclick="openCreateTaskModal()" style="min-height: 48px; padding: 0 22px; border-radius: 9999px; font-size: 0.95rem; display: inline-flex; align-items: center; gap: 10px;">
+                        <button type="button" class="btn btn-primary" onclick="openCreateTaskModal()" style="min-height: 48px; padding: 0 22px; border-radius: 9999px; font-size: 0.95rem; display: inline-flex; align-items: center; gap: 10px;">
                             <i data-lucide="plus" style="width: 18px; height: 18px;"></i>
                             <span>New task</span>
                         </button>
@@ -1565,10 +1558,10 @@
 
     <!-- Supabase JS Client & Config -->
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-    <script src="js/config.js?v=10"></script>
+    <script src="js/config.js?v=12"></script>
 
     <!-- JS script loading -->
-    <script src="js/onboarding.js?v=10"></script>
-    <script src="js/app.js?v=10"></script>
+    <script src="js/onboarding.js?v=12"></script>
+    <script src="js/app.js?v=12"></script>
 </body>
 </html>

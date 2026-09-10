@@ -7,6 +7,7 @@
 window.ENV = {
   SUPABASE_URL: 'https://xwmimrocnanyjtcomlib.supabase.co',
   SUPABASE_ANON_KEY: 'sb_publishable_pmMBWtdSdPeDJh_PdN_GUQ_YoCEOB-A',
+  VAPID_PUBLIC_KEY: 'BOOfho7XQIYjv8VoplYubn9GpOp_aSrWZYGpa5sP2bVlTzjPM4Urpsvkv9mi6OpXRuGu_M_L3hHKsuWRovip4Sc',
 
   // Helper to determine if Supabase BaaS is ready
   isConfigured: function () {

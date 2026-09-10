@@ -230,8 +230,8 @@ function calculateTaskState(task) {
     // Check if task is already completed today
     if (task.lastCompleted) {
         const lastComp = new Date(task.lastCompleted);
-        const todayStr = now.toISOString().split('T')[0];
-        const lastCompStr = lastComp.toISOString().split('T')[0];
+        const todayStr = calDateStr(now);
+        const lastCompStr = calDateStr(lastComp);
         if (lastCompStr === todayStr) {
             return 'Green'; // Completed today
         }
@@ -247,7 +247,7 @@ function calculateTaskState(task) {
 
         // Check if fixed date task was already completed on or after due date
         if (task.lastCompleted) {
-            const lastCompDate = new Date(task.lastCompleted).toISOString().split('T')[0];
+            const lastCompDate = calDateStr(new Date(task.lastCompleted));
             if (lastCompDate >= dueDateStr) {
                 return 'Green';
             }
@@ -460,20 +460,50 @@ async function apiRequest(endpoint, method = 'GET', body = null) {
             return mapBackendTask(data);
         }
 
-        // PUT /tasks/reorder
-        if (endpoint === '/tasks/reorder' && method === 'PUT') {
-            if (Array.isArray(body)) {
-                for (const item of body) {
-                    const updateObj = { display_order: item.order };
-                    if (item.sector) updateObj.sector = item.sector;
-                    await supabaseClient.from('tasks').update(updateObj).eq('id', item.id);
+        // DELETE /tasks/{id}/complete - undo the most recent completion
+        if (endpoint.includes('/complete') && method === 'DELETE') {
+            const id = parseTaskId(endpoint.split('/')[2]);
+            // Find and delete the newest completion log for this task
+            const { data: logs, error: logsErr } = await supabaseClient
+                .from('task_completion_logs')
+                .select('*')
+                .eq('task_id', id)
+                .order('completed_at', { ascending: false })
+                .limit(2);
+            if (logsErr) throw logsErr;
+
+            if (logs && logs.length > 0) {
+                await supabaseClient.from('task_completion_logs').delete().eq('id', logs[0].id);
+            }
+
+            const prevCompleted = (logs && logs.length > 1) ? logs[1].completed_at : null;
+
+            // Fetch current task to recalculate state/due date
+            const { data: currentTask, error: tErr } = await supabaseClient.from('tasks').select('*').eq('id', id).single();
+            if (tErr) throw tErr;
+
+            let nextDue = currentTask.due_date;
+            if (currentTask.interval_type === 'IntervalBased') {
+                const days = currentTask.interval_days || 1;
+                if (prevCompleted) {
+                    nextDue = new Date(new Date(prevCompleted).getTime() + days * 86400000).toISOString();
+                } else {
+                    nextDue = currentTask.created_at || new Date().toISOString();
                 }
             }
-            return null;
+
+            const { data, error } = await supabaseClient.from('tasks').update({
+                last_completed_at: prevCompleted,
+                due_date: nextDue,
+                snoozed_until: null,
+                state: 'Green'
+            }).eq('id', id).select().single();
+            if (error) throw error;
+            return mapBackendTask(data);
         }
 
         // DELETE /tasks/{id}
-        if (endpoint.startsWith('/tasks/') && method === 'DELETE') {
+        if (endpoint.startsWith('/tasks/') && method === 'DELETE' && !endpoint.includes('/complete')) {
             const id = parseTaskId(endpoint.split('/')[2]);
             const { error } = await supabaseClient.from('tasks').delete().eq('id', id);
             if (error) throw error;
@@ -517,8 +547,16 @@ async function apiRequest(endpoint, method = 'GET', body = null) {
         // POST /tasks/{id}/snooze
         if (endpoint.includes('/snooze') && method === 'POST') {
             const id = parseTaskId(endpoint.split('/')[2]);
-            const durationHours = (body && body.durationHours) ? body.durationHours : 24;
-            const snoozeUntil = new Date(Date.now() + durationHours * 3600000).toISOString();
+            const asked = body && body.durationHours;
+            const durationHours = (asked === 0)
+                ? 0
+                : (asked || parseInt(localStorage.getItem('bokea_default_snooze')) || 24);
+
+            let snoozeUntil = null;
+            if (durationHours > 0) {
+                snoozeUntil = new Date(Date.now() + durationHours * 3600000).toISOString();
+            }
+
             const { data, error } = await supabaseClient.from('tasks').update({
                 snoozed_until: snoozeUntil,
                 state: 'Green'
@@ -603,26 +641,6 @@ async function apiRequest(endpoint, method = 'GET', body = null) {
                 }).eq('id', userId);
             }
             return { success: true };
-        }
-
-        // GET /auth/profile
-        if (endpoint === '/auth/profile' && method === 'GET') {
-            const { data: userResp } = await supabaseClient.auth.getUser();
-            const userId = userResp?.user?.id;
-            if (userId) {
-                const { data: profile } = await supabaseClient.from('profiles').select('*').eq('id', userId).single();
-                return {
-                    id: userId,
-                    firstName: profile?.first_name || userResp.user.user_metadata?.first_name || 'User',
-                    email: userResp.user.email,
-                    isSetupCompleted: profile?.is_setup_completed || false,
-                    wakeUpTime: profile?.wake_up_time,
-                    bedTime: profile?.bed_time,
-                    workStartTime: profile?.work_start_time,
-                    workEndTime: profile?.work_end_time,
-                    workDays: profile?.work_days || []
-                };
-            }
         }
 
         // PUT /auth/profile
@@ -960,6 +978,18 @@ function handleLocalStorageFallback(endpoint, method, body) {
     if (endpoint === '/auth/setup' && method === 'POST') {
         return { success: true };
     }
+
+    // PUT /auth/profile fallback - save schedule settings in local storage
+    if (endpoint === '/auth/profile' && method === 'PUT') {
+        if (body) {
+            if (body.wakeUpTime) localStorage.setItem('bokea_wakeup_time', body.wakeUpTime);
+            if (body.bedTime) localStorage.setItem('bokea_bed_time', body.bedTime);
+            if (body.workStartTime) localStorage.setItem('bokea_work_start', body.workStartTime);
+            if (body.workEndTime) localStorage.setItem('bokea_work_end', body.workEndTime);
+            if (body.workDays) localStorage.setItem('bokea_work_days', JSON.stringify(body.workDays));
+        }
+        return { success: true };
+    }
     
     throw new Error(`Unsupported fallback endpoint: ${method} ${endpoint}`);
 }
@@ -970,11 +1000,11 @@ function updateLocalHistory() {
     const localTasks = readStore(STORAGE_KEYS.TASKS);
     const localHistory = readStore(STORAGE_KEYS.HISTORY);
     
-    const todayStr = new Date().toISOString().split('T')[0];
+    const todayStr = calDateStr(new Date());
     
     const completedToday = localTasks.filter(t => {
         if (!t.lastCompleted) return false;
-        return t.lastCompleted.split('T')[0] === todayStr;
+        return calDateStr(new Date(t.lastCompleted)) === todayStr;
     }).length;
     
     const amberRedCount = localTasks.filter(t => {
@@ -2344,20 +2374,33 @@ document.addEventListener('DOMContentLoaded', () => {
             const selectedOpt = taskNameSelect.options[taskNameSelect.selectedIndex];
             if (!selectedOpt || !selectedOpt.value) {
                 document.getElementById('taskName').value = "";
+                syncSaveEnabled();
                 return;
             }
 
             const name = selectedOpt.getAttribute('data-name');
             const desc = selectedOpt.getAttribute('data-desc');
             const dur = selectedOpt.getAttribute('data-duration');
+            const slot = selectedOpt.getAttribute('data-slot');
             
             document.getElementById('taskName').value = name;
             document.getElementById('taskDescription').value = desc;
             
-            const durInput = document.getElementById('taskDuration');
+            const durHidden = document.getElementById('taskDuration');
+            if (durHidden) durHidden.value = dur;
+            const durInput = document.getElementById('taskDurationInput');
             if (durInput) durInput.value = dur;
+
+            if (slot) {
+                const slotInput = document.getElementById('taskTimeSlot');
+                if (slotInput) slotInput.value = slot;
+                document.querySelectorAll('#timeSlotGrid button').forEach(b => {
+                    b.classList.toggle('active', b.getAttribute('data-slot') === slot);
+                });
+            }
             
             document.getElementById('taskName').classList.remove('input-error');
+            syncSaveEnabled();
         });
     }
 
@@ -2752,7 +2795,10 @@ function openEditTaskModal(id) {
             dueDateGroup.classList.add('hidden');
         }
     } else {
-        document.getElementById('taskDueDate').value = task.dueDate || "";
+        const dStr = (task.dueDate && typeof task.dueDate === 'string')
+            ? task.dueDate.split('T')[0]
+            : (task.dueDate && task.dueDate.value ? String(task.dueDate.value).split('T')[0] : "");
+        document.getElementById('taskDueDate').value = dStr;
         document.getElementById('taskInterval').value = "1";
         
         const btn = document.getElementById('btnFixedDate');
@@ -3396,8 +3442,33 @@ document.addEventListener('DOMContentLoaded', () => {
         return false;
     }
 
+    async function storePasswordCredentials(formEl, username, password) {
+        if (!window.PasswordCredential || !navigator.credentials || !navigator.credentials.store) return;
+        try {
+            let cred = null;
+            if (formEl && formEl instanceof HTMLFormElement) {
+                try {
+                    cred = new PasswordCredential(formEl);
+                } catch (_) {}
+            }
+            if (!cred) {
+                cred = new PasswordCredential({
+                    id: username,
+                    password: password,
+                    name: username
+                });
+            }
+            if (cred) {
+                await navigator.credentials.store(cred);
+            }
+        } catch (credErr) {
+            console.debug("Credential storage note:", credErr);
+        }
+    }
+
     // Login
-    document.getElementById('loginBtn').addEventListener('click', async () => {
+    const handleLogin = async (e) => {
+        if (e) e.preventDefault();
         const email = document.getElementById('loginEmailInput').value.trim();
         const password = document.getElementById('loginPasswordInput').value;
         if (!authBackendReady()) return;
@@ -3408,13 +3479,27 @@ document.addEventListener('DOMContentLoaded', () => {
             return;
         }
 
+        const loginBtn = document.getElementById('loginBtn');
+        const origBtnText = loginBtn ? loginBtn.textContent : '';
+        if (loginBtn) {
+            loginBtn.disabled = true;
+            loginBtn.textContent = 'Logging in...';
+        }
+
         try {
             const { data, error } = await supabaseClient.auth.signInWithPassword({ email, password });
             if (error) {
+                if (loginBtn) {
+                    loginBtn.disabled = false;
+                    loginBtn.textContent = origBtnText;
+                }
                 // Whatever was wrong, the server is the one that knows it.
                 showAuthError(error.message || "We could not sign you in.");
                 return;
             }
+
+            // Prompt browser password manager to store/update credentials
+            await storePasswordCredentials(loginFormSection, email, password);
 
             const user = data.user;
             // Anything left on this device from before accounts were required
@@ -3438,14 +3523,25 @@ document.addEventListener('DOMContentLoaded', () => {
             if (profile?.work_days) {
                 localStorage.setItem('bokea_work_days', JSON.stringify(profile.work_days));
             }
-            window.location.reload();
+            setTimeout(() => {
+                window.location.reload();
+            }, 100);
         } catch (err) {
+            if (loginBtn) {
+                loginBtn.disabled = false;
+                loginBtn.textContent = origBtnText;
+            }
             showAuthError("We could not reach the server: " + (err.message || "network error") + ". Please try again.");
         }
-    });
+    };
+
+    if (loginFormSection) {
+        loginFormSection.addEventListener('submit', handleLogin);
+    }
 
     // Register
-    document.getElementById('registerBtn').addEventListener('click', async () => {
+    const handleRegister = async (e) => {
+        if (e) e.preventDefault();
         const firstName = document.getElementById('registerNameInput').value.trim();
         const email = document.getElementById('registerEmailInput').value.trim();
         const password = document.getElementById('registerPasswordInput').value;
@@ -3453,6 +3549,13 @@ document.addEventListener('DOMContentLoaded', () => {
         if (!email || !password || !firstName) {
             showAuthError("Fill in your name, email and password.");
             return;
+        }
+
+        const registerBtn = document.getElementById('registerBtn');
+        const origBtnText = registerBtn ? registerBtn.textContent : '';
+        if (registerBtn) {
+            registerBtn.disabled = true;
+            registerBtn.textContent = 'Creating account...';
         }
 
         try {
@@ -3465,16 +3568,27 @@ document.addEventListener('DOMContentLoaded', () => {
             });
 
             if (error) {
+                if (registerBtn) {
+                    registerBtn.disabled = false;
+                    registerBtn.textContent = origBtnText;
+                }
                 // Address already taken, password too weak, address rejected:
                 // the server's rules, stated in the server's words.
                 showAuthError(error.message || "We could not create your account.");
                 return;
             }
 
+            // Prompt browser password manager to store credentials
+            await storePasswordCredentials(registerFormSection, email, password);
+
             // No session with a new account means the address has to be proved
             // before it becomes one. That check belongs to the server, and the
             // app stays on this screen until the server says otherwise.
             if (!data.session) {
+                if (registerBtn) {
+                    registerBtn.disabled = false;
+                    registerBtn.textContent = origBtnText;
+                }
                 showAuthError("Account created. Check your email and confirm your address, then log in.", 'success');
                 return;
             }
@@ -3489,11 +3603,21 @@ document.addEventListener('DOMContentLoaded', () => {
             clearScopedStorage();
             initLocalStorage();
             await migrateLocalTasksToSupabase(data.session.user.id);
-            window.location.reload();
+            setTimeout(() => {
+                window.location.reload();
+            }, 100);
         } catch (err) {
+            if (registerBtn) {
+                registerBtn.disabled = false;
+                registerBtn.textContent = origBtnText;
+            }
             showAuthError("We could not reach the server: " + (err.message || "network error") + ". Please try again.");
         }
-    });
+    };
+
+    if (registerFormSection) {
+        registerFormSection.addEventListener('submit', handleRegister);
+    }
 
 
     window.logoutUser = async function() {
