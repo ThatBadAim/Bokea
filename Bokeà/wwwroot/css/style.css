@@ -56,6 +56,7 @@
     margin: 0;
     padding: 0;
     box-sizing: border-box;
+    -webkit-tap-highlight-color: transparent;
 }
 
 html {
@@ -4519,6 +4520,11 @@ body.dark-theme .cal-cell.is-weekend:not(.is-outside) {
         box-shadow: 0 0 0 1.5px var(--solid);
     }
 
+    .cal-cell:focus,
+    .cal-cell:focus-visible {
+        outline: none !important;
+    }
+
     .cal-cell-items {
         display: flex;
         flex-direction: row;
@@ -4649,6 +4655,41 @@ body.dark-theme .cal-cell.is-weekend:not(.is-outside) {
 .dark-theme :focus-visible {
     outline-color: #93c5fd;
     box-shadow: 0 0 0 6px rgba(0, 0, 0, 0.85);
+}
+
+/* Suppress focus rings on headings, containers, buttons clicked via touch, and programmatic focus targets */
+h1:focus,
+h1:focus-visible,
+h2:focus,
+h2:focus-visible,
+h3:focus,
+h3:focus-visible,
+h4:focus,
+h4:focus-visible,
+.view-title:focus,
+.view-title:focus-visible,
+.welcome-text:focus,
+.welcome-text:focus-visible,
+[tabindex="-1"]:focus,
+[tabindex="-1"]:focus-visible,
+.tab-view:focus,
+.tab-view:focus-visible,
+.modal-content:focus,
+.modal-content:focus-visible,
+.cal-day:focus,
+.cal-day:focus-visible,
+.cal-day-title:focus,
+.cal-day-title:focus-visible,
+#calMonthTitle:focus,
+#calMonthTitle:focus-visible,
+#calDayDialog:focus,
+#calDayDialog:focus-visible,
+#taskModalDialog:focus,
+#taskModalDialog:focus-visible,
+.nav-item:focus:not(:focus-visible),
+.cal-cell:focus:not(:focus-visible) {
+    outline: none !important;
+    box-shadow: none !important;
 }
 
 /* Contained focus ring for text/form inputs to avoid overlapping adjacent labels or controls */

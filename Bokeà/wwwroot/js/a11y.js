@@ -198,7 +198,7 @@
         if (!heading) return;
         if (!heading.hasAttribute('tabindex')) heading.setAttribute('tabindex', '-1');
         window.setTimeout(function () {
-            try { heading.focus({ preventScroll: false }); } catch (e) { heading.focus(); }
+            try { heading.focus({ preventScroll: true }); } catch (e) { heading.focus(); }
         }, 0);
     }
 

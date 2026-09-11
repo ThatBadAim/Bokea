@@ -4974,7 +4974,7 @@ document.addEventListener('DOMContentLoaded', () => {
         if (!shownView) {
             shownView = document.querySelector('.tab-view:not(.hidden)');
         }
-        if (options.focusHeading !== false && typeof focusFirstHeading === 'function') {
+        if (options.focusHeading === true && typeof focusFirstHeading === 'function') {
             focusFirstHeading(shownView);
         }
         if (typeof announce === 'function') {
@@ -5069,10 +5069,7 @@ document.addEventListener('DOMContentLoaded', () => {
             targetTab = null;
             targetIndex = -1;
             targetView = null;
-
-            setTimeout(() => {
-                suppressNavClick = false;
-            }, 120);
+            suppressNavClick = false;
         }
 
         function onTouchStart(e) {
@@ -5107,8 +5104,8 @@ document.addEventListener('DOMContentLoaded', () => {
             const deltaY = touch.clientY - startY;
 
             if (isHorizontal === null) {
-                if (Math.abs(deltaX) > 8 || Math.abs(deltaY) > 8) {
-                    if (Math.abs(deltaX) > Math.abs(deltaY) * 1.1) {
+                if (Math.abs(deltaX) > 22 || Math.abs(deltaY) > 22) {
+                    if (Math.abs(deltaX) > Math.abs(deltaY) * 1.35) {
                         isHorizontal = true;
                         isDragging = true;
                         suppressNavClick = true;
@@ -5174,11 +5171,14 @@ document.addEventListener('DOMContentLoaded', () => {
         }
 
         function onTouchEnd(e) {
-            if (!startX || !isDragging || !activeView) {
-                startX = 0;
-                startY = 0;
-                isDragging = false;
-                isHorizontal = null;
+            if (!startX || !activeView) {
+                resetGestureState();
+                return;
+            }
+
+            if (!isDragging) {
+                suppressNavClick = false;
+                resetGestureState();
                 return;
             }
 
@@ -6199,12 +6199,14 @@ function initCalendar() {
             let touchStartX = 0;
             let touchStartY = 0;
             let touchStartTime = 0;
+            let didSwipe = false;
 
             grid.addEventListener('touchstart', (e) => {
                 if (e.touches.length === 1) {
                     touchStartX = e.touches[0].clientX;
                     touchStartY = e.touches[0].clientY;
                     touchStartTime = Date.now();
+                    didSwipe = false;
                 }
             }, { passive: true });
 
@@ -6215,6 +6217,7 @@ function initCalendar() {
                     const dt = Date.now() - touchStartTime;
                     // Horizontal swipe: dx > 48px, dy < 60px, within 450ms
                     if (dt < 450 && Math.abs(dx) > 48 && Math.abs(dy) < 60) {
+                        didSwipe = true;
                         if (dx < 0) {
                             calShiftMonth(1);
                         } else {
@@ -6225,6 +6228,10 @@ function initCalendar() {
             }, { passive: true });
 
             grid.addEventListener('click', (e) => {
+                if (didSwipe) {
+                    didSwipe = false;
+                    return;
+                }
                 const cell = e.target.closest('.cal-cell');
                 if (!cell) return;
                 const dateStr = cell.getAttribute('data-date');
