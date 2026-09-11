@@ -240,7 +240,13 @@
                     <span class="nav-label"><i data-lucide="calendar" aria-hidden="true"></i><span>Calendar</span></span>
                 </button>
                 <button type="button" class="nav-item" data-tab="profile" aria-label="Profile">
-                    <span class="nav-label"><i data-lucide="user" aria-hidden="true"></i><span>Profile</span></span>
+                    <span class="nav-label">
+                        <span class="nav-avatar-disc" id="navProfileAvatar" aria-hidden="true">
+                            <span class="nav-avatar-initial" id="navProfileAvatarInitial"></span>
+                            <i data-lucide="user" class="nav-avatar-icon" aria-hidden="true"></i>
+                        </span>
+                        <span>Profile</span>
+                    </span>
                 </button>
                 <button type="button" class="nav-item" data-tab="settings" aria-label="Settings" id="openSettings">
                     <span class="nav-label"><i data-lucide="settings" aria-hidden="true"></i><span>Settings</span></span>
@@ -480,8 +486,13 @@
                     <div class="cal-layout">
                         <section class="cal-month">
                             <div class="cal-weekdays" aria-hidden="true">
-                                <span>Mon</span><span>Tue</span><span>Wed</span>
-                                <span>Thu</span><span>Fri</span><span class="cal-weekday-weekend">Sat</span><span class="cal-weekday-weekend">Sun</span>
+                                <span>M<span class="cal-weekday-long">on</span></span>
+                                <span>T<span class="cal-weekday-long">ue</span></span>
+                                <span>W<span class="cal-weekday-long">ed</span></span>
+                                <span>T<span class="cal-weekday-long">hu</span></span>
+                                <span>F<span class="cal-weekday-long">ri</span></span>
+                                <span class="cal-weekday-weekend">S<span class="cal-weekday-long">at</span></span>
+                                <span class="cal-weekday-weekend">S<span class="cal-weekday-long">un</span></span>
                             </div>
 
                             <!-- A group rather than a grid: the cells are self-labelling buttons laid
@@ -1330,6 +1341,10 @@
                                 <i data-lucide="refresh-cw" aria-hidden="true"></i>
                                 <span>Every day</span>
                             </button>
+                            <button type="button" class="wizard-option-btn" id="btnWorkDays" data-freq-type="workdays">
+                                <i data-lucide="briefcase" aria-hidden="true"></i>
+                                <span>Workdays</span>
+                            </button>
                             <button type="button" class="wizard-option-btn" data-freq-type="interval" data-freq-val="7">
                                 <i data-lucide="calendar-days" aria-hidden="true"></i>
                                 <span>Every week</span>
@@ -1346,6 +1361,11 @@
                                 <i data-lucide="calendar" aria-hidden="true"></i>
                                 <span>One date</span>
                             </button>
+                        </div>
+
+                        <div class="form-hint hidden" id="workdaysHint">
+                            <i data-lucide="calendar" aria-hidden="true"></i>
+                            <span>Active on your work days: <strong id="workdaysHintText">Monday&ndash;Friday</strong></span>
                         </div>
 
                         <div class="form-group hidden" id="intervalGroup" style="margin-top: 12px;">

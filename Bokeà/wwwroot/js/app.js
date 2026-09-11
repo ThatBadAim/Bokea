@@ -215,6 +215,44 @@ function clearScopedStorage(scope) {
     }
 }
 
+// 1.9 User Workdays Configuration Helpers
+function getUserWorkDays() {
+    try {
+        const stored = localStorage.getItem('bokea_work_days');
+        if (stored) {
+            const parsed = JSON.parse(stored);
+            if (Array.isArray(parsed) && parsed.length > 0) return parsed;
+        }
+    } catch (e) { /* storage unavailable */ }
+    return ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday"];
+}
+
+function isDateWorkday(date) {
+    const d = date ? new Date(date) : new Date();
+    const weekdays = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
+    const dayName = weekdays[d.getDay()];
+    return getUserWorkDays().includes(dayName);
+}
+
+function formatWorkDaysSummary(days) {
+    const list = days || getUserWorkDays();
+    if (!list || list.length === 0) return 'Monday–Friday';
+    const allFiveStandard = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday'];
+    if (list.length === 5 && allFiveStandard.every(d => list.includes(d))) {
+        return 'Monday–Friday';
+    }
+    const shortMap = {
+        'Monday': 'Mon',
+        'Tuesday': 'Tue',
+        'Wednesday': 'Wed',
+        'Thursday': 'Thu',
+        'Friday': 'Fri',
+        'Saturday': 'Sat',
+        'Sunday': 'Sun'
+    };
+    return list.map(d => shortMap[d] || d).join(', ');
+}
+
 // 2. Dynamic Task State Calculation (Fallback logic / Client-side validator)
 function calculateTaskState(task) {
     const now = new Date();
@@ -235,6 +273,32 @@ function calculateTaskState(task) {
         if (lastCompStr === todayStr) {
             return 'Green'; // Completed today
         }
+    }
+
+    // Workdays cadence
+    if (task.type === 'workdays' || task.intervalType === 'Workdays') {
+        const isTodayWorkday = isDateWorkday(now);
+        // Non-workday: task is dormant, never penalized or late on days off
+        if (!isTodayWorkday) {
+            return 'Green';
+        }
+
+        if (task.dueTime && /^\d{2}:\d{2}$/.test(task.dueTime)) {
+            const todayStr = calDateStr(now);
+            const dueDateTime = new Date(`${todayStr}T${task.dueTime}:00`);
+            const diffMs = dueDateTime - now;
+            const diffHours = diffMs / (1000 * 60 * 60);
+
+            if (diffHours < 0) {
+                return taskIsCommitment(task) ? 'Red' : 'Amber';
+            } else if (diffHours <= 2) {
+                return 'Amber';
+            } else {
+                return 'Green';
+            }
+        }
+
+        return 'Amber'; // Due on active workday
     }
 
     if (task.type === 'fixed' || task.intervalType === 'FixedDate') {
@@ -351,13 +415,24 @@ function mapBackendTask(task) {
         else task.category = task.sector;
     }
     if (task.interval_type && !task.type) {
-        task.type = task.interval_type === 'IntervalBased' ? 'interval' : 'fixed';
+        if (task.interval_type === 'Workdays') task.type = 'workdays';
+        else task.type = task.interval_type === 'IntervalBased' ? 'interval' : 'fixed';
+    }
+    if (task.intervalType !== undefined && !task.type) {
+        if (task.intervalType === 'Workdays' || task.intervalType === 2) task.type = 'workdays';
+        else task.type = (task.intervalType === 'IntervalBased' || task.intervalType === 1) ? 'interval' : 'fixed';
     }
     if (task.interval_days !== undefined && task.intervalDays === undefined) {
         task.intervalDays = task.interval_days;
     }
     if (task.last_completed_at && !task.lastCompleted) {
         task.lastCompleted = task.last_completed_at;
+    }
+    if (task.created_at && !task.createdAt) {
+        task.createdAt = task.created_at;
+    }
+    if (task.updated_at && !task.updatedAt) {
+        task.updatedAt = task.updated_at;
     }
     if (task.snoozed_until && !task.snoozeUntil) {
         task.snoozeUntil = task.snoozed_until;
@@ -402,10 +477,11 @@ async function apiRequest(endpoint, method = 'GET', body = null) {
                 'Mind & Environment': 'MindAndEnvironment'
             };
             const sector = sectorMap[body.category] || body.sector || 'HealthAndVitality';
-            const intervalType = (body.type === 'interval' || body.intervalType === 'IntervalBased') ? 'IntervalBased' : 'FixedDate';
-            const intervalDays = body.intervalDays ? parseInt(body.intervalDays) : null;
-            let dueDate = body.dueDate || null;
-            if (intervalType === 'IntervalBased' && intervalDays && !dueDate) {
+            const isWorkdays = body.type === 'workdays' || body.intervalType === 'Workdays';
+            const intervalType = isWorkdays ? 'Workdays' : ((body.type === 'interval' || body.intervalType === 'IntervalBased') ? 'IntervalBased' : 'FixedDate');
+            const intervalDays = isWorkdays ? null : (body.intervalDays ? parseInt(body.intervalDays) : null);
+            let dueDate = isWorkdays ? null : (body.dueDate || null);
+            if (!isWorkdays && intervalType === 'IntervalBased' && intervalDays && !dueDate) {
                 dueDate = new Date(Date.now() + intervalDays * 86400000).toISOString();
             }
 
@@ -441,14 +517,15 @@ async function apiRequest(endpoint, method = 'GET', body = null) {
                 'Relationships & Social': 'RelationshipsAndSocial',
                 'Mind & Environment': 'MindAndEnvironment'
             };
+            const isWorkdays = body.type === 'workdays' || body.intervalType === 'Workdays';
             const updatePayload = {
                 title: body.name || body.title,
                 description: body.description || null,
                 sector: sectorMap[body.category] || body.sector || 'HealthAndVitality',
-                interval_type: (body.type === 'interval' || body.intervalType === 'IntervalBased') ? 'IntervalBased' : 'FixedDate',
-                interval_days: body.intervalDays ? parseInt(body.intervalDays) : null
+                interval_type: isWorkdays ? 'Workdays' : ((body.type === 'interval' || body.intervalType === 'IntervalBased') ? 'IntervalBased' : 'FixedDate'),
+                interval_days: isWorkdays ? null : (body.intervalDays ? parseInt(body.intervalDays) : null)
             };
-            if (body.dueDate !== undefined) updatePayload.due_date = body.dueDate;
+            if (body.dueDate !== undefined) updatePayload.due_date = isWorkdays ? null : body.dueDate;
             if (body.dueTime !== undefined) updatePayload.due_time = body.dueTime;
             if (body.timeSlot !== undefined) updatePayload.time_slot = body.timeSlot;
             if (body.durationMinutes !== undefined) updatePayload.duration_minutes = body.durationMinutes;
@@ -611,7 +688,9 @@ async function apiRequest(endpoint, method = 'GET', body = null) {
                 const completed = logs.filter(l => (l.completed_at || '').startsWith(targetStr)).length;
                 let expectedDue = 0;
                 mappedTasks.forEach(t => {
-                    if (t.type === 'interval' || t.interval_type === 'IntervalBased') {
+                    if (t.type === 'workdays' || t.interval_type === 'Workdays') {
+                        if (isDateWorkday(target)) expectedDue += 1.0;
+                    } else if (t.type === 'interval' || t.interval_type === 'IntervalBased') {
                         expectedDue += 1.0 / (t.intervalDays || t.interval_days || 1);
                     } else if (t.dueDate === targetStr) {
                         expectedDue += 1.0;
@@ -906,12 +985,14 @@ function handleLocalStorageFallback(endpoint, method, body) {
     
     // POST /tasks
     if (endpoint === '/tasks' && method === 'POST') {
+        const isWorkdays = body.type === 'workdays' || body.intervalType === 'Workdays';
         const newTask = {
             id: 'task_' + Date.now() + '_' + Math.floor(Math.random() * 1000),
             name: body.name,
             category: body.category,
             description: body.description || '',
-            type: body.type,
+            type: isWorkdays ? 'workdays' : body.type,
+            intervalType: isWorkdays ? 'Workdays' : (body.type === 'fixed' ? 'FixedDate' : 'IntervalBased'),
             intervalDays: body.type === 'interval' ? parseInt(body.intervalDays) || 1 : null,
             dueDate: body.type === 'fixed' ? (body.dueDate || null) : null,
             dueTime: body.dueTime || null,
@@ -938,10 +1019,12 @@ function handleLocalStorageFallback(endpoint, method, body) {
         const taskId = match[1];
         const idx = localTasks.findIndex(t => t.id === taskId);
         if (idx !== -1) {
+            const isWorkdays = body.type === 'workdays' || body.intervalType === 'Workdays';
             localTasks[idx].name = body.name;
             localTasks[idx].category = body.category;
             localTasks[idx].description = body.description || '';
-            localTasks[idx].type = body.type;
+            localTasks[idx].type = isWorkdays ? 'workdays' : body.type;
+            localTasks[idx].intervalType = isWorkdays ? 'Workdays' : (body.type === 'fixed' ? 'FixedDate' : 'IntervalBased');
             localTasks[idx].intervalDays = body.type === 'interval' ? parseInt(body.intervalDays) || 1 : null;
             localTasks[idx].dueDate = body.type === 'fixed' ? body.dueDate : null;
             if (body.dueTime !== undefined) localTasks[idx].dueTime = body.dueTime;
@@ -1187,6 +1270,7 @@ function renderStats() {
 // ============================================================
 function renderNextUpTask() {
     const todayStr = new Date().toISOString().split('T')[0];
+    const isTodayWorkday = isDateWorkday(new Date());
 
     const decorated = (Array.isArray(tasks) ? tasks : [])
         .filter(t => {
@@ -1195,6 +1279,9 @@ function renderNextUpTask() {
                 if (done === todayStr) return false;
             }
             if (t.snoozeUntil && new Date(t.snoozeUntil) > new Date()) return false;
+            if ((t.type === 'workdays' || t.intervalType === 'Workdays') && !isTodayWorkday) {
+                return false;
+            }
             return true;
         })
         .map(t => Object.assign({}, t, { _calculatedState: t.state || calculateTaskState(t) }));
@@ -1226,6 +1313,11 @@ function renderNextUpTask() {
 
     const rank = (st) => (st === 'Red' ? 1 : st === 'Amber' ? 2 : 3);
     const baseDay = (t) => {
+        if (t.type === 'workdays' || t.intervalType === 'Workdays') {
+            const d = new Date();
+            d.setHours(0, 0, 0, 0);
+            return d.getTime();
+        }
         const d = t.type === 'fixed'
             ? new Date(t.dueDate || 0)
             : new Date(t.lastCompleted || t.createdAt || Date.now());
@@ -1595,7 +1687,7 @@ function taskRowMarkup(task, dateStr, opts) {
                 <span class="task-row-meta">
                     <span class="task-row-when${late && !done ? ' is-late' : ''}" title="${esc(when.range)}"><i data-lucide="${when.icon}"></i>${esc(whenChipText(task, dateStr))}</span>
                     <span class="task-row-tag"><i data-lucide="${area.icon}"></i>${esc(area.short)}</span>
-                    <span class="task-row-tag"><i data-lucide="${task.type === 'interval' ? 'refresh-cw' : 'calendar'}"></i>${esc(cadenceText(task))}</span>
+                    <span class="task-row-tag"><i data-lucide="${(task.type === 'workdays' || task.intervalType === 'Workdays') ? 'briefcase' : (task.type === 'interval' ? 'refresh-cw' : 'calendar')}"></i>${esc(cadenceText(task))}</span>
                     ${nowish && !done ? '<span class="task-row-nowtag">Happening now</span>' : ''}
                 </span>
             </span>
@@ -2416,6 +2508,28 @@ document.addEventListener('DOMContentLoaded', () => {
             btn.classList.add('active');
             
             const freqType = btn.getAttribute('data-freq-type');
+            const workdaysHint = document.getElementById('workdaysHint');
+            const workdaysHintText = document.getElementById('workdaysHintText');
+
+            if (freqType === 'workdays') {
+                document.getElementById('taskType').value = 'workdays';
+                document.getElementById('taskInterval').value = "";
+                document.getElementById('taskDueDate').value = "";
+                intervalGroup.classList.add('hidden');
+                dueDateGroup.classList.add('hidden');
+                if (workdaysHint) {
+                    if (workdaysHintText) {
+                        workdaysHintText.textContent = `Active on your work days: ${formatWorkDaysSummary(getUserWorkDays())}`;
+                    }
+                    workdaysHint.classList.remove('hidden');
+                }
+                setTimeout(() => {
+                    if (currentStep === 3) showStep(4);
+                }, 250);
+                return;
+            }
+
+            if (workdaysHint) workdaysHint.classList.add('hidden');
             document.getElementById('taskType').value = freqType === 'fixed' ? 'fixed' : 'interval';
             
             const freqVal = btn.getAttribute('data-freq-val');
@@ -2466,14 +2580,85 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     });
 
+    function formatTimeInputOnType(e) {
+        const input = e.target;
+        const isDelete = e.inputType === 'deleteContentBackward' || e.inputType === 'deleteContentForward';
+        if (isDelete) return;
+
+        let val = input.value;
+        const pos = input.selectionStart;
+        const isAtEnd = pos === val.length;
+
+        // Clean any accidental duplicate colons
+        if (val.includes('::')) {
+            input.value = val.replace(/:+/g, ':');
+            return;
+        }
+
+        // Only auto-insert when typing forward at the end of the input
+        if (!isAtEnd) return;
+
+        // Case A: 2 digits typed (e.g. "14" -> "14:", "09" -> "09:", "24" -> "24:")
+        if (/^\d{2}$/.test(val)) {
+            const h = parseInt(val, 10);
+            if (h >= 0 && h <= 24) {
+                input.value = val + ':';
+                input.setSelectionRange(3, 3);
+                return;
+            }
+        }
+
+        // Case B: 3 digits typed without colon (e.g. "930" -> "9:30", "140" -> "14:0")
+        if (/^\d{3}$/.test(val)) {
+            const firstTwo = parseInt(val.slice(0, 2), 10);
+            if (firstTwo <= 24) {
+                input.value = val.slice(0, 2) + ':' + val.slice(2);
+            } else {
+                input.value = val.slice(0, 1) + ':' + val.slice(1);
+            }
+            input.setSelectionRange(input.value.length, input.value.length);
+            return;
+        }
+
+        // Case C: 4 digits typed without colon (e.g. "1400" -> "14:00", "2400" -> "24:00")
+        if (/^\d{4}$/.test(val)) {
+            input.value = val.slice(0, 2) + ':' + val.slice(2);
+            input.setSelectionRange(input.value.length, input.value.length);
+            return;
+        }
+    }
+
     const dueTimeEl = document.getElementById('taskDueTime');
     if (dueTimeEl) {
-        dueTimeEl.addEventListener('input', syncWhenUI);
+        dueTimeEl.addEventListener('keydown', (e) => {
+            if (e.key === 'Backspace' && dueTimeEl.selectionStart === dueTimeEl.selectionEnd) {
+                const pos = dueTimeEl.selectionStart;
+                if (pos > 0 && dueTimeEl.value[pos - 1] === ':') {
+                    // Backspacing on the colon: cleanly delete both the colon and the preceding digit
+                    e.preventDefault();
+                    const nextVal = dueTimeEl.value.slice(0, pos - 2) + dueTimeEl.value.slice(pos);
+                    dueTimeEl.value = nextVal;
+                    dueTimeEl.setSelectionRange(pos - 2, pos - 2);
+                    syncWhenUI();
+                }
+            }
+        });
+        dueTimeEl.addEventListener('input', (e) => {
+            formatTimeInputOnType(e);
+            syncWhenUI();
+        });
         // Reformat to the app's clock format once typing is done, rather than
         // fighting the user's cursor on every keystroke.
         dueTimeEl.addEventListener('blur', () => {
             const mins = parseTimeFieldValue(dueTimeEl.value);
-            if (mins !== null) dueTimeEl.value = formatAppTime(mins);
+            if (mins !== null) {
+                dueTimeEl.value = formatAppTime(mins);
+            } else {
+                const hint = document.getElementById('taskDueTimeHint');
+                if (dueTimeEl.value.trim() && hint) {
+                    hint.textContent = `Couldn't read that as a time. Try something like ${formatAppTime(13 * 60 + 30)}.`;
+                }
+            }
             syncWhenUI();
         });
     }
@@ -2646,7 +2831,16 @@ function syncWhenUI() {
     };
 
     if (exact === null) {
-        if (hint) hint.textContent = rawValue.trim() ? `Couldn't read that as a time. Try something like ${formatAppTime(13 * 60 + 30)}.` : '';
+        if (hint) {
+            const trimmed = rawValue.trim();
+            // Don't flash an error while user is actively typing an in-progress pattern (e.g. "1", "14:", "14:3")
+            const isInProgress = /^\d{1,2}:?$/.test(trimmed) || /^\d{1,2}:[0-5]?$/.test(trimmed);
+            if (!trimmed || isInProgress) {
+                hint.textContent = '';
+            } else {
+                hint.textContent = `Couldn't read that as a time. Try something like ${formatAppTime(13 * 60 + 30)}.`;
+            }
+        }
         mark(hidden ? hidden.value : 'anytime', false);
         return;
     }
@@ -2688,6 +2882,9 @@ function openCreateTaskModal(category, presetDate) {
         }
     });
     
+    const workdaysHint = document.getElementById('workdaysHint');
+    if (workdaysHint) workdaysHint.classList.add('hidden');
+
     if (presetDate) {
         document.getElementById('taskType').value = 'fixed';
         document.getElementById('taskDueDate').value = presetDate;
@@ -2785,7 +2982,25 @@ function openEditTaskModal(id) {
         btn.classList.remove('active');
     });
     
-    if (task.type === 'interval') {
+    const workdaysHint = document.getElementById('workdaysHint');
+    const workdaysHintText = document.getElementById('workdaysHintText');
+
+    if (task.type === 'workdays' || task.intervalType === 'Workdays' || task.interval_type === 'Workdays') {
+        document.getElementById('taskType').value = 'workdays';
+        document.getElementById('taskInterval').value = "";
+        document.getElementById('taskDueDate').value = "";
+        const btn = document.getElementById('btnWorkDays');
+        if (btn) btn.classList.add('active');
+        intervalGroup.classList.add('hidden');
+        dueDateGroup.classList.add('hidden');
+        if (workdaysHint) {
+            if (workdaysHintText) {
+                workdaysHintText.textContent = `Active on your work days: ${formatWorkDaysSummary(getUserWorkDays())}`;
+            }
+            workdaysHint.classList.remove('hidden');
+        }
+    } else if (task.type === 'interval') {
+        if (workdaysHint) workdaysHint.classList.add('hidden');
         const interval = task.intervalDays || 1;
         document.getElementById('taskInterval').value = interval;
         document.getElementById('taskDueDate').value = "";
@@ -2812,6 +3027,7 @@ function openEditTaskModal(id) {
             dueDateGroup.classList.add('hidden');
         }
     } else {
+        if (workdaysHint) workdaysHint.classList.add('hidden');
         const dStr = (task.dueDate && typeof task.dueDate === 'string')
             ? task.dueDate.split('T')[0]
             : (task.dueDate && task.dueDate.value ? String(task.dueDate.value).split('T')[0] : "");
@@ -2929,11 +3145,13 @@ taskForm.addEventListener('submit', async (e) => {
         return;
     }
     
+    const isWorkdays = type === 'workdays';
     const payload = {
         name,
         category,
         description,
-        type,
+        type: isWorkdays ? 'workdays' : type,
+        intervalType: isWorkdays ? 'Workdays' : (type === 'fixed' ? 'FixedDate' : 'IntervalBased'),
         intervalDays: type === 'interval' ? parseInt(intervalDays) || 1 : null,
         dueDate: type === 'fixed' ? dueDate : null,
         dueTime: dueTime || null,
@@ -3083,6 +3301,11 @@ document.addEventListener('DOMContentLoaded', () => {
         const topAvatar = document.querySelector('.profile-avatar-initial');
         if (topAvatar) topAvatar.textContent = initial;
 
+        const navAvatarInitial = document.getElementById('navProfileAvatarInitial');
+        if (navAvatarInitial) navAvatarInitial.textContent = initial;
+        const navAvatarDisc = document.getElementById('navProfileAvatar');
+        if (navAvatarDisc) navAvatarDisc.classList.toggle('has-initial', !!initial);
+
         // The picture, wherever the person is shown. Read here rather than only
         // on the profile screen, so it is already there on the first paint.
         applyAvatarEverywhere(readLocalProfile().avatarDataUrl || '');
@@ -3091,6 +3314,12 @@ document.addEventListener('DOMContentLoaded', () => {
             profileBox.setAttribute('aria-label', displayName
                 ? `Account menu for ${displayName}`
                 : 'Account menu');
+        }
+        const profileNavItem = document.querySelector('.nav-menu .nav-item[data-tab="profile"]');
+        if (profileNavItem) {
+            profileNavItem.setAttribute('aria-label', displayName
+                ? `Profile for ${displayName}`
+                : 'Profile');
         }
     }
 
@@ -3407,15 +3636,16 @@ document.addEventListener('DOMContentLoaded', () => {
                 if (!title || existingTitles.has(title.toLowerCase())) continue;
 
                 const sector = sectorMap[t.category] || 'HealthAndVitality';
-                const intervalType = t.type === 'interval' ? 'IntervalBased' : 'FixedDate';
+                const isWorkdays = t.type === 'workdays' || t.intervalType === 'Workdays';
+                const intervalType = isWorkdays ? 'Workdays' : (t.type === 'interval' ? 'IntervalBased' : 'FixedDate');
                 rowsToInsert.push({
                     user_id: userId,
                     title: title,
                     description: t.description || null,
                     sector: sector,
                     interval_type: intervalType,
-                    interval_days: t.type === 'interval' ? (parseInt(t.intervalDays) || 1) : null,
-                    due_date: t.dueDate || null,
+                    interval_days: (!isWorkdays && t.type === 'interval') ? (parseInt(t.intervalDays) || 1) : null,
+                    due_date: isWorkdays ? null : (t.dueDate || null),
                     due_time: t.dueTime || null,
                     time_slot: t.timeSlot || 'anytime',
                     duration_minutes: t.durationMinutes || 15,
@@ -4170,6 +4400,11 @@ document.addEventListener('DOMContentLoaded', () => {
             topBox.classList.toggle('has-photo', !!dataUrl);
             topBox.style.backgroundImage = dataUrl ? `url("${dataUrl}")` : '';
         }
+        const navAvatar = document.getElementById('navProfileAvatar');
+        if (navAvatar) {
+            navAvatar.classList.toggle('has-photo', !!dataUrl);
+            navAvatar.style.backgroundImage = dataUrl ? `url("${dataUrl}")` : '';
+        }
     }
 
     // ---- reading and writing ----
@@ -4718,7 +4953,7 @@ document.addEventListener('DOMContentLoaded', () => {
             loadProfileIntoForm();
         }
 
-        if (shownView) {
+        if (shownView && !options.fromGesture) {
             shownView.style.animation = 'none';
             shownView.offsetHeight; /* trigger reflow */
             shownView.style.animation = '';
@@ -4748,8 +4983,265 @@ document.addEventListener('DOMContentLoaded', () => {
     }
     window.switchTab = switchTab;
 
+    // 10.1 Mobile Bottom Navigation Horizontal Swipe Gestures
+    (function initMobileBottomNavGestures() {
+        const sidebar = document.querySelector('.sidebar');
+        const mainBody = document.querySelector('.main-content-body');
+        if (!sidebar || !mainBody) return;
+
+        const MOBILE_NAV_TABS = ['home', 'tasks', 'calendar', 'profile'];
+        const TAB_VIEW_IDS = {
+            'home': 'homeView',
+            'tasks': 'tasksView',
+            'calendar': 'calendarFullView',
+            'profile': 'profileView'
+        };
+
+        let startX = 0;
+        let startY = 0;
+        let startTime = 0;
+        let isDragging = false;
+        let isHorizontal = null;
+        let activeTab = null;
+        let activeIndex = -1;
+        let activeView = null;
+        let targetTab = null;
+        let targetIndex = -1;
+        let targetView = null;
+        let containerWidth = 0;
+        let suppressNavClick = false;
+        let rafId = null;
+
+        window._suppressBottomNavClick = () => suppressNavClick;
+
+        function getActiveMobileTab() {
+            const currentActive = document.querySelector('.nav-menu .nav-item.active');
+            return currentActive ? currentActive.getAttribute('data-tab') : 'home';
+        }
+
+        function prepareIncomingView(view, tab) {
+            if (!view) return;
+            view.classList.remove('hidden');
+            view.classList.add('gesture-incoming');
+
+            if (tab === 'tasks' && typeof renderAllTasksGrid === 'function') {
+                renderAllTasksGrid();
+            } else if (tab === 'calendar' && typeof initCalendar === 'function') {
+                initCalendar();
+            } else if (tab === 'profile' && typeof loadProfileIntoForm === 'function') {
+                loadProfileIntoForm();
+            }
+        }
+
+        function cleanupIncomingView(view) {
+            if (!view) return;
+            view.classList.add('hidden');
+            view.classList.remove('gesture-incoming');
+            view.style.transform = '';
+            view.style.transition = '';
+        }
+
+        function resetGestureState() {
+            if (rafId) {
+                cancelAnimationFrame(rafId);
+                rafId = null;
+            }
+            if (activeView) {
+                activeView.classList.remove('gesture-active', 'gesture-animating');
+                activeView.style.transform = '';
+                activeView.style.transition = '';
+            }
+            if (targetView) {
+                cleanupIncomingView(targetView);
+                targetView.classList.remove('gesture-animating');
+            }
+            mainBody.classList.remove('gesture-dragging');
+            sidebar.classList.remove('gesture-dragging');
+
+            startX = 0;
+            startY = 0;
+            startTime = 0;
+            isDragging = false;
+            isHorizontal = null;
+            activeTab = null;
+            activeIndex = -1;
+            activeView = null;
+            targetTab = null;
+            targetIndex = -1;
+            targetView = null;
+
+            setTimeout(() => {
+                suppressNavClick = false;
+            }, 120);
+        }
+
+        function onTouchStart(e) {
+            if (window.innerWidth > 1024) return;
+            if (e.touches.length !== 1) return;
+
+            const touch = e.touches[0];
+            startX = touch.clientX;
+            startY = touch.clientY;
+            startTime = performance.now();
+            isDragging = false;
+            isHorizontal = null;
+            suppressNavClick = false;
+
+            activeTab = getActiveMobileTab();
+            activeIndex = MOBILE_NAV_TABS.indexOf(activeTab);
+            if (activeIndex === -1) {
+                activeIndex = 0;
+                activeTab = 'home';
+            }
+            activeView = document.getElementById(TAB_VIEW_IDS[activeTab]);
+            targetTab = null;
+            targetIndex = -1;
+            targetView = null;
+            containerWidth = mainBody.offsetWidth || window.innerWidth;
+        }
+
+        function onTouchMove(e) {
+            if (!startX || !activeView) return;
+            const touch = e.touches[0];
+            const deltaX = touch.clientX - startX;
+            const deltaY = touch.clientY - startY;
+
+            if (isHorizontal === null) {
+                if (Math.abs(deltaX) > 8 || Math.abs(deltaY) > 8) {
+                    if (Math.abs(deltaX) > Math.abs(deltaY) * 1.1) {
+                        isHorizontal = true;
+                        isDragging = true;
+                        suppressNavClick = true;
+                        mainBody.classList.add('gesture-dragging');
+                        sidebar.classList.add('gesture-dragging');
+                        activeView.classList.add('gesture-active');
+                    } else {
+                        isHorizontal = false;
+                        return;
+                    }
+                } else {
+                    return;
+                }
+            }
+
+            if (!isHorizontal) return;
+            e.preventDefault();
+
+            if (rafId) cancelAnimationFrame(rafId);
+            rafId = requestAnimationFrame(() => {
+                let currentTargetIndex = -1;
+                let currentTargetTab = null;
+                let effectiveDelta = deltaX;
+
+                if (deltaX < 0) {
+                    currentTargetIndex = activeIndex + 1;
+                    if (currentTargetIndex >= MOBILE_NAV_TABS.length) {
+                        effectiveDelta = -Math.pow(Math.abs(deltaX), 0.78) * 1.6;
+                        currentTargetIndex = -1;
+                    } else {
+                        currentTargetTab = MOBILE_NAV_TABS[currentTargetIndex];
+                    }
+                } else if (deltaX > 0) {
+                    currentTargetIndex = activeIndex - 1;
+                    if (currentTargetIndex < 0) {
+                        effectiveDelta = Math.pow(Math.abs(deltaX), 0.78) * 1.6;
+                        currentTargetIndex = -1;
+                    } else {
+                        currentTargetTab = MOBILE_NAV_TABS[currentTargetIndex];
+                    }
+                }
+
+                if (currentTargetTab !== targetTab) {
+                    if (targetView) cleanupIncomingView(targetView);
+                    targetTab = currentTargetTab;
+                    targetIndex = currentTargetIndex;
+                    if (targetTab) {
+                        targetView = document.getElementById(TAB_VIEW_IDS[targetTab]);
+                        prepareIncomingView(targetView, targetTab);
+                    } else {
+                        targetView = null;
+                    }
+                }
+
+                activeView.style.transform = `translate3d(${effectiveDelta}px, 0, 0)`;
+                if (targetView) {
+                    const targetOffset = deltaX < 0
+                        ? effectiveDelta + containerWidth
+                        : effectiveDelta - containerWidth;
+                    targetView.style.transform = `translate3d(${targetOffset}px, 0, 0)`;
+                }
+            });
+        }
+
+        function onTouchEnd(e) {
+            if (!startX || !isDragging || !activeView) {
+                startX = 0;
+                startY = 0;
+                isDragging = false;
+                isHorizontal = null;
+                return;
+            }
+
+            if (rafId) {
+                cancelAnimationFrame(rafId);
+                rafId = null;
+            }
+
+            const touch = e.changedTouches ? e.changedTouches[0] : null;
+            const endX = touch ? touch.clientX : startX;
+            const deltaX = endX - startX;
+            const duration = Math.max(performance.now() - startTime, 1);
+            const velocity = deltaX / duration;
+            const thresholdDist = containerWidth * 0.22;
+            const thresholdVelocity = 0.35;
+
+            const shouldSnapForward = targetView && (
+                (deltaX < 0 && (deltaX < -thresholdDist || velocity < -thresholdVelocity)) ||
+                (deltaX > 0 && (deltaX > thresholdDist || velocity > thresholdVelocity))
+            );
+
+            if (shouldSnapForward) {
+                activeView.classList.add('gesture-animating');
+                targetView.classList.add('gesture-animating');
+
+                const activeFinal = deltaX < 0 ? -containerWidth : containerWidth;
+                activeView.style.transform = `translate3d(${activeFinal}px, 0, 0)`;
+                targetView.style.transform = `translate3d(0, 0, 0)`;
+
+                const destinationTab = targetTab;
+                setTimeout(() => {
+                    switchTab(destinationTab, { fromGesture: true });
+                    resetGestureState();
+                }, 280);
+            } else {
+                activeView.classList.add('gesture-animating');
+                activeView.style.transform = `translate3d(0, 0, 0)`;
+
+                if (targetView) {
+                    targetView.classList.add('gesture-animating');
+                    const targetFinal = deltaX < 0 ? containerWidth : -containerWidth;
+                    targetView.style.transform = `translate3d(${targetFinal}px, 0, 0)`;
+                }
+
+                setTimeout(() => {
+                    resetGestureState();
+                }, 280);
+            }
+        }
+
+        sidebar.addEventListener('touchstart', onTouchStart, { passive: true });
+        sidebar.addEventListener('touchmove', onTouchMove, { passive: false });
+        sidebar.addEventListener('touchend', onTouchEnd, { passive: true });
+        sidebar.addEventListener('touchcancel', onTouchEnd, { passive: true });
+    })();
+
     document.querySelectorAll('.nav-menu .nav-item').forEach(item => {
         item.addEventListener('click', (e) => {
+            if (window._suppressBottomNavClick && window._suppressBottomNavClick()) {
+                e.preventDefault();
+                e.stopPropagation();
+                return;
+            }
             e.preventDefault();
             const tab = item.getAttribute('data-tab');
             if (tab) switchTab(tab);
@@ -5379,7 +5871,9 @@ function renderDailyScheduleTimeline() {
     tasks.forEach(t => {
         // Determine if task is active for today's timeline
         let isActiveToday = false;
-        if (t.type === 'fixed') {
+        if (t.type === 'workdays' || t.intervalType === 'Workdays') {
+            isActiveToday = isDateWorkday(new Date());
+        } else if (t.type === 'fixed') {
             isActiveToday = (t.dueDate === todayStr);
         } else {
             // Interval task: daily tasks (intervalDays === 1) or tasks currently in Red/Amber are active today
@@ -5652,9 +6146,21 @@ const CAL_DAYS = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Frida
 
 // A daily habit is true of every single day, so it says nothing about which
 // day is heavy — writing it into all 30 cells would bury the things that
-// actually land on a date. Dailies still appear in the day panel.
+// actually land on a date. Dailies are excluded from the calendar.
 function calIsDaily(task) {
-    return task.type === 'interval' && (parseInt(task.intervalDays) || 1) === 1;
+    if (!task) return false;
+    if (task.type === 'workdays' || task.intervalType === 'Workdays' || task.interval_type === 'Workdays') {
+        return true;
+    }
+    const interval = parseInt(task.intervalDays !== undefined ? task.intervalDays : task.interval_days, 10);
+    const isInterval = task.type === 'interval'
+        || task.interval_type === 'IntervalBased'
+        || task.intervalType === 'IntervalBased'
+        || task.intervalType === 1;
+    if (isInterval) {
+        return isNaN(interval) || interval <= 1;
+    }
+    return false;
 }
 
 // What actually lands on this specific day.
@@ -5690,6 +6196,34 @@ function initCalendar() {
 
         // One delegated listener, so it survives every re-render of the grid.
         if (grid) {
+            let touchStartX = 0;
+            let touchStartY = 0;
+            let touchStartTime = 0;
+
+            grid.addEventListener('touchstart', (e) => {
+                if (e.touches.length === 1) {
+                    touchStartX = e.touches[0].clientX;
+                    touchStartY = e.touches[0].clientY;
+                    touchStartTime = Date.now();
+                }
+            }, { passive: true });
+
+            grid.addEventListener('touchend', (e) => {
+                if (e.changedTouches.length === 1) {
+                    const dx = e.changedTouches[0].clientX - touchStartX;
+                    const dy = e.changedTouches[0].clientY - touchStartY;
+                    const dt = Date.now() - touchStartTime;
+                    // Horizontal swipe: dx > 48px, dy < 60px, within 450ms
+                    if (dt < 450 && Math.abs(dx) > 48 && Math.abs(dy) < 60) {
+                        if (dx < 0) {
+                            calShiftMonth(1);
+                        } else {
+                            calShiftMonth(-1);
+                        }
+                    }
+                }
+            }, { passive: true });
+
             grid.addEventListener('click', (e) => {
                 const cell = e.target.closest('.cal-cell');
                 if (!cell) return;
@@ -5859,7 +6393,7 @@ function renderCalendarMonth() {
                     ${dateStr === todayStr ? '<span class="cal-cell-tag">Today</span>' : ''}
                 </span>
                 <span class="cal-cell-items">${shown}</span>
-                ${rest > 0 ? `<span class="cal-cell-more">+${rest} more</span>` : ''}
+                ${rest > 0 ? `<span class="cal-cell-more">+${rest} more</span><span class="cal-cell-dots-more" aria-hidden="true">+</span>` : ''}
             </button>
         `);
     }
@@ -6084,23 +6618,25 @@ function getTasksForDate(dateStr) {
 
     tasks.forEach(t => {
         const mapped = mapBackendTask(t);
+        // Daily tasks take place every day — the calendar only displays one-off events or weekly/monthly/interval tasks
+        if (calIsDaily(mapped)) return;
+
         if (mapped.type === 'fixed') {
             if (mapped.dueDate === dateStr) {
                 matching.push(mapped);
             }
         } else if (mapped.type === 'interval') {
-            const interval = parseInt(mapped.intervalDays) || 1;
-            if (interval === 1) {
-                // Daily habit
+            const interval = parseInt(mapped.intervalDays, 10) || 1;
+            if (interval <= 1) return;
+
+            // Multi-day interval (e.g. every 2 days, weekly, monthly)
+            const anchorDate = mapped.lastCompleted
+                ? new Date(mapped.lastCompleted)
+                : (mapped.createdAt ? new Date(mapped.createdAt) : (mapped.dueDate ? new Date(mapped.dueDate) : new Date()));
+            const anchorMidnight = new Date(anchorDate.getFullYear(), anchorDate.getMonth(), anchorDate.getDate());
+            const diffDays = Math.round((cellDate.getTime() - anchorMidnight.getTime()) / 86400000);
+            if (diffDays >= 0 && diffDays % interval === 0) {
                 matching.push(mapped);
-            } else {
-                // Multi-day interval
-                const anchorDate = mapped.lastCompleted ? new Date(mapped.lastCompleted) : new Date(mapped.createdAt || cellDate);
-                const anchorMidnight = new Date(anchorDate.getFullYear(), anchorDate.getMonth(), anchorDate.getDate());
-                const diffDays = Math.round((cellDate.getTime() - anchorMidnight.getTime()) / 86400000);
-                if (diffDays >= 0 && diffDays % interval === 0) {
-                    matching.push(mapped);
-                }
             }
         }
     });
@@ -6196,6 +6732,9 @@ function taskMinutes(task) {
 // Rule 7: in gentle mode this never says how late something is
 function cadenceText(task) {
     if (!task) return '';
+    if (task.type === 'workdays' || task.intervalType === 'Workdays' || task.interval_type === 'Workdays') {
+        return 'Workdays';
+    }
     if (task.type === 'interval') {
         const n = parseInt(task.intervalDays) || 1;
         return n === 1 ? 'Every day' : `Every ${n} days`;
@@ -6252,7 +6791,20 @@ function parseTimeFieldValue(str) {
     if (!s) return null;
     let m = /^(\d{1,2}):([0-5]\d)\s*(am|pm)?$/i.exec(s);
     if (!m) m = /^(\d{1,2})([0-5]\d)\s*(am|pm)?$/i.exec(s);
-    if (!m) return null;
+    if (!m) {
+        // Also support "2pm", "2 pm", "11am", etc. without minutes
+        const mHourOnly = /^(\d{1,2})\s*(am|pm)$/i.exec(s);
+        if (mHourOnly) {
+            let h = parseInt(mHourOnly[1], 10);
+            const meridiem = mHourOnly[2].toLowerCase();
+            if (h >= 1 && h <= 12) {
+                if (meridiem === 'pm' && h !== 12) h += 12;
+                if (meridiem === 'am' && h === 12) h = 0;
+                return h * 60;
+            }
+        }
+        return null;
+    }
 
     let hour = parseInt(m[1], 10);
     const mins = parseInt(m[2], 10);
@@ -6261,6 +6813,8 @@ function parseTimeFieldValue(str) {
         if (hour < 1 || hour > 12) return null;
         if (meridiem === 'pm' && hour !== 12) hour += 12;
         if (meridiem === 'am' && hour === 12) hour = 0;
+    } else if (hour === 24 && mins === 0) {
+        return 0; // 24:00 is midnight (00:00)
     } else if (hour > 23) {
         return null;
     }

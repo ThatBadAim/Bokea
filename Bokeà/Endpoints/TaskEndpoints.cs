@@ -80,6 +80,10 @@ namespace Bokea.Endpoints
                     }
                     dueDate = DateTime.UtcNow.AddDays(request.IntervalDays.Value);
                 }
+                else if (intervalTypeEnum == IntervalType.Workdays)
+                {
+                    dueDate = DueDateType.Null;
+                }
                 else // FixedDate
                 {
                     // No date is a legitimate answer, not a validation error.
@@ -118,6 +122,7 @@ namespace Bokea.Endpoints
             group.MapPut("/{id}", async (AppDbContext db, ClaimsPrincipal user, int id, UpdateTaskRequest request) =>
             {
                 int userId = int.Parse(user.FindFirstValue(ClaimTypes.NameIdentifier) ?? "0");
+
                 var task = await db.Tasks.FirstOrDefaultAsync(t => t.Id == id && t.UserId == userId);
                 if (task == null)
                 {
@@ -164,6 +169,12 @@ namespace Bokea.Endpoints
                     {
                         task.DueDate = (task.LastCompletedAt ?? task.CreatedAt).AddDays(request.IntervalDays.Value);
                     }
+                }
+                else if (intervalTypeEnum == IntervalType.Workdays)
+                {
+                    task.IntervalType = intervalTypeEnum;
+                    task.IntervalDays = null;
+                    task.DueDate = DueDateType.Null;
                 }
                 else // FixedDate
                 {

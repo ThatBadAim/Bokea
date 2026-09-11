@@ -65,7 +65,8 @@ public class TaskWatchdogService : BackgroundService
 
         // Only load tasks that can experience time-based state transitions (skip unscheduled parked thoughts)
         var tasks = await dbContext.Tasks
-            .Where(t => t.IntervalType == IntervalType.IntervalBased || t.DueDateValue != null)
+            .Include(t => t.User)
+            .Where(t => t.IntervalType == IntervalType.IntervalBased || t.IntervalType == IntervalType.Workdays || t.DueDateValue != null)
             .ToListAsync(stoppingToken);
         var currentTime = DateTime.UtcNow;
         bool hasChanges = false;
@@ -109,6 +110,42 @@ public class TaskWatchdogService : BackgroundService
         if (task.SnoozedUntil.HasValue && currentTime < task.SnoozedUntil.Value)
         {
             return TaskState.Green;
+        }
+
+        if (task.IntervalType == IntervalType.Workdays)
+        {
+            var userWorkDays = task.User?.WorkDays?.Split(',', StringSplitOptions.RemoveEmptyEntries)
+                ?? new[] { "Monday", "Tuesday", "Wednesday", "Thursday", "Friday" };
+            var currentDayName = currentTime.DayOfWeek.ToString();
+
+            // If today is NOT a workday, task is relaxed and safe (Green)
+            if (!userWorkDays.Contains(currentDayName, StringComparer.OrdinalIgnoreCase))
+            {
+                return TaskState.Green;
+            }
+
+            // If already completed today, it's Green
+            if (task.LastCompletedAt.HasValue && task.LastCompletedAt.Value.Date == currentTime.Date)
+            {
+                return TaskState.Green;
+            }
+
+            // On a workday: if past due time (if specified) or during the day
+            if (!string.IsNullOrEmpty(task.DueTime) && TimeSpan.TryParse(task.DueTime, out var dueTimeSpan))
+            {
+                var dueToday = currentTime.Date.Add(dueTimeSpan);
+                if (currentTime > dueToday)
+                {
+                    return task.IsCommitment ? TaskState.Red : TaskState.Amber;
+                }
+                else if ((dueToday - currentTime).TotalHours <= 2)
+                {
+                    return TaskState.Amber;
+                }
+                return TaskState.Green;
+            }
+
+            return TaskState.Amber;
         }
 
         if (task.IntervalType == IntervalType.IntervalBased)

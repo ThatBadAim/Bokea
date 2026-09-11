@@ -16,7 +16,8 @@ namespace Bokea.Database
     public enum IntervalType
     {
         IntervalBased,
-        FixedDate
+        FixedDate,
+        Workdays
     }
 
     public enum TaskState
