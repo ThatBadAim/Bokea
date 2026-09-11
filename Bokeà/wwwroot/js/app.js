@@ -1687,7 +1687,7 @@ function taskRowMarkup(task, dateStr, opts) {
                 <span class="task-row-meta">
                     <span class="task-row-when${late && !done ? ' is-late' : ''}" title="${esc(when.range)}"><i data-lucide="${when.icon}"></i>${esc(whenChipText(task, dateStr))}</span>
                     <span class="task-row-tag"><i data-lucide="${area.icon}"></i>${esc(area.short)}</span>
-                    <span class="task-row-tag"><i data-lucide="${(task.type === 'workdays' || task.intervalType === 'Workdays') ? 'briefcase' : (task.type === 'interval' ? 'refresh-cw' : 'calendar')}"></i>${esc(cadenceText(task))}</span>
+                    <span class="task-row-tag task-row-tag-cadence"><i data-lucide="${(task.type === 'workdays' || task.intervalType === 'Workdays') ? 'briefcase' : (task.type === 'interval' ? 'refresh-cw' : 'calendar')}"></i>${esc(cadenceText(task))}</span>
                     ${nowish && !done ? '<span class="task-row-nowtag">Happening now</span>' : ''}
                 </span>
             </span>
@@ -1851,8 +1851,13 @@ function renderAllTasksGrid() {
         if (moreLabel && capped) moreLabel.textContent = `Show the other ${filtered.length - CAP}`;
     }
 
+    const capBtn = document.getElementById('capToggleBtn');
     const capLabel = document.getElementById('capToggleLabel');
-    if (capLabel) capLabel.textContent = uiPrefs.capThree ? 'Three at a time' : 'Showing all';
+    if (capBtn) {
+        capBtn.classList.toggle('active', !!uiPrefs.capThree);
+        capBtn.setAttribute('aria-pressed', uiPrefs.capThree ? 'true' : 'false');
+    }
+    if (capLabel) capLabel.textContent = uiPrefs.capThree ? 'Focus 3' : 'All tasks';
 
     if (filtered.length === 0) {
         const elsewhere = ['now', 'ticking', 'parked']

@@ -504,26 +504,26 @@
                 </div>
 
                 <!-- Tasks View -->
-                <div id="tasksView" class="tab-view hidden" role="region" aria-label="Everything">
-                    <div style="display: flex; align-items: flex-end; justify-content: space-between; gap: 24px; margin-bottom: 24px; flex-wrap: wrap;">
-                        <div style="display: flex; flex-direction: column; gap: 6px;">
-                            <h1 class="welcome-text" style="font-size: 2.6rem; margin-bottom: 0;">Everything</h1>
-                            <p style="margin: 0; font-size: 0.95rem; color: var(--text-secondary);" id="tasksShownLine" role="status" aria-live="polite">&nbsp;</p>
+                <div id="tasksView" class="tab-view hidden tasks-view" role="region" aria-label="Everything">
+                    <header class="tasks-view-head">
+                        <div class="tasks-view-title-wrap">
+                            <h1 class="welcome-text">Everything</h1>
+                            <p class="tasks-shown-pill" id="tasksShownLine" role="status" aria-live="polite">&nbsp;</p>
                         </div>
-                        <button type="button" class="btn btn-primary" onclick="openCreateTaskModal()" style="min-height: 48px; padding: 0 22px; border-radius: 9999px; font-size: 0.95rem; display: inline-flex; align-items: center; gap: 10px;">
-                            <i data-lucide="plus" style="width: 18px; height: 18px;"></i>
+                        <button type="button" class="btn btn-primary tasks-add-btn" onclick="openCreateTaskModal()" aria-label="Create new task">
+                            <i data-lucide="plus"></i>
                             <span>New task</span>
                         </button>
-                    </div>
+                    </header>
 
-                    <div class="capture-wrap" style="margin-bottom: 22px;">
+                    <div class="capture-wrap tasks-search-wrap">
                         <i data-lucide="search" aria-hidden="true"></i>
                         <label for="taskSearchInput" class="sr-only">Search your tasks by name</label>
-                        <input type="search" id="taskSearchInput" class="capture-input" placeholder="Search by name" autocomplete="off" style="padding-right: 20px;">
+                        <input type="search" id="taskSearchInput" class="capture-input" placeholder="Search tasks..." autocomplete="off">
                     </div>
 
-                    <!-- ONE unified control bar for status segments -->
-                    <div style="margin-bottom: 20px;">
+                    <!-- ONE unified control bar for status segments: horizontal scroll rail on mobile -->
+                    <div class="tasks-seg-wrapper">
                         <div class="seg-bar" id="taskSegBar" role="group" aria-label="Filter by what needs doing">
                             <button type="button" class="seg active" data-seg="now" aria-pressed="true">
                                 <i data-lucide="alert-circle" style="width: 16px; height: 16px;"></i>
@@ -548,10 +548,10 @@
                         </div>
                     </div>
 
-                    <div style="display: flex; flex-direction: column; gap: 12px;">
-                        <div class="sec-head">
+                    <div class="tasks-content-wrap">
+                        <div class="sec-head tasks-filter-bar">
                             <span class="sec-label" id="tasksListHeading">Active tasks</span>
-                            <div style="display: flex; align-items: center; gap: 8px; flex-wrap: wrap;">
+                            <div class="tasks-filter-controls">
                                 <label for="taskAreaSelect" class="sr-only">Filter by area</label>
                                 <select id="taskAreaSelect" class="tasks-filter-select" aria-label="Filter by area">
                                     <option value="all">All Areas</option>
@@ -568,14 +568,14 @@
                                     <option value="name">Name</option>
                                     <option value="order">Custom order</option>
                                 </select>
-                                <button type="button" class="cap-toggle" id="capToggleBtn">
+                                <button type="button" class="cap-toggle" id="capToggleBtn" title="ADHD Focus Mode: limit visible tasks to reduce overwhelm">
                                     <i data-lucide="target"></i>
                                     <span id="capToggleLabel">Three at a time</span>
                                 </button>
                             </div>
                         </div>
 
-                        <div id="allTasksGrid" role="group" aria-labelledby="tasksListHeading" style="display: flex; flex-direction: column; gap: 10px;">
+                        <div id="allTasksGrid" role="group" aria-labelledby="tasksListHeading" class="all-tasks-grid">
                             <!-- Rendered by renderAllTasksGrid() as rows -->
                         </div>
 

@@ -8058,10 +8058,86 @@ body.motion-off .focus-ring-fill { transition: none; }
     gap: 8px;
 }
 
-/* ---------- Calmer, Unified Tasks View Filters ---------- */
+/* ---------- Tasks View (Everything Page) Base Layout ---------- */
+.tasks-view {
+    display: flex;
+    flex-direction: column;
+}
+
+.tasks-view-head {
+    display: flex;
+    align-items: flex-end;
+    justify-content: space-between;
+    gap: 20px;
+    margin-bottom: 20px;
+    flex-wrap: wrap;
+}
+
+.tasks-view-title-wrap {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
+.tasks-view-title-wrap .welcome-text {
+    margin-bottom: 0;
+}
+
+.tasks-shown-pill {
+    margin: 0;
+    font-size: 0.92rem;
+    color: var(--text-secondary);
+}
+
+.tasks-add-btn {
+    min-height: 46px;
+    padding: 0 20px;
+    border-radius: 9999px;
+    font-size: 0.92rem;
+    font-weight: 600;
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    flex-shrink: 0;
+    box-shadow: 0 4px 14px rgba(0, 0, 0, 0.08);
+}
+
+.tasks-add-btn i, .tasks-add-btn svg {
+    width: 18px;
+    height: 18px;
+}
+
+.tasks-search-wrap {
+    margin-bottom: 18px;
+}
+
+.tasks-seg-wrapper {
+    margin-bottom: 18px;
+}
+
+.tasks-content-wrap {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+.tasks-filter-bar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+}
+
+.tasks-filter-controls {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex-wrap: wrap;
+}
+
 .tasks-filter-select {
     min-height: 38px;
-    padding: 0 10px;
+    padding: 0 12px;
     border-radius: var(--border-radius-md);
     border: 1px solid var(--border-color);
     background: var(--bg-card);
@@ -8079,6 +8155,18 @@ body.motion-off .focus-ring-fill { transition: none; }
     border-color: var(--border-color-dark);
 }
 
+.cap-toggle.active {
+    background: rgba(99, 102, 241, 0.12);
+    border-color: var(--color-primary, #6366f1);
+    color: var(--color-primary, #6366f1);
+}
+
+.all-tasks-grid {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
 /* Group completed tasks quietly at the bottom */
 .completed-tasks-wrap {
     margin-top: 14px;
@@ -8090,7 +8178,7 @@ body.motion-off .focus-ring-fill { transition: none; }
     display: inline-flex;
     align-items: center;
     gap: 8px;
-    font-size: 0.82rem;
+    font-size: 0.84rem;
     font-weight: 600;
     color: var(--text-muted);
     cursor: pointer;
@@ -8108,5 +8196,263 @@ body.motion-off .focus-ring-fill { transition: none; }
     flex-direction: column;
     gap: 10px;
     margin-top: 10px;
+}
+
+/* ============================================================
+   ADHD Mobile Ergonomics for Everything Page (<= 768px)
+   ============================================================ */
+@media (max-width: 768px) {
+    /* Header: Single-line compact title & thumb-friendly quick add */
+    .tasks-view-head {
+        align-items: center;
+        gap: 12px;
+        margin-bottom: 12px;
+        flex-wrap: nowrap;
+    }
+
+    .tasks-view-title-wrap {
+        flex: 1;
+        min-width: 0;
+        gap: 2px;
+    }
+
+    .tasks-view-title-wrap .welcome-text {
+        font-size: 1.6rem !important;
+        line-height: 1.15;
+    }
+
+    .tasks-shown-pill {
+        font-size: 0.78rem;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+    }
+
+    .tasks-add-btn {
+        min-height: 38px;
+        padding: 0 14px;
+        font-size: 0.82rem;
+        gap: 6px;
+    }
+
+    .tasks-search-wrap {
+        margin-bottom: 12px;
+    }
+
+    /* Horizontal Segment Track: Zero jagged wrapping, smooth edge-to-edge scroll */
+    .tasks-seg-wrapper {
+        margin-left: -16px;
+        margin-right: -16px;
+        padding: 0 16px 4px 16px;
+        overflow-x: auto;
+        -webkit-overflow-scrolling: touch;
+        scrollbar-width: none;
+        margin-bottom: 10px;
+    }
+
+    .tasks-seg-wrapper::-webkit-scrollbar {
+        display: none;
+    }
+
+    .tasks-seg-wrapper .seg-bar {
+        display: flex;
+        flex-wrap: nowrap;
+        gap: 8px;
+        width: max-content;
+    }
+
+    .tasks-seg-wrapper .seg {
+        flex: 0 0 auto;
+        min-height: 38px;
+        padding: 0 13px;
+        font-size: 0.8rem;
+        gap: 6px;
+        white-space: nowrap;
+        border-radius: 9999px;
+    }
+
+    /* Secondary Controls: Single neat toolbar row */
+    .tasks-filter-bar {
+        display: block;
+        margin-bottom: 8px;
+    }
+
+    .tasks-filter-bar .sec-label {
+        display: none; /* Already indicated clearly by the active tab pill */
+    }
+
+    .tasks-filter-controls {
+        display: flex;
+        align-items: center;
+        gap: 6px;
+        width: 100%;
+    }
+
+    .tasks-filter-controls .tasks-filter-select {
+        flex: 1 1 0;
+        min-width: 0;
+        min-height: 36px;
+        font-size: 0.78rem;
+        padding: 0 8px;
+        border-radius: 10px;
+    }
+
+    .tasks-filter-controls .cap-toggle {
+        flex: 0 0 auto;
+        min-height: 36px;
+        padding: 0 10px;
+        font-size: 0.76rem;
+        gap: 5px;
+        border-radius: 10px;
+    }
+
+    /* Calmer, ADHD-Friendly Task Cards on Mobile */
+    .task-row {
+        position: relative;
+        display: flex;
+        flex-direction: column;
+        align-items: stretch;
+        gap: 0;
+        padding: 12px 14px 10px 18px;
+        border-radius: 16px;
+        background: var(--bg-card);
+        border: 1px solid var(--border-color);
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.03);
+    }
+
+    /* Colored Urgency Rail on Left Edge */
+    .task-row-rail {
+        left: 0;
+        top: 0;
+        bottom: 0;
+        width: 6px;
+        border-radius: 16px 0 0 16px;
+    }
+
+    /* Primary Task Content Row: Tick + Details */
+    .task-row-main {
+        display: flex;
+        flex-direction: column;
+        gap: 4px;
+        width: 100%;
+        padding-left: 36px; /* Room for the tick button */
+        position: relative;
+    }
+
+    .task-row .tick-btn {
+        position: absolute;
+        left: 14px;
+        top: 12px;
+        width: 26px;
+        height: 26px;
+        flex-shrink: 0;
+        z-index: 2;
+    }
+
+    .task-row-name {
+        font-size: 0.98rem;
+        font-weight: 600;
+        line-height: 1.35;
+        color: var(--text-main);
+        word-break: break-word;
+    }
+
+    /* Clear focus anchor for the lead task */
+    .task-row.is-lead {
+        border-color: var(--color-primary, #6366f1);
+        box-shadow: 0 0 0 2px var(--color-primary-glow, rgba(99, 102, 241, 0.2)), 0 4px 14px rgba(0, 0, 0, 0.06);
+    }
+
+    .task-row-lead {
+        font-size: 0.7rem;
+        color: var(--color-primary, #6366f1);
+        font-weight: 700;
+        margin-bottom: 2px;
+    }
+
+    /* Single-line, calm meta row */
+    .task-row-meta {
+        display: flex;
+        align-items: center;
+        gap: 6px;
+        flex-wrap: wrap;
+        margin-top: 2px;
+        font-size: 0.74rem;
+    }
+
+    .task-row-meta .task-row-when,
+    .task-row-meta .task-row-tag {
+        font-size: 0.72rem;
+        padding: 2px 7px;
+        gap: 4px;
+    }
+
+    /* Hide redundant cadence tag and noisy state pill on mobile to eliminate clutter */
+    .task-row-meta .task-row-tag-cadence {
+        display: none !important;
+    }
+
+    .task-row-side .state-pill {
+        display: none !important;
+    }
+
+    /* Bottom Utility Strip: Duration on left, Snooze & Menu on right */
+    .task-row-side {
+        width: 100%;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        margin-top: 8px;
+        padding-top: 8px;
+        padding-left: 36px;
+        border-top: 1px solid var(--border-color);
+        opacity: 0.92;
+    }
+
+    .task-row-mins {
+        font-size: 0.75rem;
+        padding: 3px 8px;
+        background: var(--bg-card);
+        border: 1px solid var(--border-color);
+        border-radius: 8px;
+    }
+
+    .task-row-actions {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+    }
+
+    .task-row-actions .row-later {
+        padding: 0 12px;
+        min-height: 30px;
+        font-size: 0.76rem;
+        border-radius: 8px;
+    }
+
+    .task-row-actions .row-more {
+        width: 30px;
+        height: 30px;
+        border-radius: 8px;
+    }
+
+    /* Completed state styling */
+    .task-row.is-done {
+        opacity: 0.65;
+    }
+
+    .task-row.is-done .task-row-side {
+        border-top: none;
+        margin-top: 2px;
+        padding-top: 0;
+    }
+
+    .completed-tasks-wrap {
+        margin-top: 16px;
+        border-radius: 14px;
+        background: var(--bg-card);
+        border: 1px solid var(--border-color);
+        padding: 6px 14px;
+    }
 }
 
