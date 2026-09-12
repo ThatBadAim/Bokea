@@ -3516,8 +3516,10 @@ function showToast(message, type = 'success', opts) {
         toast.classList.add('toast-error');
     } else if (type === 'warning') {
         toast.classList.add('toast-error'); // Reuse styling with variations if needed
-        toast.style.borderColor = 'var(--color-amber)';
-        toast.style.boxShadow = '0 10px 30px rgba(255, 183, 3, 0.2)';
+        // Not a deadline warning (e.g. "saved on this device, not your
+        // account") — amber is reserved for tasks close to being missed.
+        toast.style.borderColor = 'var(--primary-color)';
+        toast.style.boxShadow = '0 10px 30px rgba(0, 0, 0, 0.2)';
     }
     
     toast.classList.remove('hidden');
@@ -3879,15 +3881,21 @@ document.addEventListener('DOMContentLoaded', () => {
     }
     window.maybeStartTutorial = maybeStartTutorial;
 
-    // Brand click redirects to Home page
+    // Brand click redirects to Home page (sidebar wordmark on desktop, topbar
+    // wordmark on mobile — same behaviour, both places).
+    const goHome = () => {
+        const homeNavItem = document.querySelector('.nav-menu .nav-item[data-tab="home"]');
+        if (homeNavItem) {
+            homeNavItem.click();
+        }
+    };
     const brandContainer = document.getElementById('brandHomeBtn') || document.querySelector('.brand');
     if (brandContainer) {
-        brandContainer.addEventListener('click', () => {
-            const homeNavItem = document.querySelector('.nav-menu .nav-item[data-tab="home"]');
-            if (homeNavItem) {
-                homeNavItem.click();
-            }
-        });
+        brandContainer.addEventListener('click', goHome);
+    }
+    const topbarBrand = document.getElementById('topbarBrandBtn');
+    if (topbarBrand) {
+        topbarBrand.addEventListener('click', goHome);
     }
 
     // Toggle Forms. All four go through showAuthForm so that exactly one is
@@ -4500,6 +4508,20 @@ document.addEventListener('DOMContentLoaded', () => {
         document.getElementById('dropdownMenuBox').classList.remove('show');
     });
 
+    const dropdownPatternsBtn = document.getElementById('dropdownPatternsBtn');
+    if (dropdownPatternsBtn) {
+        dropdownPatternsBtn.addEventListener('click', (e) => {
+            e.preventDefault();
+            const patternsNavItem = document.querySelector('.nav-menu .nav-item[data-tab="analytics"]');
+            if (patternsNavItem) {
+                patternsNavItem.click();
+            } else if (typeof switchTab === 'function') {
+                switchTab('analytics');
+            }
+            document.getElementById('dropdownMenuBox')?.classList.remove('show');
+        });
+    }
+
     document.getElementById('dropdownSettingsBtn').addEventListener('click', (e) => {
         e.preventDefault();
         const settingsNavItem = document.querySelector('.nav-menu .nav-item[data-tab="settings"]');
@@ -4570,6 +4592,9 @@ document.addEventListener('DOMContentLoaded', () => {
 
         updateThemeCardSelection(theme);
         refreshIcons();
+        if (typeof applyAvatarEverywhere === 'function' && typeof readLocalProfile === 'function') {
+            applyAvatarEverywhere(readLocalProfile().avatarDataUrl || '');
+        }
     }
 
     themeToggleBtn.addEventListener('click', () => {
@@ -5536,12 +5561,14 @@ document.addEventListener('DOMContentLoaded', () => {
         const mainBody = document.querySelector('.main-content-body');
         if (!sidebar || !mainBody) return;
 
-        const MOBILE_NAV_TABS = ['home', 'tasks', 'calendar', 'profile'];
+        const MOBILE_NAV_TABS = ['home', 'tasks', 'analytics', 'calendar', 'profile', 'settings'];
         const TAB_VIEW_IDS = {
             'home': 'homeView',
             'tasks': 'tasksView',
+            'analytics': 'analyticsView',
             'calendar': 'calendarFullView',
-            'profile': 'profileView'
+            'profile': 'profileView',
+            'settings': 'settingsView'
         };
 
         let startX = 0;
@@ -5573,10 +5600,14 @@ document.addEventListener('DOMContentLoaded', () => {
 
             if (tab === 'tasks' && typeof renderAllTasksGrid === 'function') {
                 renderAllTasksGrid();
+            } else if (tab === 'analytics' && typeof renderAnalyticsGraph === 'function') {
+                renderAnalyticsGraph();
             } else if (tab === 'calendar' && typeof initCalendar === 'function') {
                 initCalendar();
             } else if (tab === 'profile' && typeof loadProfileIntoForm === 'function') {
                 loadProfileIntoForm();
+            } else if (tab === 'settings' && typeof loadSettingsIntoForm === 'function') {
+                loadSettingsIntoForm();
             }
         }
 
@@ -7818,8 +7849,12 @@ function renderNowBlock() {
     const m = remaining % 60;
 
     nameEl.textContent = label;
-    if (leftEl) leftEl.textContent = remaining <= 0 ? 'done' : (h > 0 ? `${h}h ${m}m left` : `${m}m left`);
+    if (leftEl) {
+        leftEl.textContent = remaining <= 0 ? 'done' : (h > 0 ? `${h}h ${m}m left` : `${m}m left`);
+        leftEl.style.color = 'var(--color-green-text)';
+    }
     fillEl.style.width = pct.toFixed(1) + '%';
+    fillEl.style.backgroundColor = 'var(--color-green)';
     if (startEl) startEl.textContent = fmtHM(from) + ' start';
     if (endEl) endEl.textContent = fmtHM(to) + ' end';
 }

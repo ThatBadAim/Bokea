@@ -36,10 +36,10 @@
     "semantic_hash": "4c0de416d676315faae8ab74b8601b3c"
   },
   "Boke\u00e0/Program.cs": {
-    "mtime": 1788974287.5162554,
-    "seen": 1788974482.5762916,
-    "ast_hash": "c833d71184f2caaab320d8e20897b1b0",
-    "semantic_hash": "c833d71184f2caaab320d8e20897b1b0"
+    "mtime": 1789228103.0752797,
+    "seen": 1789243450.9717114,
+    "ast_hash": "651bf28dae560bae0cf30689de5ffc57",
+    "semantic_hash": "651bf28dae560bae0cf30689de5ffc57"
   },
   "Boke\u00e0/Properties/launchSettings.json": {
     "mtime": 1781034663.0,
@@ -66,10 +66,10 @@
     "semantic_hash": "c52f435e4bcaf2bd106befb5823b841e"
   },
   "Boke\u00e0/wwwroot/js/app.js": {
-    "mtime": 1789212767.3822517,
-    "seen": 1789213007.716917,
-    "ast_hash": "26e892504b678c81581edeef5997843b",
-    "semantic_hash": "26e892504b678c81581edeef5997843b"
+    "mtime": 1789248606.4678512,
+    "seen": 1789248627.5714984,
+    "ast_hash": "ab353e8bee9b404f70161c0594bf4540",
+    "semantic_hash": "ab353e8bee9b404f70161c0594bf4540"
   },
   "Boke\u00e0/wwwroot/manifest.json": {
     "mtime": 1788973935.0335922,
@@ -78,10 +78,10 @@
     "semantic_hash": "e38e6347cfd75ae30017fa0ee340711d"
   },
   "Boke\u00e0/wwwroot/sw.js": {
-    "mtime": 1789221523.882166,
-    "seen": 1789221549.1058896,
-    "ast_hash": "ab01292ca2aa994d8f801265b5c49a38",
-    "semantic_hash": "ab01292ca2aa994d8f801265b5c49a38"
+    "mtime": 1789248616.7200823,
+    "seen": 1789248627.5716717,
+    "ast_hash": "9d1f811b87ea522f3a6c6efcec945792",
+    "semantic_hash": "9d1f811b87ea522f3a6c6efcec945792"
   },
   "Boke\u00e0/Endpoints/PushEndpoints.cs": {
     "mtime": 1788888987.3830833,

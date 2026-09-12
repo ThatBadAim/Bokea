@@ -66,7 +66,33 @@ app.MapTaskEndpoints();
 app.MapDigestEndpoints();
 app.MapPushEndpoints();
 
-// Fallback to index.html for client-side SPA routing (e.g. /tasks, /calendar, /settings)
-app.MapFallbackToFile("index.html");
+// Fallback for anything not handled above. Known SPA routes (the same ones
+// js/app.js's client-side router recognises) get index.html so deep links
+// like /tasks or /calendar still load the app at the right tab. Anything
+// else is a genuinely bad URL, so it gets a real 404 — this used to fall
+// through to index.html too, which silently loaded the Today screen with
+// no sign anything was wrong.
+var knownSpaRoutes = new HashSet<string>(StringComparer.OrdinalIgnoreCase)
+{
+    "/", "/today", "/home", "/tasks", "/everything",
+    "/patterns", "/analytics", "/calendar", "/profile", "/settings"
+};
+
+app.MapFallback(async context =>
+{
+    var path = context.Request.Path.Value ?? "/";
+    var webRoot = app.Environment.WebRootPath;
+
+    if (knownSpaRoutes.Contains(path))
+    {
+        context.Response.ContentType = "text/html";
+        await context.Response.SendFileAsync(Path.Combine(webRoot, "index.html"));
+        return;
+    }
+
+    context.Response.StatusCode = StatusCodes.Status404NotFound;
+    context.Response.ContentType = "text/html";
+    await context.Response.SendFileAsync(Path.Combine(webRoot, "404.html"));
+});
 
 app.Run();

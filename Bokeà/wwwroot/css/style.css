@@ -29,6 +29,10 @@
     --color-red-bg: #fee2e2;
     --color-red-border: rgba(239, 68, 68, 0.25);
     
+    /* Black is the brand/primary accent — referenced by active-state borders
+       (.time-preset.active, .cap-toggle.active) that were pointing at this
+       token before it was ever declared. */
+    --primary-color: #1A1A1A;
     --color-primary-light: #1A1A1A;
     --color-primary-glow: rgba(26, 26, 26, 0.08);
     --bg-dark-gray: #f4f4f5;
@@ -231,10 +235,11 @@ body {
     box-sizing: border-box;
 }
 
-.nav-avatar-disc.has-photo {
-    background-size: cover;
-    background-position: center;
-    background-repeat: no-repeat;
+.nav-avatar-disc.has-photo,
+body.dark-theme .nav-avatar-disc.has-photo {
+    background-size: cover !important;
+    background-position: center !important;
+    background-repeat: no-repeat !important;
     border-color: var(--border-color);
 }
 
@@ -432,6 +437,27 @@ body.dark-theme #taskSearchInput:focus {
     display: flex;
     align-items: center;
     gap: 20px;
+}
+
+/* Mobile-only wordmark, see index.html topbar comment. Hidden on desktop —
+   the sidebar brand already carries this there — and unhidden inside the
+   mobile media query below. */
+.topbar-brand {
+    display: none;
+    background: none;
+    border: none;
+    padding: 0;
+    cursor: pointer;
+    flex: 0 0 auto;
+}
+
+.topbar-brand-name {
+    font-family: var(--font-display);
+    font-size: 1.05rem;
+    font-weight: 700;
+    letter-spacing: -0.3px;
+    color: var(--text-main);
+    white-space: nowrap;
 }
 
 .system-status {
@@ -1448,6 +1474,7 @@ body.dark-theme {
     --color-amber-bg: rgba(245, 158, 11, 0.1);
     --color-red-bg: rgba(239, 68, 68, 0.1);
 
+    --primary-color: #ffffff;
     --color-primary-light: #f4f4f5;
     --color-primary-glow: rgba(244, 244, 245, 0.25);
     --bg-dark-gray: #18181b;
@@ -1619,7 +1646,7 @@ body.dark-theme .graph-toggle {
     border-color: var(--border-color);
 }
 
-body.dark-theme .profile-avatar-box {
+body.dark-theme .profile-avatar-box:not(.has-photo) {
     background: #ffffff;
     color: #000000;
 }
@@ -2642,7 +2669,9 @@ body.dark-theme .btn-new-task-pill:hover {
 }
 
 .stat-card.compliance {
-    border-left: 3px solid var(--color-amber);
+    /* A completion rate isn't a warning, so it gets the general accent
+       rather than the colour reserved for "close to missing a deadline". */
+    border-left: 3px solid var(--color-green);
 }
 
 /* Linear Timeline Schedule Widget */
@@ -3042,7 +3071,9 @@ body.motion-off *::after {
 }
 
 .now-block-left {
-    color: var(--color-amber-text);
+    /* Not a deadline warning — this counts down every block of the day,
+       not just ones at risk of being missed. Amber is reserved for that. */
+    color: var(--color-green-text) !important;
 }
 
 .now-block-bar {
@@ -3055,7 +3086,10 @@ body.motion-off *::after {
 }
 
 .now-block-fill {
-    background: var(--color-amber);
+    /* Always on screen and never itself a sign of a missed deadline, so it
+       carries the app's general accent rather than the warning colour. */
+    background: var(--color-green) !important;
+    background-color: var(--color-green) !important;
     border-radius: 9999px;
     transition: width 0.4s ease;
 }
@@ -6024,13 +6058,20 @@ button.user-profile:focus-visible {
     overflow: hidden;
 }
 
-.avatar.has-photo {
+.avatar.has-photo,
+body.dark-theme .avatar.has-photo {
     color: transparent;
+    background-size: cover !important;
+    background-position: center !important;
+    background-repeat: no-repeat !important;
 }
 
-.profile-avatar-box.has-photo {
-    background-size: cover;
-    background-position: center;
+.profile-avatar-box.has-photo,
+body.dark-theme .profile-avatar-box.has-photo {
+    background-size: cover !important;
+    background-position: center !important;
+    background-repeat: no-repeat !important;
+    background-color: transparent !important;
 }
 
 .profile-avatar-box.has-photo .profile-avatar-initial {
@@ -7836,18 +7877,12 @@ body.motion-off .focus-ring-fill { transition: none; }
         display: none !important;
     }
 
-    /* Mobile Navigation Cleanup: Remove Patterns & Settings from bottom navigation */
-    .sidebar .nav-item[data-tab="analytics"],
-    .sidebar .nav-item[data-tab="settings"] {
-        display: none !important;
-    }
-
     .nav-menu {
         display: flex;
         flex-direction: row;
         width: 100%;
         justify-content: space-around;
-        gap: 4px;
+        gap: 2px;
         margin: 0;
         padding: 0;
     }
@@ -7859,9 +7894,9 @@ body.motion-off .focus-ring-fill { transition: none; }
         justify-content: center;
         align-items: center;
         gap: 2px;
-        padding: 6px 4px;
+        padding: 5px 2px;
         min-height: 48px;
-        border-radius: 14px;
+        border-radius: 12px;
         position: relative;
         transition: background-color var(--transition-speed), color var(--transition-speed);
     }
@@ -7892,32 +7927,36 @@ body.motion-off .focus-ring-fill { transition: none; }
     /* Labels remain visible on mobile bottom tabs */
     .nav-item .nav-label span {
         display: block !important;
-        font-size: 0.64rem;
+        font-size: 0.60rem;
         font-weight: 600;
         line-height: 1;
         letter-spacing: 0.01em;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        max-width: 100%;
     }
 
     .nav-item i, .nav-item svg {
-        width: 20px;
-        height: 20px;
+        width: 19px;
+        height: 19px;
     }
 
     .nav-item .nav-avatar-disc {
-        width: 22px;
-        height: 22px;
+        width: 20px;
+        height: 20px;
     }
 
     .nav-count {
         position: absolute;
         top: 2px;
         right: 50%;
-        transform: translateX(18px);
-        font-size: 0.65rem;
-        padding: 1px 5px;
-        min-width: 16px;
-        height: 16px;
-        line-height: 14px;
+        transform: translateX(14px);
+        font-size: 0.62rem;
+        padding: 1px 4px;
+        min-width: 14px;
+        height: 14px;
+        line-height: 12px;
     }
 
     /* Edge-to-Edge Main Canvas */
@@ -7942,28 +7981,69 @@ body.motion-off .focus-ring-fill { transition: none; }
         position: sticky;
         top: 0;
         z-index: 500;
-        padding: calc(10px + env(safe-area-inset-top, 0px)) 16px 10px 16px;
-        margin: 0 0 14px 0;
+        padding: calc(8px + env(safe-area-inset-top, 0px)) 16px 8px 16px;
+        margin: 0 0 12px 0;
         width: 100%;
         background: var(--bg-body);
         border-bottom: 1px solid var(--border-color);
         box-sizing: border-box;
+        /* flex-start + topbar-right's margin-left:auto (below) keeps the
+           wordmark, clock and day-progress grouped on the left with a
+           consistent gap, and the icon cluster pinned to the right —
+           regardless of how many left-side items a given view shows. */
+        justify-content: flex-start;
+        gap: 10px;
     }
 
-    /* Mobile Topbar: on mobile devices, only the Home (Today) page shows the timer and top section.
-       Non-home views (such as Calendar, Everything, Patterns, Profile, Settings) hide the topbar
-       so that they only display their own dedicated content without taking up precious vertical space. */
-    body[data-active-tab]:not([data-active-tab="home"]) .topbar,
-    .main-content[data-active-tab]:not([data-active-tab="home"]) .topbar,
-    .main-content:has(.tab-view:not(#homeView):not(.hidden)) .topbar {
+    /* The one place "Bokeà" is on screen once you're past sign-in — the
+       bottom-dock nav has no room for it once it becomes a floating pill. */
+    .topbar-brand {
+        display: flex;
+        align-items: center;
+    }
+
+    .topbar-right {
+        margin-left: auto;
+    }
+
+    /* Mobile Topbar: on mobile devices, non-home views hide the heavy live clock
+       and day progress block to maximize vertical space, while keeping the topbar-right actions
+       (Theme toggle, Notifications, Account menu) accessible across all views. */
+    body[data-active-tab]:not([data-active-tab="home"]) .topbar .now-clock,
+    body[data-active-tab]:not([data-active-tab="home"]) .topbar .now-block,
+    .main-content[data-active-tab]:not([data-active-tab="home"]) .topbar .now-clock,
+    .main-content[data-active-tab]:not([data-active-tab="home"]) .topbar .now-block,
+    .main-content:has(.tab-view:not(#homeView):not(.hidden)) .topbar .now-clock,
+    .main-content:has(.tab-view:not(#homeView):not(.hidden)) .topbar .now-block {
         display: none !important;
     }
 
-    /* Provide safe top breathing room and notch clearance when topbar is hidden */
+    body[data-active-tab]:not([data-active-tab="home"]) .topbar,
+    .main-content[data-active-tab]:not([data-active-tab="home"]) .topbar,
+    .main-content:has(.tab-view:not(#homeView):not(.hidden)) .topbar {
+        display: flex !important;
+        justify-content: flex-start;
+        align-items: center;
+        padding: calc(6px + env(safe-area-inset-top, 0px)) 16px 6px 16px;
+        margin: 0 0 8px 0;
+        min-height: 42px;
+        border-bottom: 1px solid var(--border-color);
+        background: var(--bg-body);
+    }
+
+    body[data-active-tab]:not([data-active-tab="home"]) .topbar .topbar-right,
+    .main-content[data-active-tab]:not([data-active-tab="home"]) .topbar .topbar-right,
+    .main-content:has(.tab-view:not(#homeView):not(.hidden)) .topbar .topbar-right {
+        display: flex !important;
+        margin-left: auto;
+        gap: 8px;
+    }
+
+    /* Provide safe top breathing room when topbar is present */
     body[data-active-tab]:not([data-active-tab="home"]) .main-content-body,
     .main-content[data-active-tab]:not([data-active-tab="home"]) .main-content-body,
     .main-content:has(.tab-view:not(#homeView):not(.hidden)) .main-content-body {
-        padding-top: calc(24px + env(safe-area-inset-top, 0px)) !important;
+        padding-top: 8px !important;
     }
 
     .header {
@@ -8019,6 +8099,10 @@ body.motion-off .focus-ring-fill { transition: none; }
     }
 
     @media (max-width: 480px) {
+        .topbar-brand-name {
+            font-size: 0.92rem;
+        }
+
         .sidebar {
             left: 0;
             right: 0;
@@ -8029,8 +8113,32 @@ body.motion-off .focus-ring-fill { transition: none; }
             border-radius: 0;
             border-left: none;
             border-right: none;
-            padding: 4px 6px calc(6px + env(safe-area-inset-bottom, 0px)) 6px;
+            padding: 4px 4px calc(6px + env(safe-area-inset-bottom, 0px)) 4px;
             box-shadow: 0 -4px 20px rgba(0, 0, 0, 0.08);
+        }
+
+        .nav-menu {
+            gap: 1px;
+        }
+
+        .nav-item {
+            padding: 4px 1px;
+            min-height: 44px;
+            border-radius: 10px;
+        }
+
+        .nav-item i, .nav-item svg {
+            width: 18px;
+            height: 18px;
+        }
+
+        .nav-item .nav-avatar-disc {
+            width: 18px;
+            height: 18px;
+        }
+
+        .nav-item .nav-label span {
+            font-size: 0.56rem;
         }
 
         #homeView .capture-wrap {
