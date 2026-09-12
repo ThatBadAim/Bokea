@@ -3766,16 +3766,48 @@ document.addEventListener('DOMContentLoaded', () => {
                 if (session?.user) {
                     localStorage.setItem('bokea_auth_token', session.access_token);
                     localStorage.setItem('bokea_user_id', session.user.id);
-                    if (!localStorage.getItem('bokea_username')) {
-                        const { data: profile } = await supabaseClient.from('profiles').select('*').eq('id', session.user.id).single();
-                        const name = profile?.first_name || session.user.user_metadata?.first_name || session.user.email.split('@')[0];
-                        localStorage.setItem('bokea_username', name);
-                        localStorage.setItem('bokea_setup_completed', profile?.is_setup_completed ? 'true' : 'false');
-                        if (profile?.wake_up_time) localStorage.setItem('bokea_wakeup_time', profile.wake_up_time);
-                        if (profile?.bed_time) localStorage.setItem('bokea_bed_time', profile.bed_time);
-                        if (profile?.work_start_time) localStorage.setItem('bokea_work_start', profile.work_start_time);
-                        if (profile?.work_end_time) localStorage.setItem('bokea_work_end', profile.work_end_time);
-                        if (profile?.work_days) localStorage.setItem('bokea_work_days', JSON.stringify(profile.work_days));
+                    const { data: profile } = await supabaseClient.from('profiles').select('*').eq('id', session.user.id).single();
+                    if (profile) {
+                        const name = profile.first_name || session.user.user_metadata?.first_name || session.user.email?.split('@')[0] || '';
+                        if (name) localStorage.setItem('bokea_username', name);
+                        localStorage.setItem('bokea_setup_completed', profile.is_setup_completed ? 'true' : 'false');
+                        if (profile.wake_up_time) localStorage.setItem('bokea_wakeup_time', profile.wake_up_time);
+                        if (profile.bed_time) localStorage.setItem('bokea_bed_time', profile.bed_time);
+                        if (profile.work_start_time) localStorage.setItem('bokea_work_start', profile.work_start_time);
+                        if (profile.work_end_time) localStorage.setItem('bokea_work_end', profile.work_end_time);
+                        if (profile.work_days) localStorage.setItem('bokea_work_days', JSON.stringify(profile.work_days));
+
+                        const cleanScope = `u_${String(session.user.id).replace(/[^a-zA-Z0-9_-]/g, '')}`;
+                        let localProf = {};
+                        try {
+                            localProf = JSON.parse(localStorage.getItem(`bokea_profile_${cleanScope}`) || localStorage.getItem('bokea_profile') || '{}') || {};
+                        } catch (e) {
+                            localProf = {};
+                        }
+
+                        localProf.firstName = profile.first_name || localProf.firstName || name;
+                        if (profile.display_name !== undefined) localProf.displayName = profile.display_name || '';
+                        if (profile.pronouns !== undefined) localProf.pronouns = profile.pronouns || '';
+                        if (profile.date_of_birth !== undefined) localProf.dateOfBirth = profile.date_of_birth || '';
+                        if (profile.gender !== undefined) localProf.gender = profile.gender || '';
+                        if (profile.bio !== undefined) localProf.bio = profile.bio || '';
+                        if (profile.country !== undefined) localProf.country = profile.country || '';
+                        if (profile.city !== undefined) localProf.city = profile.city || '';
+                        if (profile.time_zone !== undefined) localProf.timeZoneName = profile.time_zone || '';
+                        if (profile.phone_number !== undefined) localProf.phoneNumber = profile.phone_number || '';
+                        localProf.avatarDataUrl = profile.avatar_data_url || '';
+                        localProf.email = session.user.email || '';
+
+                        try {
+                            localStorage.setItem(`bokea_profile_${cleanScope}`, JSON.stringify(localProf));
+                            localStorage.setItem('bokea_profile', JSON.stringify(localProf));
+                        } catch (e) {
+                            console.warn("Could not cache synced profile:", e);
+                        }
+
+                        if (typeof applyAvatarEverywhere === 'function') {
+                            applyAvatarEverywhere(localProf.avatarDataUrl || '');
+                        }
                     }
                 } else {
                     // No session on the server means no session here. The
@@ -4289,6 +4321,28 @@ document.addEventListener('DOMContentLoaded', () => {
             if (profile?.work_days) {
                 localStorage.setItem('bokea_work_days', JSON.stringify(profile.work_days));
             }
+
+            const cleanScope = `u_${String(user.id).replace(/[^a-zA-Z0-9_-]/g, '')}`;
+            const userProfile = {
+                firstName: profile?.first_name || firstName,
+                displayName: profile?.display_name || '',
+                pronouns: profile?.pronouns || '',
+                dateOfBirth: profile?.date_of_birth || '',
+                gender: profile?.gender || '',
+                bio: profile?.bio || '',
+                country: profile?.country || '',
+                city: profile?.city || '',
+                timeZoneName: profile?.time_zone || '',
+                phoneNumber: profile?.phone_number || '',
+                avatarDataUrl: profile?.avatar_data_url || '',
+                email: user.email || ''
+            };
+            try {
+                localStorage.setItem(`bokea_profile_${cleanScope}`, JSON.stringify(userProfile));
+                localStorage.setItem('bokea_profile', JSON.stringify(userProfile));
+            } catch (e) {
+                console.warn('Could not cache profile locally:', e);
+            }
             setTimeout(() => {
                 window.location.reload();
             }, 100);
@@ -4438,6 +4492,8 @@ document.addEventListener('DOMContentLoaded', () => {
         localStorage.removeItem('bokea_work_start');
         localStorage.removeItem('bokea_work_end');
         localStorage.removeItem('bokea_work_days');
+        localStorage.removeItem('bokea_profile');
+        if (typeof applyAvatarEverywhere === 'function') applyAvatarEverywhere('');
 
         // An empty guest bucket is not data, but it is still clutter that
         // suggests the device remembers something. Drop it too.
@@ -5105,6 +5161,7 @@ document.addEventListener('DOMContentLoaded', () => {
         // network agrees is a profile that vanishes on a train.
         try {
             localStorage.setItem(STORAGE_KEYS.PROFILE, JSON.stringify(profile));
+            localStorage.setItem('bokea_profile', JSON.stringify(profile));
         } catch (e) {
             // Almost always the quota, and almost always the picture.
             showToast('There is no room left in this browser to store that.', 'error');
@@ -5281,9 +5338,13 @@ document.addEventListener('DOMContentLoaded', () => {
         }
 
         const form = profEl('profileForm');
-        if (form && !form.dataset.avatar && remote.avatarDataUrl) {
-            form.dataset.avatar = remote.avatarDataUrl;
-            filledSomething = true;
+        if (form) {
+            const currentAvatar = form.dataset.avatar || '';
+            const remoteAvatar = remote.avatarDataUrl || '';
+            if (currentAvatar !== remoteAvatar) {
+                form.dataset.avatar = remoteAvatar;
+                filledSomething = true;
+            }
         }
 
         const select = profEl('profPronouns');
@@ -5313,6 +5374,9 @@ document.addEventListener('DOMContentLoaded', () => {
         renderProfileCard(merged);
         renderProfileDerived(merged);
         validateDob();
+        if (typeof applyAvatarEverywhere === 'function') {
+            applyAvatarEverywhere(merged.avatarDataUrl || '');
+        }
     }
 
     // ---- wiring, once ----

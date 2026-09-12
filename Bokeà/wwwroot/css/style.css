@@ -5446,19 +5446,43 @@ body.motion-off *::after {
 
 @media (max-width: 900px) {
     .topbar {
+        display: flex;
         flex-wrap: wrap;
-        gap: 10px 16px;
+        align-items: center;
+        justify-content: space-between;
+        gap: 10px 0;
         padding: 12px 16px;
+    }
+
+    .topbar-brand {
+        display: flex;
+        align-items: center;
+        order: 1;
+        flex: 0 0 auto;
+    }
+
+    .topbar-right {
+        display: flex !important;
+        align-items: center;
+        order: 2;
+        margin-left: auto;
+        gap: 12px;
+        flex: 0 0 auto;
+    }
+
+    .now-clock {
+        order: 3;
+        flex: 0 0 100%;
+        width: 100%;
+        margin-top: 4px;
     }
 
     .now-block {
         max-width: none;
-        flex-basis: 100%;
-        order: 3;
-    }
-
-    .topbar-right {
-        margin-left: auto;
+        flex: 0 0 100%;
+        width: 100%;
+        order: 4;
+        margin-top: 4px;
     }
 }
 
@@ -5476,29 +5500,48 @@ body.motion-off *::after {
    text sizes. */
 @media (max-width: 620px) {
     .topbar {
-        padding: 10px 14px;
+        padding: calc(10px + env(safe-area-inset-top, 0px)) 16px 12px 16px;
         row-gap: 8px;
     }
 
-    .now-clock {
-        flex-direction: column;
-        align-items: flex-start;
-        gap: 0;
-        min-width: 0;
-    }
-
-    .now-clock-time {
-        font-size: 1.9rem;
-        line-height: 1.1;
-    }
-
-    .now-clock-date {
-        font-size: 0.8rem;
+    .topbar-brand {
+        order: 1;
     }
 
     .topbar-right {
+        order: 2;
         margin-left: auto;
-        gap: 6px;
+        gap: 10px;
+    }
+
+    .now-clock {
+        order: 3;
+        flex: 0 0 100%;
+        width: 100%;
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 2px;
+        min-width: 0;
+        margin-top: 4px;
+    }
+
+    .now-clock-time {
+        font-size: 2.1rem;
+        line-height: 1.05;
+        font-weight: 700;
+        letter-spacing: -0.5px;
+    }
+
+    .now-clock-date {
+        font-size: 0.82rem;
+        color: var(--text-secondary);
+    }
+
+    .now-block {
+        order: 4;
+        flex: 0 0 100%;
+        width: 100%;
+        margin-top: 4px;
     }
 
     /* Inline style on the element, so this needs the extra weight. */
@@ -7873,7 +7916,9 @@ body.motion-off .focus-ring-fill { transition: none; }
 
     .sidebar .brand,
     .sidebar .user-profile,
-    .sidebar .sidebar-search {
+    .sidebar .sidebar-search,
+    .sidebar .nav-item[data-tab="analytics"],
+    .sidebar .nav-item[data-tab="settings"] {
         display: none !important;
     }
 
@@ -7981,29 +8026,80 @@ body.motion-off .focus-ring-fill { transition: none; }
         position: sticky;
         top: 0;
         z-index: 500;
-        padding: calc(8px + env(safe-area-inset-top, 0px)) 16px 8px 16px;
+        padding: calc(10px + env(safe-area-inset-top, 0px)) 16px 12px 16px;
         margin: 0 0 12px 0;
         width: 100%;
         background: var(--bg-body);
         border-bottom: 1px solid var(--border-color);
         box-sizing: border-box;
-        /* flex-start + topbar-right's margin-left:auto (below) keeps the
-           wordmark, clock and day-progress grouped on the left with a
-           consistent gap, and the icon cluster pinned to the right —
-           regardless of how many left-side items a given view shows. */
-        justify-content: flex-start;
-        gap: 10px;
+        display: flex;
+        flex-wrap: wrap;
+        align-items: center;
+        justify-content: space-between;
+        gap: 8px 0;
     }
 
-    /* The one place "Bokeà" is on screen once you're past sign-in — the
-       bottom-dock nav has no room for it once it becomes a floating pill. */
+    /* Topbar Brand (Bokeà wordmark) positioned on top-left */
     .topbar-brand {
         display: flex;
         align-items: center;
+        order: 1;
+        flex: 0 0 auto;
+        min-height: 38px;
     }
 
+    .topbar-brand-name {
+        font-family: var(--font-display);
+        font-size: 1.25rem;
+        font-weight: 700;
+        letter-spacing: -0.3px;
+        color: var(--text-main);
+    }
+
+    /* Topbar Right action icons (Theme toggle, notifications, profile) pinned to top-right */
     .topbar-right {
+        display: flex !important;
+        align-items: center;
+        order: 2;
         margin-left: auto;
+        gap: 12px;
+        flex: 0 0 auto;
+        min-height: 38px;
+    }
+
+    /* Now Clock on Home tab: sits cleanly on its own full-width row below the brand header */
+    .now-clock {
+        order: 3;
+        flex: 0 0 100%;
+        width: 100%;
+        display: flex;
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 2px;
+        margin-top: 6px;
+        margin-bottom: 2px;
+    }
+
+    .now-clock-time {
+        font-size: 2.2rem;
+        line-height: 1.05;
+        font-weight: 700;
+        letter-spacing: -0.5px;
+    }
+
+    .now-clock-date {
+        font-size: 0.85rem;
+        color: var(--text-secondary);
+        font-weight: 500;
+    }
+
+    /* Day progress bar on Home tab: sits cleanly on its own full-width row below the clock */
+    .now-block {
+        order: 4;
+        flex: 0 0 100%;
+        width: 100%;
+        max-width: 100%;
+        margin-top: 6px;
     }
 
     /* Mobile Topbar: on mobile devices, non-home views hide the heavy live clock
@@ -8022,11 +8118,11 @@ body.motion-off .focus-ring-fill { transition: none; }
     .main-content[data-active-tab]:not([data-active-tab="home"]) .topbar,
     .main-content:has(.tab-view:not(#homeView):not(.hidden)) .topbar {
         display: flex !important;
-        justify-content: flex-start;
+        justify-content: space-between;
         align-items: center;
-        padding: calc(6px + env(safe-area-inset-top, 0px)) 16px 6px 16px;
+        padding: calc(10px + env(safe-area-inset-top, 0px)) 16px 10px 16px;
         margin: 0 0 8px 0;
-        min-height: 42px;
+        min-height: 48px;
         border-bottom: 1px solid var(--border-color);
         background: var(--bg-body);
     }
@@ -8036,7 +8132,7 @@ body.motion-off .focus-ring-fill { transition: none; }
     .main-content:has(.tab-view:not(#homeView):not(.hidden)) .topbar .topbar-right {
         display: flex !important;
         margin-left: auto;
-        gap: 8px;
+        gap: 12px;
     }
 
     /* Provide safe top breathing room when topbar is present */
@@ -8100,7 +8196,7 @@ body.motion-off .focus-ring-fill { transition: none; }
 
     @media (max-width: 480px) {
         .topbar-brand-name {
-            font-size: 0.92rem;
+            font-size: 1.15rem;
         }
 
         .sidebar {
@@ -8113,32 +8209,33 @@ body.motion-off .focus-ring-fill { transition: none; }
             border-radius: 0;
             border-left: none;
             border-right: none;
-            padding: 4px 4px calc(6px + env(safe-area-inset-bottom, 0px)) 4px;
+            padding: 6px 8px calc(6px + env(safe-area-inset-bottom, 0px)) 8px;
             box-shadow: 0 -4px 20px rgba(0, 0, 0, 0.08);
         }
 
         .nav-menu {
-            gap: 1px;
+            gap: 4px;
         }
 
         .nav-item {
-            padding: 4px 1px;
-            min-height: 44px;
-            border-radius: 10px;
+            padding: 6px 4px;
+            min-height: 48px;
+            border-radius: 12px;
         }
 
         .nav-item i, .nav-item svg {
-            width: 18px;
-            height: 18px;
+            width: 20px;
+            height: 20px;
         }
 
         .nav-item .nav-avatar-disc {
-            width: 18px;
-            height: 18px;
+            width: 20px;
+            height: 20px;
         }
 
         .nav-item .nav-label span {
-            font-size: 0.56rem;
+            font-size: 0.68rem;
+            font-weight: 600;
         }
 
         #homeView .capture-wrap {
@@ -8147,7 +8244,7 @@ body.motion-off .focus-ring-fill { transition: none; }
             transform: none;
             width: auto;
             max-width: none;
-            bottom: calc(60px + env(safe-area-inset-bottom, 0px));
+            bottom: calc(68px + env(safe-area-inset-bottom, 0px));
         }
     }
 
