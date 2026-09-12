@@ -4919,6 +4919,102 @@ body.motion-off *::after {
 
 /* Several hints are written by script and are blank until they have
    something to say. An empty one must take no room at all. */
+/* Common times as taps rather than recall. Each shows the hour it means for
+   this person, so nothing has to be guessed or remembered to use it. */
+.time-presets {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    margin-top: 8px;
+}
+
+.time-preset {
+    display: inline-flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 1px;
+    min-height: var(--tap);
+    padding: 6px 10px;
+    border: 1px solid var(--border-color);
+    border-radius: var(--border-radius-md);
+    background: transparent;
+    color: var(--text-secondary);
+    font-family: var(--font-inter);
+    cursor: pointer;
+    transition: border-color var(--transition-speed) ease, color var(--transition-speed) ease;
+}
+
+.time-preset:hover:not(:disabled),
+.time-preset:focus-visible {
+    border-color: var(--border-color-dark);
+    color: var(--text-main);
+}
+
+.time-preset.active {
+    border-color: var(--primary-color);
+    color: var(--text-main);
+    font-weight: 700;
+}
+
+.time-preset:disabled {
+    opacity: 0.45;
+    cursor: default;
+}
+
+.time-preset-name {
+    font-size: 0.76rem;
+    font-weight: 600;
+    line-height: 1.2;
+}
+
+.time-preset-clock {
+    font-size: 0.72rem;
+    line-height: 1.2;
+    color: var(--text-muted);
+}
+
+.time-preset.active .time-preset-clock {
+    color: var(--text-secondary);
+}
+
+.time-preset-clear {
+    justify-content: center;
+    font-size: 0.78rem;
+    font-weight: 600;
+}
+
+/* The reason a save did not go through, said beside the field it is about.
+   Never colour alone: the icon and the words carry it too. */
+.field-error {
+    display: flex;
+    align-items: flex-start;
+    gap: 6px;
+    margin: 6px 0 0 0;
+    font-size: 0.8rem;
+    line-height: 1.4;
+    font-weight: 600;
+    color: var(--color-red);
+    text-align: left;
+}
+
+.field-error::before {
+    content: "!";
+    flex: 0 0 auto;
+    width: 16px;
+    height: 16px;
+    margin-top: 1px;
+    border-radius: 50%;
+    border: 1.5px solid currentColor;
+    font-size: 0.7rem;
+    line-height: 13px;
+    text-align: center;
+    font-weight: 800;
+}
+
+.field-error[hidden] {
+    display: none;
+}
+
 .field-hint:empty {
     display: none;
 }
@@ -5737,6 +5833,14 @@ body.motion-off *::after {
     font-size: 0.92rem;
     font-weight: 600;
     color: var(--text-main);
+}
+
+/* The last chance to keep a copy, said at the moment it still helps. */
+.set-confirm-note {
+    margin: 8px 0 0 0;
+    font-size: 0.82rem;
+    line-height: 1.45;
+    color: var(--text-secondary);
 }
 
 .set-confirm-row {
@@ -6628,14 +6732,9 @@ span.settings-label {
     font-size: 0.82rem;
 }
 
-/* Edit and delete go behind one quiet button. Three loud controls per row
-   is three decisions to get past before the row can be done at all, and
+/* Start, edit and delete go behind one quiet button. Three loud controls per
+   row is three decisions to get past before the row can be done at all, and
    the loudest of them used to be the irreversible one. */
-.row-more-wrap {
-    position: relative;
-    display: inline-flex;
-}
-
 .row-more {
     width: var(--tap);
     height: var(--tap);
@@ -6657,17 +6756,20 @@ span.settings-label {
 
 .row-more:hover,
 .row-more:focus-visible,
-.row-more-wrap.open .row-more {
+.row-more[aria-expanded="true"] {
     border-color: var(--border-color);
     color: var(--text-main);
 }
 
-.row-menu {
-    display: none;
+/* Built on the body and positioned from script, like the snooze menu. Inside
+   the row it was clipped by .fold's overflow: hidden and pinned under the
+   capture bar and bottom nav by .tab-view's stacking context - which is to
+   say it disappeared exactly where a phone needs it, at the foot of the
+   screen. 1200 matches .snooze-menu: above both pinned bars, below modals. */
+.row-menu.is-floating {
+    display: flex;
     position: absolute;
-    top: calc(100% + 6px);
-    right: 0;
-    z-index: 40;
+    z-index: 1200;
     min-width: 172px;
     flex-direction: column;
     padding: 6px;
@@ -6675,14 +6777,6 @@ span.settings-label {
     border: 1px solid var(--border-color);
     border-radius: var(--border-radius-lg);
     box-shadow: 0 12px 28px rgba(0, 0, 0, 0.16);
-}
-
-.row-more-wrap.open {
-    z-index: 50;
-}
-
-.row-more-wrap.open .row-menu {
-    display: flex;
 }
 
 .row-menu button {
@@ -7114,8 +7208,14 @@ body.motion-off .tick-btn:active {
     font-size: 0.82rem;
 }
 
-.parked-row-bin { padding: 0 12px; }
-.parked-row-bin i { width: 16px; height: 16px; }
+/* The two answers that need no thought sit on the row; Pick a day, Start and
+   Delete are behind the same overflow button the task rows use. Four buttons
+   laid across a line of text - one of them destructive - is not a row anybody
+   reads, it is a row anybody mis-taps. */
+.parked-row-actions .row-more {
+    width: 40px;
+    height: 40px;
+}
 
 /* ---------- Undo, and the toast that carries it ---------- */
 .toast {
@@ -7863,8 +7963,55 @@ body.motion-off .focus-ring-fill { transition: none; }
         }
     }
 
-    .right-now-actions { flex-direction: column; align-items: stretch; }
-    .right-now-actions .btn { width: 100%; justify-content: center; min-height: 44px; }
+    /* Compact, Ergonomic Right Now Hero Card on Mobile */
+    .right-now {
+        border-radius: 18px;
+    }
+
+    .right-now-body {
+        padding: 16px 16px 14px 16px !important;
+        gap: 12px !important;
+    }
+
+    .right-now-title {
+        font-size: 1.45rem !important;
+        line-height: 1.2 !important;
+        letter-spacing: -0.3px;
+        margin-top: 2px;
+    }
+
+    .right-now-why {
+        font-size: 0.86rem !important;
+        line-height: 1.35 !important;
+    }
+
+    .right-now-side {
+        flex-direction: row !important;
+        align-items: center !important;
+        justify-content: space-between !important;
+        gap: 8px;
+        margin-top: 2px;
+    }
+
+    .right-now-mins b {
+        font-size: 1.5rem !important;
+    }
+
+    .right-now-actions {
+        display: grid !important;
+        grid-template-columns: 1fr 1fr;
+        gap: 8px;
+        width: 100%;
+    }
+
+    .right-now-actions .btn {
+        width: 100%;
+        min-height: 38px !important;
+        padding: 0 10px !important;
+        font-size: 0.82rem !important;
+        justify-content: center;
+        border-radius: var(--border-radius-md);
+    }
 
     .task-more-pair { grid-template-columns: 1fr; }
 
@@ -8306,18 +8453,20 @@ body.motion-off .focus-ring-fill { transition: none; }
         border-radius: 10px;
     }
 
-    /* Calmer, ADHD-Friendly Task Cards on Mobile */
+    /* Compact, Ergonomic Task Cards on Mobile */
     .task-row {
         position: relative;
-        display: flex;
-        flex-direction: column;
-        align-items: stretch;
-        gap: 0;
-        padding: 12px 14px 10px 18px;
-        border-radius: 16px;
+        display: flex !important;
+        flex-direction: row !important;
+        flex-wrap: nowrap !important;
+        align-items: center !important;
+        gap: 10px;
+        padding: 9px 12px 9px 16px !important;
+        border-radius: 14px;
         background: var(--bg-card);
         border: 1px solid var(--border-color);
-        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.03);
+        box-shadow: 0 1px 4px rgba(0, 0, 0, 0.03);
+        min-height: 52px;
     }
 
     /* Colored Urgency Rail on Left Edge */
@@ -8325,34 +8474,35 @@ body.motion-off .focus-ring-fill { transition: none; }
         left: 0;
         top: 0;
         bottom: 0;
-        width: 6px;
-        border-radius: 16px 0 0 16px;
+        width: 5px;
+        border-radius: 14px 0 0 14px;
     }
 
-    /* Primary Task Content Row: Tick + Details */
+    /* Normal document flow tick button */
+    .task-row .tick-btn {
+        position: static !important;
+        flex: 0 0 28px;
+        width: 28px;
+        height: 28px;
+        margin: 0;
+        z-index: 1;
+    }
+
+    /* Primary Task Content Row: Title + Meta */
     .task-row-main {
+        flex: 1 1 auto !important;
+        min-width: 0;
         display: flex;
         flex-direction: column;
-        gap: 4px;
-        width: 100%;
-        padding-left: 36px; /* Room for the tick button */
-        position: relative;
-    }
-
-    .task-row .tick-btn {
-        position: absolute;
-        left: 14px;
-        top: 12px;
-        width: 26px;
-        height: 26px;
-        flex-shrink: 0;
-        z-index: 2;
+        gap: 2px;
+        padding-left: 0 !important;
+        position: static !important;
     }
 
     .task-row-name {
-        font-size: 0.98rem;
+        font-size: 0.94rem;
         font-weight: 600;
-        line-height: 1.35;
+        line-height: 1.25;
         color: var(--text-main);
         word-break: break-word;
     }
@@ -8360,31 +8510,33 @@ body.motion-off .focus-ring-fill { transition: none; }
     /* Clear focus anchor for the lead task */
     .task-row.is-lead {
         border-color: var(--color-primary, #6366f1);
-        box-shadow: 0 0 0 2px var(--color-primary-glow, rgba(99, 102, 241, 0.2)), 0 4px 14px rgba(0, 0, 0, 0.06);
+        box-shadow: 0 0 0 2px var(--color-primary-glow, rgba(99, 102, 241, 0.2)), 0 2px 10px rgba(0, 0, 0, 0.05);
     }
 
     .task-row-lead {
-        font-size: 0.7rem;
+        font-size: 0.68rem;
         color: var(--color-primary, #6366f1);
         font-weight: 700;
-        margin-bottom: 2px;
+        margin-bottom: 1px;
     }
 
-    /* Single-line, calm meta row */
+    /* Single-line, compact meta row */
     .task-row-meta {
         display: flex;
         align-items: center;
-        gap: 6px;
-        flex-wrap: wrap;
-        margin-top: 2px;
-        font-size: 0.74rem;
+        gap: 5px;
+        flex-wrap: nowrap;
+        overflow: hidden;
+        margin-top: 1px;
+        font-size: 0.72rem;
     }
 
     .task-row-meta .task-row-when,
     .task-row-meta .task-row-tag {
-        font-size: 0.72rem;
-        padding: 2px 7px;
+        font-size: 0.7rem;
+        padding: 1px 6px;
         gap: 4px;
+        white-space: nowrap;
     }
 
     /* Hide redundant cadence tag and noisy state pill on mobile to eliminate clutter */
@@ -8396,55 +8548,74 @@ body.motion-off .focus-ring-fill { transition: none; }
         display: none !important;
     }
 
-    /* Bottom Utility Strip: Duration on left, Snooze & Menu on right */
+    /* Integrated Side Group: Duration & Actions aligned to the right */
     .task-row-side {
-        width: 100%;
-        display: flex;
-        align-items: center;
-        justify-content: space-between;
-        margin-top: 8px;
-        padding-top: 8px;
-        padding-left: 36px;
-        border-top: 1px solid var(--border-color);
-        opacity: 0.92;
+        flex: 0 0 auto !important;
+        display: flex !important;
+        flex-direction: column !important;
+        align-items: flex-end !important;
+        justify-content: center !important;
+        gap: 3px !important;
+        width: auto !important;
+        margin: 0 !important;
+        padding: 0 !important;
+        border-top: none !important;
+        opacity: 0.95;
     }
 
     .task-row-mins {
-        font-size: 0.75rem;
-        padding: 3px 8px;
+        font-size: 0.72rem;
+        padding: 2px 7px;
         background: var(--bg-card);
         border: 1px solid var(--border-color);
-        border-radius: 8px;
+        border-radius: 6px;
+        margin-right: 0 !important;
+        line-height: 1.2;
+    }
+
+    .task-row-mins b {
+        font-size: 0.78rem;
     }
 
     .task-row-actions {
         display: inline-flex;
         align-items: center;
-        gap: 6px;
+        gap: 4px;
     }
 
     .task-row-actions .row-later {
-        padding: 0 12px;
-        min-height: 30px;
-        font-size: 0.76rem;
-        border-radius: 8px;
+        padding: 0 8px;
+        min-height: 26px;
+        font-size: 0.72rem;
+        border-radius: 6px;
     }
 
     .task-row-actions .row-more {
-        width: 30px;
-        height: 30px;
-        border-radius: 8px;
+        width: 26px;
+        height: 26px;
+        border-radius: 6px;
     }
 
     /* Completed state styling */
     .task-row.is-done {
-        opacity: 0.65;
+        opacity: 0.6;
     }
 
     .task-row.is-done .task-row-side {
-        border-top: none;
-        margin-top: 2px;
-        padding-top: 0;
+        border-top: none !important;
+        margin: 0 !important;
+        padding: 0 !important;
+    }
+
+    /* Calendar Day List inside bottom sheet drawer */
+    .cal-day-list .task-row {
+        flex-wrap: nowrap !important;
+        padding: 9px 12px 9px 16px !important;
+    }
+
+    .cal-day-list .task-row-side {
+        flex: 0 0 auto !important;
+        width: auto !important;
     }
 
     .completed-tasks-wrap {
@@ -8456,3 +8627,110 @@ body.motion-off .focus-ring-fill { transition: none; }
     }
 }
 
+
+/* ---------- Everything: arranging folded away from doing ----------
+   Area and sort are answers to "how would I like this arranged", which is a
+   different question from "what needs doing" and a much rarer one. They fold
+   behind one control so the list starts where the screen starts. */
+.tasks-arrange {
+    position: relative;
+}
+
+.tasks-arrange-summary {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    min-height: var(--tap);
+    padding: 0 14px;
+    border: 1px solid var(--border-color);
+    border-radius: var(--border-radius-md);
+    background: var(--bg-card);
+    color: var(--text-secondary);
+    font-size: 0.8rem;
+    font-weight: 600;
+    white-space: nowrap;
+    cursor: pointer;
+    list-style: none;
+}
+
+.tasks-arrange-summary::-webkit-details-marker { display: none; }
+
+.tasks-arrange-summary:hover,
+.tasks-arrange[open] .tasks-arrange-summary {
+    border-color: var(--border-color-dark);
+    color: var(--text-main);
+}
+
+.tasks-arrange-summary i, .tasks-arrange-summary svg {
+    width: 15px;
+    height: 15px;
+}
+
+.tasks-arrange-body {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    margin-top: 8px;
+    padding: 14px;
+    border: 1px solid var(--border-color);
+    border-radius: var(--border-radius-lg);
+    background: var(--bg-card);
+}
+
+.tasks-arrange-field {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+}
+
+.tasks-arrange-field .tasks-filter-select {
+    width: 100%;
+}
+
+/* The cap toggle explains itself in words on the page. It used to do it in a
+   title attribute, which a touch screen never shows. */
+.cap-toggle-help {
+    margin: 6px 0 10px 0;
+    font-size: 0.78rem;
+    line-height: 1.4;
+    color: var(--text-secondary);
+}
+
+.cap-toggle.active {
+    border-color: var(--primary-color);
+    color: var(--text-main);
+}
+
+/* On a phone the arrange panel is the full width of the list rather than a
+   dropdown that would run off the edge. */
+@media (max-width: 768px) {
+    .tasks-filter-bar {
+        flex-direction: column;
+        align-items: stretch;
+    }
+
+    .tasks-filter-controls {
+        justify-content: space-between;
+    }
+
+    .tasks-arrange {
+        flex: 1 1 auto;
+    }
+
+    .tasks-arrange-summary {
+        width: 100%;
+        justify-content: center;
+    }
+}
+
+/* ---------- The way in that costs nothing ----------
+   Separated from the form above it, because it is a different answer to
+   "how do I start" rather than another field to fill in. */
+.local-mode-box {
+    margin-top: 20px;
+    padding-top: 18px;
+    border-top: 1px solid var(--border-color);
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}

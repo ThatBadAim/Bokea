@@ -15,6 +15,35 @@ if (window.supabase && window.ENV && typeof window.ENV.isConfigured === 'functio
 }
 
 // ---------------------------------------------------------------------------
+// Password recovery
+//
+// A recovery link arrives as "#access_token=...&type=recovery". Supabase reads
+// that fragment and turns it into a real session, which means that without
+// this flag the app would simply open - leaving the account still shut behind
+// the password the person could not remember. Read synchronously at load,
+// before anything asks whether there is a session.
+// ---------------------------------------------------------------------------
+let isPasswordRecovery = (function () {
+    try {
+        const hash = window.location.hash || '';
+        const query = window.location.search || '';
+        return /(^|[#&?])type=recovery(&|$)/.test(hash) || /(^|[&?])type=recovery(&|$)/.test(query);
+    } catch (e) {
+        return false;
+    }
+})();
+
+// Once the new password is saved the grant is spent, and leaving it in the
+// address bar means a refresh drops back into the reset form.
+function stripRecoveryHash() {
+    try {
+        if (window.history && window.history.replaceState) {
+            window.history.replaceState(null, '', window.location.pathname + window.location.search);
+        }
+    } catch (e) { /* not fatal */ }
+}
+
+// ---------------------------------------------------------------------------
 // localStorage keys
 //
 // Task and history data is namespaced per account. Two people signing in on the
@@ -31,6 +60,26 @@ let storageScope = 'guest';
 // the only reason the name survives is to recognise one left on a device from
 // before and throw it away rather than honour it. See clearStaleLocalSession().
 const LEGACY_OFFLINE_TOKEN = 'offline_mode_token';
+
+// Working without an account, done honestly this time. The old version wrote
+// LEGACY_OFFLINE_TOKEN into bokea_auth_token - the browser minting itself a
+// session and the app believing it, which is why it had to go. This is a
+// separate flag that never claims to be authentication: it says "there is
+// nobody signed in and that is on purpose", data stays in the 'guest' bucket,
+// and no request is ever made in anyone's name.
+const LOCAL_MODE_KEY = 'bokea_local_mode';
+
+function isLocalMode() {
+    try { return localStorage.getItem(LOCAL_MODE_KEY) === 'true'; }
+    catch (e) { return false; }
+}
+
+function setLocalMode(on) {
+    try {
+        if (on) localStorage.setItem(LOCAL_MODE_KEY, 'true');
+        else localStorage.removeItem(LOCAL_MODE_KEY);
+    } catch (e) { /* storage blocked */ }
+}
 
 // Returns a stable, filesystem-safe id for whoever is currently signed in.
 // 'guest' means nobody is: it is the empty bucket the app reads before a session
@@ -446,7 +495,7 @@ async function apiRequest(endpoint, method = 'GET', body = null) {
     // (isFallbackMode), not a way to run without one. Reaching here without a
     // client at all means no session was ever granted, so there is nothing to
     // serve from the network either way.
-    if (isFallbackMode || !supabaseClient) {
+    if (isFallbackMode || !supabaseClient || isLocalMode()) {
         return handleLocalStorageFallback(endpoint, method, body);
     }
 
@@ -1247,10 +1296,10 @@ function renderStats() {
     localStorage.setItem(longestStreakKey, longestStreak);
     const streakCard = document.querySelector('.stat-card.streak');
     if (streakCard) {
-        streakCard.title = `Best streak: ${longestStreak} day${longestStreak === 1 ? '' : 's'} of completing every goal`;
+        streakCard.title = `Your best so far: ${longestStreak} day${longestStreak === 1 ? '' : 's'} in a row`;
     }
     
-    // 3. Compliance Rate (average compliance of the visible graph range)
+    // 3. How often things actually get finished, across the visible range.
     let avgComp = 0;
     if (historyData && historyData.length > 0) {
         const sorted = [...historyData].sort((a, b) => new Date(b.date) - new Date(a.date));
@@ -1384,19 +1433,28 @@ function renderParked(list) {
 
     if (count) count.textContent = list.length === 1 ? '1 thought' : `${list.length} thoughts`;
 
-    body.innerHTML = list.map(t => `
-        <div class="parked-row" data-task-id="${esc(String(t.id))}">
-            <span class="parked-row-name">${esc(t.name)}</span>
+    // Two answers and a menu. This row used to carry four buttons - Today,
+    // Tomorrow, Pick a day, and a bin - which on a phone is four decisions
+    // laid across a line of text, one of them destructive. The two answers
+    // that need no thought stay; the rest go behind the same overflow button
+    // the task rows already use, so both kinds of row read the same way.
+    body.innerHTML = list.map(t => {
+        const id = esc(String(t.id));
+        const name = esc(t.name);
+        return `
+        <div class="parked-row" data-task-id="${id}">
+            <span class="parked-row-name">${name}</span>
             <span class="parked-row-actions">
-                <button type="button" class="btn btn-secondary" onclick="scheduleParked('${esc(String(t.id))}', 'today')">Today</button>
-                <button type="button" class="btn btn-secondary" onclick="scheduleParked('${esc(String(t.id))}', 'tomorrow')">Tomorrow</button>
-                <button type="button" class="btn btn-secondary" onclick="openEditTaskModal('${esc(String(t.id))}')" title="Pick a day">Pick a day</button>
-                <button type="button" class="btn btn-secondary parked-row-bin" onclick="deleteTask('${esc(String(t.id))}')" title="Delete">
-                    <i data-lucide="trash-2"></i><span class="sr-only">Delete</span>
+                <button type="button" class="btn btn-secondary" aria-label="Put ${name} on today" onclick="scheduleParked('${id}', 'today')">Today</button>
+                <button type="button" class="btn btn-secondary" aria-label="Put ${name} on tomorrow" onclick="scheduleParked('${id}', 'tomorrow')">Tomorrow</button>
+                <button type="button" class="row-more" aria-haspopup="true" aria-expanded="false"
+                        aria-label="More for ${name}" onclick="toggleRowMenu(this, '${id}', false, 'parked')">
+                    <i data-lucide="more-horizontal"></i>
                 </button>
             </span>
         </div>
-    `).join('');
+    `;
+    }).join('');
     refreshIcons();
 }
 
@@ -1696,72 +1754,135 @@ function taskRowMarkup(task, dateStr, opts) {
                 ${!done && meta.key !== 'green' ? `<span class="state-pill ${meta.cls}"><i data-lucide="${meta.icon}"></i>${meta.word}</span>` : ''}
                 <span class="task-row-actions">
                     ${!done ? `<button type="button" class="btn btn-secondary row-later" aria-label="Push ${name} to later" onclick="openSnoozeMenu('${task.id}', this)">Later</button>` : ''}
-                    <span class="row-more-wrap">
-                        <button type="button" class="row-more" aria-haspopup="true" aria-expanded="false"
-                                aria-label="More for ${name}" onclick="toggleRowMenu(this)">
-                            <i data-lucide="more-horizontal"></i>
-                        </button>
-                        <span class="row-menu" role="menu">
-                            <button type="button" role="menuitem" onclick="closeRowMenus(); openEditTaskModal('${task.id}')"><i data-lucide="edit-2"></i>Edit</button>
-                            <button type="button" role="menuitem" class="is-danger" onclick="closeRowMenus(); deleteTask('${task.id}')"><i data-lucide="trash-2"></i>Delete</button>
-                        </span>
-                    </span>
+                    <button type="button" class="row-more" aria-haspopup="true" aria-expanded="false"
+                            aria-label="More for ${name}" onclick="toggleRowMenu(this, '${task.id}', ${done ? 'true' : 'false'}, 'task')">
+                        <i data-lucide="more-horizontal"></i>
+                    </button>
                 </span>
             </span>
         </div>
     `;
 }
 
-// Edit and Delete live behind one button. Three equally loud controls on a
-// row is three decisions to get past before the row can be done at all,
+// Start, Edit and Delete live behind one button. Three equally loud controls
+// on a row is three decisions to get past before the row can be done at all,
 // and the loudest of the three used to be the one that throws work away.
-function closeRowMenus(except) {
-    document.querySelectorAll('.row-more-wrap.open').forEach(wrap => {
-        if (wrap === except) return;
-        wrap.classList.remove('open');
-        const btn = wrap.querySelector('.row-more');
-        if (btn) btn.setAttribute('aria-expanded', 'false');
-    });
+//
+// Start is in here rather than on the row for the same reason: the timer used
+// to be reachable from exactly one place, the Right Now card, so if the task
+// the app had surfaced was not the one you could face, the one tool for
+// starting anything was gone. It now works on any row, without the row
+// growing a fourth control.
+// The menu is built on the body rather than inside the row, for the same
+// reason the snooze menu already is. Two things make an in-row menu
+// unopenable exactly where it is needed most: .fold has overflow: hidden, so
+// anything escaping a row inside "Waiting on you" or "Parked" is cut off at
+// the fold edge; and .tab-view carries an animation with fill-mode both,
+// whose transform leaves a permanent stacking context that no z-index can
+// climb out of to clear the pinned capture bar and bottom nav. A row near the
+// bottom of a phone screen is precisely where the menu used to vanish.
+function closeRowMenus() {
+    const menu = document.getElementById('rowMenu');
+    if (!menu) return;
+    const owner = menu._owner;
+    menu.remove();
+    document.removeEventListener('click', closeRowMenusOnOutside, true);
+    if (owner && document.contains(owner)) {
+        owner.setAttribute('aria-expanded', 'false');
+    }
 }
 
-function toggleRowMenu(btn) {
-    const wrap = btn.closest('.row-more-wrap');
-    if (!wrap) return;
-    const opening = !wrap.classList.contains('open');
-    closeRowMenus(wrap);
-    wrap.classList.toggle('open', opening);
-    btn.setAttribute('aria-expanded', opening ? 'true' : 'false');
-    if (opening) {
-        const first = wrap.querySelector('.row-menu button');
-        if (first) first.focus();
+function closeRowMenusAndReturn() {
+    const menu = document.getElementById('rowMenu');
+    const owner = menu ? menu._owner : null;
+    closeRowMenus();
+    if (owner && document.contains(owner)) owner.focus();
+}
+
+function closeRowMenusOnOutside(e) {
+    const menu = document.getElementById('rowMenu');
+    if (menu && !menu.contains(e.target) && !e.target.closest('.row-more')) closeRowMenus();
+}
+
+// `done` decides only whether Start is offered: there is nothing to start
+// about a task that is already finished. `kind` is 'task' or 'parked' - a
+// parked thought has no date, so the thing it needs is a day, not an edit,
+// and "Later" would be putting off something that was never expected.
+function toggleRowMenu(btn, id, done, kind) {
+    const existing = document.getElementById('rowMenu');
+    const wasMine = existing && existing._owner === btn;
+    closeRowMenus();
+    if (wasMine) return;
+
+    const items = [];
+    if (!done) items.push({ icon: 'play', label: 'Start now', run: () => startFocus(id) });
+    items.push(kind === 'parked'
+        ? { icon: 'calendar', label: 'Pick a day', run: () => openEditTaskModal(id) }
+        : { icon: 'edit-2', label: 'Edit', run: () => openEditTaskModal(id) });
+    items.push({ icon: 'trash-2', label: 'Delete', danger: true, run: () => deleteTask(id) });
+
+    const menu = document.createElement('div');
+    menu.className = 'row-menu is-floating';
+    menu.id = 'rowMenu';
+    menu.setAttribute('role', 'menu');
+    menu.setAttribute('aria-label', btn.getAttribute('aria-label') || 'More');
+
+    items.forEach(item => {
+        const el = document.createElement('button');
+        el.type = 'button';
+        el.setAttribute('role', 'menuitem');
+        if (item.danger) el.className = 'is-danger';
+        el.innerHTML = `<i data-lucide="${item.icon}"></i>`;
+        el.appendChild(document.createTextNode(item.label));
+        el.addEventListener('click', () => {
+            closeRowMenus();
+            item.run();
+        });
+        menu.appendChild(el);
+    });
+
+    document.body.appendChild(menu);
+    menu._owner = btn;
+    btn.setAttribute('aria-expanded', 'true');
+    refreshIcons();
+
+    // Right-aligned to the button, flipped above it when there is no room
+    // below, and never off the left edge of a narrow phone.
+    const r = btn.getBoundingClientRect();
+    const menuH = menu.offsetHeight || 180;
+    const menuW = menu.offsetWidth || 172;
+    let top = r.bottom + window.scrollY + 6;
+    if (r.bottom + menuH + 12 > window.innerHeight && r.top - menuH - 6 > 0) {
+        top = r.top + window.scrollY - menuH - 6;
     }
+    menu.style.top = `${Math.round(top)}px`;
+    const left = Math.min(r.right + window.scrollX - menuW, window.innerWidth - menuW - 12);
+    menu.style.left = `${Math.round(Math.max(12, left))}px`;
+
+    const first = menu.querySelector('button');
+    if (first) first.focus();
+
+    setTimeout(() => document.addEventListener('click', closeRowMenusOnOutside, true), 0);
 }
 
 window.closeRowMenus = closeRowMenus;
 window.toggleRowMenu = toggleRowMenu;
 
-// Anywhere else on the page closes it, and so does Escape - but Escape has
-// to be caught before the day sheet sees it, or one press would shut both
-// the menu and the day behind it.
-document.addEventListener('click', (e) => {
-    if (!e.target.closest || !e.target.closest('.row-more-wrap')) closeRowMenus();
-});
-
 document.addEventListener('keydown', (e) => {
-    const wrap = document.querySelector('.row-more-wrap.open');
-    if (!wrap) return;
+    const menu = document.getElementById('rowMenu');
+    if (!menu) return;
 
+    // Escape has to be caught before the day sheet sees it, or one press would
+    // shut both the menu and the day behind it.
     if (e.key === 'Escape') {
         e.preventDefault();
         e.stopPropagation();
-        const btn = wrap.querySelector('.row-more');
-        closeRowMenus();
-        if (btn) btn.focus();
+        closeRowMenusAndReturn();
         return;
     }
 
     if (e.key !== 'ArrowDown' && e.key !== 'ArrowUp') return;
-    const items = Array.from(wrap.querySelectorAll('.row-menu button'));
+    const items = Array.from(menu.querySelectorAll('button'));
     if (!items.length) return;
     e.preventDefault();
     e.stopPropagation();
@@ -1857,7 +1978,15 @@ function renderAllTasksGrid() {
         capBtn.classList.toggle('active', !!uiPrefs.capThree);
         capBtn.setAttribute('aria-pressed', uiPrefs.capThree ? 'true' : 'false');
     }
-    if (capLabel) capLabel.textContent = uiPrefs.capThree ? 'Focus 3' : 'All tasks';
+    // "Focus 3" and "All tasks" named the mode; these name what pressing it
+    // does, which is the thing somebody standing in front of it needs to know.
+    if (capLabel) capLabel.textContent = uiPrefs.capThree ? 'Three at a time' : 'Showing all';
+    const capHelp = document.getElementById('capToggleHelp');
+    if (capHelp) {
+        capHelp.textContent = uiPrefs.capThree
+            ? 'Showing three at a time. The rest stay one tap away.'
+            : 'Showing everything. Tap to cut it down to three at a time.';
+    }
 
     if (filtered.length === 0) {
         const elsewhere = ['now', 'ticking', 'parked']
@@ -2190,7 +2319,7 @@ function showChartTooltip(event, point) {
     
     tooltip.innerHTML = `
         <span class="chart-tooltip-date">${formattedDate}</span>
-        <span class="chart-tooltip-value">Compliance: ${point.rate}%</span>
+        <span class="chart-tooltip-value">Finished ${point.rate}% of what was due</span>
         <span class="chart-tooltip-detail" style="font-size: 0.7rem; color: var(--text-secondary);">
             Done: ${point.completed} / Total due: ${point.total}
         </span>
@@ -2438,16 +2567,54 @@ function showStep(stepNum) {
     syncSaveEnabled();
 }
 
-// Save is live from the moment there is a name, and says so rather than
-// failing with a toast after the fact.
+// Save is always live. It used to disable itself whenever the name was empty
+// and explain why in a title attribute - which does not exist on a touch
+// screen, and is not read by anyone who has scrolled the open "More" section
+// between the field and the button. Tapping Save did nothing, silently, with
+// the reason stored somewhere the person tapping could not reach it.
+//
+// So the button always submits, and a submit that cannot go through says so
+// next to the field it is talking about, and puts the cursor there.
 function syncSaveEnabled() {
     const nameEl = document.getElementById('taskName');
     const saveBtn = document.getElementById('saveTaskBtn');
     if (!nameEl || !saveBtn) return;
-    const ok = !!nameEl.value.trim();
-    saveBtn.disabled = !ok;
-    saveBtn.setAttribute('aria-disabled', ok ? 'false' : 'true');
-    saveBtn.title = ok ? '' : 'Give it a name first';
+    saveBtn.disabled = false;
+    saveBtn.removeAttribute('aria-disabled');
+    saveBtn.title = '';
+    // Typing into a field clears the complaint about that field.
+    if (nameEl.value.trim()) clearFieldError('taskName', 'taskNameError');
+}
+
+// One place for "this field is why nothing happened": the message lands
+// beside the field, the field is marked, and focus goes to it so the next
+// keystroke is already in the right box.
+function showFieldError(fieldId, errorId, message) {
+    const field = document.getElementById(fieldId);
+    const slot = document.getElementById(errorId);
+    if (slot) {
+        slot.textContent = message;
+        slot.hidden = false;
+    }
+    if (field) {
+        field.classList.add('input-error');
+        field.setAttribute('aria-invalid', 'true');
+        field.focus();
+        if (typeof field.scrollIntoView === 'function') {
+            field.scrollIntoView({ block: 'center', behavior: 'smooth' });
+        }
+    }
+    announce(message, true);
+}
+
+function clearFieldError(fieldId, errorId) {
+    const field = document.getElementById(fieldId);
+    const slot = document.getElementById(errorId);
+    if (slot) { slot.textContent = ''; slot.hidden = true; }
+    if (field) {
+        field.classList.remove('input-error');
+        field.removeAttribute('aria-invalid');
+    }
 }
 
 // Wire wizard option click event listeners
@@ -2457,15 +2624,10 @@ document.addEventListener('DOMContentLoaded', () => {
         btn.addEventListener('click', () => {
             document.querySelectorAll('.wizard-step[data-step="1"] .wizard-option-btn').forEach(b => b.classList.remove('active'));
             btn.classList.add('active');
-            const catVal = btn.getAttribute('data-value');
-            document.getElementById('taskCategory').value = catVal;
-            
-            syncTaskNameUI(catVal);
-            
-            // Auto advance to step 2 after a small delay for delightful feedback
-            setTimeout(() => {
-                if (currentStep === 1) showStep(2);
-            }, 250);
+            document.getElementById('taskCategory').value = btn.getAttribute('data-value');
+            // Picking an area changes nothing else on the form. It used to
+            // wait 250ms and then "advance" to a step already on screen, and
+            // to show or hide the templates list as a side effect.
         });
     });
 
@@ -2633,6 +2795,8 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
 
+    syncTimePresets();
+
     const dueTimeEl = document.getElementById('taskDueTime');
     if (dueTimeEl) {
         dueTimeEl.addEventListener('keydown', (e) => {
@@ -2651,6 +2815,7 @@ document.addEventListener('DOMContentLoaded', () => {
         dueTimeEl.addEventListener('input', (e) => {
             formatTimeInputOnType(e);
             syncWhenUI();
+            syncTimePresets();
         });
         // Reformat to the app's clock format once typing is done, rather than
         // fighting the user's cursor on every keystroke.
@@ -2665,6 +2830,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 }
             }
             syncWhenUI();
+            syncTimePresets();
         });
     }
 
@@ -2774,30 +2940,30 @@ function commitmentSwitchOn() {
 function clearValidationErrors() {
     document.querySelectorAll('.input-error').forEach(el => {
         el.classList.remove('input-error');
+        el.removeAttribute('aria-invalid');
     });
+    // A complaint about the last thing saved must not be sitting there when
+    // the form is opened again for something else.
+    clearFieldError('taskName', 'taskNameError');
+    clearFieldError('taskDueDate', 'taskDueDateError');
 }
 
-// Show/hide taskName select or input based on category
-function syncTaskNameUI(category) {
+// The "start from a common one" list used to appear only while the area was
+// Health, and vanish the moment somebody pressed Money or People. A control
+// that comes and goes in response to an unrelated button a moment earlier is
+// read as the app breaking, and it puts the one thing that helps a blank
+// form get started behind a guess about filing. It is always here now, in
+// the folded-away "More" section where it costs nothing to leave visible.
+function syncTaskNameUI() {
     const inputGroup = document.getElementById('taskNameInputGroup');
     const selectGroup = document.getElementById('taskNameSelectGroup');
     const selectEl = document.getElementById('taskNameSelect');
     const inputEl = document.getElementById('taskName');
-    
-    // Always keep custom task name input accessible
+
     if (inputGroup) inputGroup.style.display = 'block';
     if (inputEl) inputEl.required = true;
-
-    if (category === 'Health & Vitality') {
-        if (selectGroup) selectGroup.style.display = 'block';
-        if (selectEl) selectEl.required = false;
-    } else {
-        if (selectGroup) selectGroup.style.display = 'none';
-        if (selectEl) {
-            selectEl.required = false;
-            selectEl.value = "";
-        }
-    }
+    if (selectGroup) selectGroup.style.display = 'block';
+    if (selectEl) selectEl.required = false;
 }
 
 // Open create modal
@@ -3073,6 +3239,9 @@ function openEditTaskModal(id) {
 let releaseModalFocus = null;
 
 function openModal(announceAs) {
+    // The presets read the day shape and the clock format, both of which can
+    // have changed in Settings since the form was last built.
+    syncTimePresets();
     modal.classList.add('open');
     modal.removeAttribute('aria-hidden');
     const dialog = document.getElementById('taskModalDialog');
@@ -3140,16 +3309,19 @@ taskForm.addEventListener('submit', async (e) => {
     const durationMinutes = document.getElementById('taskDurationInput') ? (parseInt(document.getElementById('taskDurationInput').value) || 15) : 15;
     const notifyPref = document.getElementById('taskNotify') ? document.getElementById('taskNotify').value : 'digest';
     
+    clearFieldError('taskName', 'taskNameError');
+    clearFieldError('taskDueDate', 'taskDueDateError');
+
     if (!name) {
-        showToast("Task name is required", "error");
+        showFieldError('taskName', 'taskNameError', 'Give it a name first — anything you would recognise later.');
         return;
     }
-    
+
     if (type === 'fixed' && !dueDate) {
-        showToast("Due date is required for fixed date tasks", "error");
+        showFieldError('taskDueDate', 'taskDueDateError', 'Pick the day this one happens.');
         return;
     }
-    
+
     const isWorkdays = type === 'workdays';
     const payload = {
         name,
@@ -3476,7 +3648,9 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     async function checkAuthToken() {
-        if (supabaseClient) {
+        // Nobody is signed in on purpose, so there is no session to ask about -
+        // and asking would clear the name and scope that local mode is using.
+        if (supabaseClient && !isLocalMode()) {
             try {
                 const { data: sessionData } = await supabaseClient.auth.getSession();
                 const session = sessionData?.session;
@@ -3532,7 +3706,12 @@ document.addEventListener('DOMContentLoaded', () => {
         // anybody knew what the answers were for. A token is now enough to
         // get in; the schedule is asked for the first time it decides
         // something (see maybeAskForSchedule), and lives in Settings after that.
-        if (token) {
+        // A recovery link signs the browser in before a new password has been
+        // chosen. Walking straight into the app at that point would leave the
+        // account still locked behind the password nobody can remember, so the
+        // reset form comes first and the session stays unused until it is done.
+        if ((token || isLocalMode()) && !isPasswordRecovery) {
+            applyLocalModeChrome();
             updateGreetings(savedName);
             welcomeScreen.classList.add('hidden');
             welcomeScreen.setAttribute('aria-hidden', 'true');
@@ -3559,6 +3738,26 @@ document.addEventListener('DOMContentLoaded', () => {
     }
     let firstPaint = true;
 
+    // With no account, "Sign out" is a button that cannot do what it says.
+    // The useful action in its place is the one that turns this into an
+    // account, and the status line stops implying there is one.
+    function applyLocalModeChrome() {
+        const local = isLocalMode();
+        const signOut = document.getElementById('dropdownSignOutBtn');
+        if (signOut) {
+            const label = signOut.querySelector('span');
+            if (label) label.textContent = local ? 'Make an account' : 'Sign out';
+            signOut.classList.toggle('text-red', !local);
+        }
+        // The sidebar status line is not touched: it belongs to renderMomentum,
+        // which says what is owed today and would overwrite anything written
+        // here on the next render anyway. That this is a device-only account is
+        // said on the way in and again in this menu, which is enough - a
+        // permanent badge would be one more thing on a screen that does not
+        // need one.
+        document.body.classList.toggle('is-local-mode', local);
+    }
+
     // Starts the guided tour the first time an account reaches the dashboard.
     // Deferred a tick so the first render has happened and the tour has real
     // elements to point at.
@@ -3584,20 +3783,214 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
-    // Toggle Forms
+    // Toggle Forms. All four go through showAuthForm so that exactly one is
+    // ever on screen, and so the no-account box follows the login form rather
+    // than sitting under the sign-up and reset screens as well.
     showRegisterLink.addEventListener('click', (e) => {
         e.preventDefault();
-        loginFormSection.classList.add('hidden');
-        registerFormSection.classList.remove('hidden');
-        authErrorMsg.classList.add('hidden');
+        showAuthForm('register');
     });
 
     showLoginLink.addEventListener('click', (e) => {
         e.preventDefault();
-        registerFormSection.classList.add('hidden');
-        loginFormSection.classList.remove('hidden');
-        authErrorMsg.classList.add('hidden');
+        showAuthForm('login');
     });
+
+    // ------------------------------------------------------------------
+    // Starting without an account
+    //
+    // The wall was: produce an email address and invent a password before you
+    // may write down the thing you are about to forget. This is the way past
+    // it. Nothing is minted and nothing is claimed - the app simply opens with
+    // nobody signed in, writing to the 'guest' bucket that the sign-up path
+    // already knows how to bring across.
+    // ------------------------------------------------------------------
+    const useLocalModeBtn = document.getElementById('useLocalModeBtn');
+    if (useLocalModeBtn) {
+        useLocalModeBtn.addEventListener('click', async () => {
+            setLocalMode(true);
+            if (!localStorage.getItem('bokea_username')) {
+                localStorage.setItem('bokea_username', '');
+            }
+            await checkAuthToken();
+            await loadDashboardData();
+            announce('Started without an account. Everything stays on this device.');
+            // Said once, on the way in, rather than as a banner that lives on
+            // the screen forever afterwards.
+            showToast('Everything stays on this device.', 'success', {
+                action: { label: 'Make an account', onClick: () => promptSignUpFromLocal() }
+            });
+        });
+    }
+
+    // Leaving local mode for a real account. The work comes along: the sign-up
+    // path already migrates the 'guest' bucket once an account exists.
+    function promptSignUpFromLocal() {
+        setLocalMode(false);
+        const appContainer = document.querySelector('.app-container');
+        if (appContainer) {
+            appContainer.style.display = 'none';
+            appContainer.setAttribute('aria-hidden', 'true');
+        }
+        welcomeScreen.classList.remove('hidden');
+        welcomeScreen.removeAttribute('aria-hidden');
+        showAuthForm('register');
+        const name = document.getElementById('registerNameInput');
+        if (name) name.focus();
+        showAuthError('Make an account and what you have written will come with you.', 'success');
+    }
+    window.promptSignUpFromLocal = promptSignUpFromLocal;
+
+    // ------------------------------------------------------------------
+    // Forgotten passwords
+    //
+    // There was no way back in. For an app built for people who forget
+    // things, a forgotten password threw away every task, every setting and
+    // every day of history, permanently, with nothing on screen even
+    // acknowledging it. Supabase can send a recovery link; all that was
+    // missing was somewhere to ask for one and somewhere to land.
+    // ------------------------------------------------------------------
+    const forgotFormSection = document.getElementById('forgotFormSection');
+    const resetFormSection = document.getElementById('resetFormSection');
+    const showForgotLink = document.getElementById('showForgotLink');
+    const backToLoginLink = document.getElementById('backToLoginLink');
+
+    function showAuthForm(which) {
+        const forms = {
+            login: loginFormSection,
+            register: registerFormSection,
+            forgot: forgotFormSection,
+            reset: resetFormSection
+        };
+        Object.keys(forms).forEach(key => {
+            if (forms[key]) forms[key].classList.toggle('hidden', key !== which);
+        });
+        // Starting without an account is an alternative to logging in, so it
+        // belongs with the login form and nowhere else.
+        const box = document.getElementById('localModeBox');
+        if (box) box.classList.toggle('hidden', which !== 'login');
+        authErrorMsg.classList.add('hidden');
+    }
+
+    if (showForgotLink) {
+        showForgotLink.addEventListener('click', (e) => {
+            e.preventDefault();
+            showAuthForm('forgot');
+            // Carry across whatever they already typed, so the address is not
+            // asked for twice.
+            const typed = document.getElementById('loginEmailInput').value.trim();
+            const target = document.getElementById('forgotEmailInput');
+            if (target) {
+                if (typed) target.value = typed;
+                target.focus();
+            }
+        });
+    }
+
+    if (backToLoginLink) {
+        backToLoginLink.addEventListener('click', (e) => {
+            e.preventDefault();
+            showAuthForm('login');
+            document.getElementById('loginEmailInput').focus();
+        });
+    }
+
+    if (forgotFormSection) {
+        forgotFormSection.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            if (!authBackendReady()) return;
+
+            const email = document.getElementById('forgotEmailInput').value.trim();
+            if (!email) {
+                showAuthError("Put in the email address you signed up with.");
+                return;
+            }
+
+            const btn = document.getElementById('forgotBtn');
+            const orig = btn ? btn.textContent : '';
+            if (btn) { btn.disabled = true; btn.textContent = 'Sending...'; }
+
+            try {
+                const { error } = await supabaseClient.auth.resetPasswordForEmail(email, {
+                    redirectTo: window.location.origin + window.location.pathname
+                });
+                if (error) {
+                    showAuthError(error.message || "We could not send that link. Please try again.");
+                } else {
+                    // Said the same way whether or not the address is on file:
+                    // confirming which emails have accounts tells a stranger
+                    // something that is not theirs to know.
+                    showAuthError("If that address has an account, a link is on its way. It is good for one hour.", 'success');
+                }
+            } catch (err) {
+                showAuthError("We could not reach the server: " + (err.message || "network error") + ". Please try again.");
+            } finally {
+                if (btn) { btn.disabled = false; btn.textContent = orig; }
+            }
+        });
+    }
+
+    if (resetFormSection) {
+        resetFormSection.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            if (!authBackendReady()) return;
+
+            const password = document.getElementById('resetPasswordInput').value;
+            if (!password || password.length < 8) {
+                showAuthError("Your new password needs to be at least 8 characters.");
+                return;
+            }
+
+            const btn = document.getElementById('resetBtn');
+            const orig = btn ? btn.textContent : '';
+            if (btn) { btn.disabled = true; btn.textContent = 'Saving...'; }
+
+            try {
+                const { error } = await supabaseClient.auth.updateUser({ password: password });
+                if (error) {
+                    showAuthError(error.message || "We could not save that password.");
+                    if (btn) { btn.disabled = false; btn.textContent = orig; }
+                    return;
+                }
+                // The recovery is spent; the session it created is now an
+                // ordinary one and the app can open on it.
+                isPasswordRecovery = false;
+                stripRecoveryHash();
+                showToast("Password changed. You're back in.");
+                await checkAuthToken();
+                await loadDashboardData();
+            } catch (err) {
+                showAuthError("We could not reach the server: " + (err.message || "network error") + ". Please try again.");
+                if (btn) { btn.disabled = false; btn.textContent = orig; }
+            }
+        });
+    }
+
+    // Supabase puts the recovery grant in the URL fragment and clears it into
+    // a session. Read it before that happens, so the reset form is on screen
+    // rather than the dashboard.
+    if (isPasswordRecovery) {
+        showAuthForm('reset');
+        const field = document.getElementById('resetPasswordInput');
+        if (field) field.focus();
+    }
+
+    if (supabaseClient && supabaseClient.auth && supabaseClient.auth.onAuthStateChange) {
+        supabaseClient.auth.onAuthStateChange((event) => {
+            if (event !== 'PASSWORD_RECOVERY') return;
+            isPasswordRecovery = true;
+            welcomeScreen.classList.remove('hidden');
+            welcomeScreen.removeAttribute('aria-hidden');
+            const appContainer = document.querySelector('.app-container');
+            if (appContainer) {
+                appContainer.style.display = 'none';
+                appContainer.setAttribute('aria-hidden', 'true');
+            }
+            showAuthForm('reset');
+            const field = document.getElementById('resetPasswordInput');
+            if (field) field.focus();
+        });
+    }
 
     // Helper to migrate local/guest tasks to Supabase when an account is created or accessed
     // Bringing offline work into a cloud account is the user's decision, not a
@@ -3741,6 +4134,9 @@ document.addEventListener('DOMContentLoaded', () => {
         }
 
         try {
+            // Whatever happens next, this is no longer a device with nobody
+            // signed in on purpose.
+            setLocalMode(false);
             const { data, error } = await supabaseClient.auth.signInWithPassword({ email, password });
             if (error) {
                 if (loginBtn) {
@@ -3813,6 +4209,9 @@ document.addEventListener('DOMContentLoaded', () => {
         }
 
         try {
+            // The guest bucket stays exactly where it is; migrateLocalTasks-
+            // ToSupabase picks it up once there is an account to move it into.
+            setLocalMode(false);
             const { data, error } = await supabaseClient.auth.signUp({
                 email,
                 password,
@@ -3875,6 +4274,32 @@ document.addEventListener('DOMContentLoaded', () => {
 
 
     window.logoutUser = async function() {
+        // In local mode there is no account to sign out of, and the guest
+        // bucket is not a leftover - it is the only copy of their work. Wiping
+        // it here would be the app deleting everything somebody owned in
+        // response to a button that promised only to log them out. So this
+        // leaves local mode and shows the way in again, and touches no data.
+        if (isLocalMode()) {
+            setLocalMode(false);
+            const appContainer = document.querySelector('.app-container');
+            if (appContainer) {
+                appContainer.style.display = 'none';
+                appContainer.setAttribute('aria-hidden', 'true');
+            }
+            // Looked up rather than closed over: this function declares its own
+            // `const welcomeScreen` further down, which shadows the outer one
+            // for the whole body and would leave this line in the temporal
+            // dead zone.
+            const welcome = document.getElementById('welcomeScreen');
+            if (welcome) {
+                welcome.classList.remove('hidden');
+                welcome.removeAttribute('aria-hidden');
+            }
+            showAuthForm('login');
+            showAuthError('Your things are still on this device. Start again without an account, or make one to keep them safe.', 'success');
+            return;
+        }
+
         if (supabaseClient) {
             try {
                 await supabaseClient.auth.signOut();
@@ -3978,6 +4403,10 @@ document.addEventListener('DOMContentLoaded', () => {
 
     document.getElementById('dropdownSignOutBtn').addEventListener('click', (e) => {
         e.preventDefault();
+        document.getElementById('dropdownMenuBox').classList.remove('show');
+        // In local mode this button says "Make an account", and it does that
+        // rather than signing out of an account that does not exist.
+        if (isLocalMode()) { promptSignUpFromLocal(); return; }
         window.logoutUser();
     });
 
@@ -5630,6 +6059,67 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
+    // ------------------------------------------------------------------
+    // Keep a copy
+    //
+    // There were two ways to lose everything for good - the button below this
+    // one, and forgetting a password that could not be reset - and no way at
+    // all to keep a copy of any of it. Everything the app knows goes into one
+    // plain JSON file: readable, re-importable, and small enough to email to
+    // yourself.
+    // ------------------------------------------------------------------
+    const exportBtn = document.getElementById('settingsExportBtn');
+    if (exportBtn) {
+        exportBtn.addEventListener('click', () => {
+            const status = document.getElementById('settingsExportStatus');
+            try {
+                // Settings live in loose localStorage keys rather than one
+                // object, so they are gathered by prefix. Anything namespaced
+                // to another account on this device stays out of it.
+                const settings = {};
+                for (let i = 0; i < localStorage.length; i++) {
+                    const key = localStorage.key(i);
+                    if (!key || !key.startsWith('bokea_')) continue;
+                    if (key === 'bokea_auth_token') continue; // a credential, not data
+                    if (/_(u_[A-Za-z0-9_-]+|guest)$/.test(key) && !key.endsWith(`_${storageScope}`)) continue;
+                    settings[key] = localStorage.getItem(key);
+                }
+
+                const payload = {
+                    app: 'Bokea',
+                    formatVersion: 1,
+                    savedAt: new Date().toISOString(),
+                    account: localStorage.getItem('bokea_username') || null,
+                    tasks: Array.isArray(tasks) ? tasks : [],
+                    history: Array.isArray(historyData) ? historyData : [],
+                    settings: settings
+                };
+
+                const stamp = calDateStr(new Date());
+                const blob = new Blob([JSON.stringify(payload, null, 2)], { type: 'application/json' });
+                const url = URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = `bokea-backup-${stamp}.json`;
+                document.body.appendChild(a);
+                a.click();
+                document.body.removeChild(a);
+                setTimeout(() => URL.revokeObjectURL(url), 1000);
+
+                const n = payload.tasks.length;
+                const words = `Saved ${n} ${n === 1 ? 'thing' : 'things'} to bokea-backup-${stamp}.json. Look in your downloads.`;
+                if (status) status.textContent = words;
+                showToast('Copy saved.');
+                announce(words);
+            } catch (err) {
+                console.error('Could not save a copy:', err);
+                const words = 'Could not save the file. Nothing has been changed or lost.';
+                if (status) status.textContent = words;
+                showToast(words, 'error');
+            }
+        });
+    }
+
     // Emptying the app is two deliberate taps in the page rather than one tap
     // and a browser dialog. An impulsive tap should not be able to finish this,
     // and a native confirm() is exactly the kind of prompt that gets dismissed
@@ -6834,6 +7324,64 @@ function parseTimeFieldValue(str) {
 }
 window.parseTimeFieldValue = parseTimeFieldValue;
 
+// Four times drawn from this person's own day, plus a way out. Typing "07:30"
+// means recalling that a colon is wanted, that two digits come first, and
+// that this app reads 24-hour - three things to get right before the field
+// accepts the one thing you actually knew, which was "when I get up".
+function syncTimePresets() {
+    const box = document.getElementById('timePresets');
+    const field = document.getElementById('taskDueTime');
+    if (!box || !field) return;
+
+    const s = dayShape();
+    const choices = [
+        { mins: s.wake, label: 'When I wake' },
+        { mins: s.workStart, label: 'Work starts' },
+        { mins: s.workEnd, label: 'Work ends' },
+        { mins: s.bed, label: 'Before bed' }
+    ];
+
+    const current = parseTimeFieldValue(field.value);
+    box.innerHTML = '';
+
+    choices.forEach(c => {
+        const btn = document.createElement('button');
+        btn.type = 'button';
+        btn.className = 'time-preset' + (current === c.mins ? ' active' : '');
+        btn.innerHTML = `<span class="time-preset-name"></span><span class="time-preset-clock"></span>`;
+        btn.querySelector('.time-preset-name').textContent = c.label;
+        btn.querySelector('.time-preset-clock').textContent = formatAppTime(c.mins);
+        btn.setAttribute('aria-label', `${c.label}, ${formatAppTime(c.mins)}`);
+        btn.addEventListener('click', () => {
+            field.value = formatAppTime(c.mins);
+            clearTimeFieldComplaint();
+            syncWhenUI();
+            syncTimePresets();
+        });
+        box.appendChild(btn);
+    });
+
+    // Clearing the time hands the choice back to the part-of-day buttons,
+    // which is a real answer and needs its own way of being given.
+    const clear = document.createElement('button');
+    clear.type = 'button';
+    clear.className = 'time-preset time-preset-clear';
+    clear.textContent = 'No set time';
+    clear.disabled = !field.value.trim();
+    clear.addEventListener('click', () => {
+        field.value = '';
+        clearTimeFieldComplaint();
+        syncWhenUI();
+        syncTimePresets();
+    });
+    box.appendChild(clear);
+}
+
+function clearTimeFieldComplaint() {
+    const hint = document.getElementById('taskDueTimeHint');
+    if (hint) hint.textContent = '';
+}
+
 function minutesToCanonicalHM(mins) {
     const h = Math.floor(mins / 60);
     const m = mins % 60;
@@ -6927,6 +7475,7 @@ function propagateClockFormatChange(newFormat) {
     renderAllTasksGrid();
     renderCalendar();
     syncWhenUI();
+    syncTimePresets();
     try {
         window.dispatchEvent(new CustomEvent('bokea-clock-format-changed', {
             detail: { format: localStorage.getItem('bokea_clock_format') || '12h' }
@@ -7221,11 +7770,39 @@ async function commitCapture(input, dueDateStr) {
 
     input.value = '';
     try {
-        await apiRequest('/tasks', 'POST', payload);
-        showToast(parsed
-            ? `Set for ${fmtHM(parsed.minutes)}.`
-            : (dueDateStr ? 'Added to that day.' : 'Parked. No date, no nagging.'));
+        const created = await apiRequest('/tasks', 'POST', payload);
         await loadDashboardData();
+
+        // The full form has exactly one door in the whole app (the New task
+        // button on Everything), so on a phone the thing this app is actually
+        // for - something that comes round again - sits behind a tab nobody
+        // has a reason to open. The door belongs here, at the moment somebody
+        // has just written the thought down and is still thinking about it.
+        //
+        // It is offered in the toast rather than as a button on the screen:
+        // Today already carries a sticky topbar, a pinned capture bar and a
+        // bottom nav, and a fourth permanent control is how a calm screen
+        // stops being one. This one exists for eight seconds and then does
+        // not, which is exactly as long as the thought lasts.
+        const id = created && created.id != null ? String(created.id) : null;
+        const label = dueDateStr ? 'Add details' : 'Give it a date';
+        const message = parsed
+            ? `Set for ${fmtHM(parsed.minutes)}.`
+            : (dueDateStr ? 'Added to that day.' : 'Parked. No date, no nagging.');
+
+        showToast(message, 'success', id ? {
+            action: {
+                label: label,
+                onClick: () => {
+                    // The day sheet is itself a modal with its own focus trap.
+                    // Opening the form on top of it would stack two, and
+                    // Escape would then have to be pressed twice to get out of
+                    // something that looks like one screen.
+                    if (dueDateStr) calCloseDay();
+                    openEditTaskModal(id);
+                }
+            }
+        } : undefined);
     } catch (err) {
         console.error('Error parking task:', err);
         showToast('Could not save that', 'error');

@@ -10,10 +10,10 @@
   "8": "TaskItem",
   "9": "a11y.js",
   "10": "loadProfileIntoForm",
-  "11": "PushSubscription",
-  "12": "checkAuthToken",
+  "11": "TaskCompletionLog",
+  "12": ".MapTaskEndpoints",
   "13": "AppDbContext",
-  "14": "TaskWatchdogService",
+  "14": "Sector",
   "15": "http",
   "16": "switchTab",
   "17": "Bokea.csproj",
@@ -25,8 +25,10 @@
   "23": "sw.js",
   "24": "Agent Instructions & Guidelines",
   "25": "applyUiPrefs",
-  "26": "prepareIncomingView",
+  "26": "promptSignUpFromLocal",
   "27": "getTasksForDate",
   "28": "config.js",
-  "29": "renderFirstRun"
+  "29": "loadSettingsIntoForm",
+  "30": "IntervalType",
+  "31": "flashSaved"
 }

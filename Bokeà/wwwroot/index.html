@@ -2,7 +2,11 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <!-- Pinch-zoom stays available. It is the one way to make text bigger that
+         needs no navigating to Settings, and it is the gesture people reach for
+         by reflex. The iOS auto-zoom-on-focus this used to suppress is handled
+         properly instead, by giving every field a 16px font below 1024px. -->
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
     <title>Bokeà</title>
     <meta name="description" content="Bokeà tracks the things in your life that come round again and tells you the one that needs you now.">
     <!-- Fonts -->
@@ -10,7 +14,7 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Outfit:wght@300;400;500;600;700&family=Playfair+Display:ital,wght@0,400..900;1,400..900&display=swap" rel="stylesheet">
     <!-- CSS -->
-    <link rel="stylesheet" href="css/style.css?v=16">
+    <link rel="stylesheet" href="css/style.css?v=17">
     <!-- PWA Settings -->
     <link rel="manifest" href="manifest.json">
     <meta name="theme-color" content="#09090b">
@@ -59,7 +63,53 @@
                         </span>
                     </div>
                     <button type="submit" id="loginBtn" class="btn btn-primary" style="width: 100%; margin-bottom: 15px;">Log in</button>
+                    <!-- There was no way back in at all. For an app whose whole
+                         audience is people who forget things, a forgotten
+                         password meant every task, every setting and every day
+                         of history was gone for good. -->
+                    <p style="font-size: 0.9rem; color: var(--text-secondary); margin-bottom: 10px;">
+                        <button type="button" id="showForgotLink" class="link-button">I've forgotten my password</button>
+                    </p>
                     <p style="font-size: 0.9rem; color: var(--text-secondary);">Don't have an account? <button type="button" id="showRegisterLink" class="link-button">Sign up</button></p>
+                </form>
+
+                <!-- Ask for a reset link -->
+                <form id="forgotFormSection" class="hidden" method="post" action="#" aria-labelledby="forgotFormHeading">
+                    <h2 id="forgotFormHeading" class="sr-only">Get back into your account</h2>
+                    <p class="welcome-subtext" style="margin-bottom: 1.25rem; text-align: left;">
+                        Put in your email address and we will send you a link that lets you
+                        set a new password. Nothing is lost in the meantime.
+                    </p>
+                    <div class="input-group" style="margin-bottom: 20px;">
+                        <label for="forgotEmailInput" class="input-label" style="text-align: left; display: block; margin-bottom: 5px;">Email</label>
+                        <input type="email" id="forgotEmailInput" name="username" class="form-control"
+                               autocomplete="username" autocapitalize="none" spellcheck="false"
+                               inputmode="email" required aria-describedby="forgotEmailHint">
+                        <span id="forgotEmailHint" class="field-hint">The address you signed up with.</span>
+                    </div>
+                    <button type="submit" id="forgotBtn" class="btn btn-primary" style="width: 100%; margin-bottom: 15px;">Send me a link</button>
+                    <p style="font-size: 0.9rem; color: var(--text-secondary);">Remembered it? <button type="button" id="backToLoginLink" class="link-button">Log in</button></p>
+                </form>
+
+                <!-- Set the new password. Shown only when the page has been
+                     opened from the emailed link, which hands Supabase a
+                     recovery session before this form is reachable. -->
+                <form id="resetFormSection" class="hidden" method="post" action="#" aria-labelledby="resetFormHeading">
+                    <h2 id="resetFormHeading" class="sr-only">Choose a new password</h2>
+                    <p class="welcome-subtext" style="margin-bottom: 1.25rem; text-align: left;">
+                        Choose a new password. You will be signed in straight afterwards.
+                    </p>
+                    <div class="input-group" style="margin-bottom: 20px;">
+                        <label for="resetPasswordInput" class="input-label" style="text-align: left; display: block; margin-bottom: 5px;">New password</label>
+                        <span class="password-field">
+                            <input type="password" id="resetPasswordInput" name="password" class="form-control"
+                                   autocomplete="new-password" required aria-describedby="resetPasswordHint">
+                            <button type="button" class="password-reveal" data-reveals="resetPasswordInput"
+                                    aria-pressed="false">Show<span class="sr-only"> password</span></button>
+                        </span>
+                        <span id="resetPasswordHint" class="field-hint">At least 8 characters.</span>
+                    </div>
+                    <button type="submit" id="resetBtn" class="btn btn-primary" style="width: 100%;">Save it and let me in</button>
                 </form>
 
                 <form id="registerFormSection" class="hidden" method="post" action="#" aria-labelledby="registerFormHeading">
@@ -96,6 +146,23 @@
                 <!-- Announced the moment it is filled in, not only when noticed. -->
                 <div id="authErrorMsg" class="text-red hidden" role="alert" aria-live="assertive"
                      style="margin-top: 15px; font-size: 0.9rem;"></div>
+
+                <!-- A way in that costs nothing. Everybody had to produce an
+                     email address and invent a password before they could write
+                     down a single thing - a wall in front of an app whose
+                     entire audience struggles to start things. This keeps
+                     everything on the device and says so; signing up later
+                     brings the work along. -->
+                <div id="localModeBox" class="local-mode-box">
+                    <button type="button" id="useLocalModeBtn" class="btn btn-secondary" style="width: 100%;">
+                        Just let me start &mdash; no account
+                    </button>
+                    <p class="field-hint" style="text-align: center;">
+                        Everything stays on this device. Nothing is sent anywhere, and
+                        nothing is backed up &mdash; so it is gone if you clear your browser.
+                        You can make an account later and keep what you have written.
+                    </p>
+                </div>
             </div>
         </div>
     </div>
@@ -549,31 +616,57 @@
                     </div>
 
                     <div class="tasks-content-wrap">
+                        <!-- This bar used to put eight controls between somebody
+                             and their own list: search, four segments, an area
+                             filter, a sort with five options, and the cap toggle.
+                             The two that are answers to "what needs doing" stay
+                             out here; the two that are answers to "how would I
+                             like this arranged" fold away, because arranging a
+                             list is not what anybody opened this screen to do. -->
                         <div class="sec-head tasks-filter-bar">
                             <span class="sec-label" id="tasksListHeading">Active tasks</span>
                             <div class="tasks-filter-controls">
-                                <label for="taskAreaSelect" class="sr-only">Filter by area</label>
-                                <select id="taskAreaSelect" class="tasks-filter-select" aria-label="Filter by area">
-                                    <option value="all">All Areas</option>
-                                    <option value="Health &amp; Vitality">Health</option>
-                                    <option value="Career &amp; Finance">Money</option>
-                                    <option value="Relationships &amp; Social">People</option>
-                                    <option value="Mind &amp; Environment">Mind</option>
-                                </select>
-                                <label for="taskSortSelect" class="sr-only">Sort tasks</label>
-                                <select id="taskSortSelect" class="tasks-filter-select" aria-label="Sort tasks">
-                                    <option value="urgency">Urgency</option>
-                                    <option value="time">Time of day</option>
-                                    <option value="dueDate">Due date</option>
-                                    <option value="name">Name</option>
-                                    <option value="order">Custom order</option>
-                                </select>
-                                <button type="button" class="cap-toggle" id="capToggleBtn" title="ADHD Focus Mode: limit visible tasks to reduce overwhelm">
+                                <button type="button" class="cap-toggle" id="capToggleBtn"
+                                        aria-pressed="false"
+                                        aria-describedby="capToggleHelp">
                                     <i data-lucide="target"></i>
                                     <span id="capToggleLabel">Three at a time</span>
                                 </button>
+                                <details class="tasks-arrange" id="tasksArrange">
+                                    <summary class="tasks-arrange-summary">
+                                        <i data-lucide="sliders-horizontal" aria-hidden="true"></i>
+                                        <span>Arrange</span>
+                                    </summary>
+                                    <div class="tasks-arrange-body">
+                                        <div class="tasks-arrange-field">
+                                            <label for="taskAreaSelect" class="settings-label">Show which part of life</label>
+                                            <select id="taskAreaSelect" class="tasks-filter-select">
+                                                <option value="all">All of it</option>
+                                                <option value="Health &amp; Vitality">Health</option>
+                                                <option value="Career &amp; Finance">Money</option>
+                                                <option value="Relationships &amp; Social">People</option>
+                                                <option value="Mind &amp; Environment">Mind</option>
+                                            </select>
+                                        </div>
+                                        <div class="tasks-arrange-field">
+                                            <label for="taskSortSelect" class="settings-label">Put them in order of</label>
+                                            <select id="taskSortSelect" class="tasks-filter-select">
+                                                <option value="urgency">What needs you first</option>
+                                                <option value="time">Time of day</option>
+                                                <option value="dueDate">The day they are due</option>
+                                                <option value="name">Name</option>
+                                                <option value="order">The order I put them in</option>
+                                            </select>
+                                        </div>
+                                    </div>
+                                </details>
                             </div>
                         </div>
+                        <!-- The explanation used to live in a title attribute,
+                             which does not exist on a touch screen - so on a
+                             phone the best feature on this screen was a word
+                             with no meaning attached. -->
+                        <p class="cap-toggle-help" id="capToggleHelp">Shows three things at a time. The rest stay one tap away.</p>
 
                         <div id="allTasksGrid" role="group" aria-labelledby="tasksListHeading" class="all-tasks-grid">
                             <!-- Rendered by renderAllTasksGrid() as rows -->
@@ -595,21 +688,21 @@
 
                     <!-- Analytics & Consistency Graph -->
                     <div class="stats-strip" style="margin-bottom: 24px;">
-                        <div class="stat-card done" title="Tasks completed today">
-                            <span style="font-size: 0.7rem; text-transform: uppercase; letter-spacing: 0.5px; color: var(--text-secondary); font-weight: 700;">Done Today</span>
+                        <div class="stat-card done" title="Things you finished today">
+                            <span style="font-size: 0.7rem; text-transform: uppercase; letter-spacing: 0.5px; color: var(--text-secondary); font-weight: 700;">Done today</span>
                             <div style="display: flex; align-items: baseline; justify-content: space-between; margin-top: 4px; width: 100%;">
                                 <span id="statsCompletedToday" style="font-size: 1.55rem; font-weight: 700; color: var(--text-main); font-family: var(--font-display);">0</span>
                             </div>
                         </div>
-                        <div class="stat-card streak" title="Consecutive days completing tasks">
-                            <span style="font-size: 0.7rem; text-transform: uppercase; letter-spacing: 0.5px; color: var(--text-secondary); font-weight: 700;">Streak</span>
+                        <div class="stat-card streak" title="Days in a row where you finished everything that was due">
+                            <span style="font-size: 0.7rem; text-transform: uppercase; letter-spacing: 0.5px; color: var(--text-secondary); font-weight: 700;">Days in a row</span>
                             <div style="display: flex; align-items: baseline; justify-content: space-between; margin-top: 4px; width: 100%;">
                                 <span id="statsStreak" style="font-size: 1.55rem; font-weight: 700; color: var(--text-main); font-family: var(--font-display);">0d</span>
                                 <i data-lucide="trending-up" style="width: 14px; height: 14px; color: var(--color-green);"></i>
                             </div>
                         </div>
-                        <div class="stat-card compliance" title="Average compliance rate">
-                            <span style="font-size: 0.7rem; text-transform: uppercase; letter-spacing: 0.5px; color: var(--text-secondary); font-weight: 700;">Compliance</span>
+                        <div class="stat-card compliance" title="Of the things that came due, how often you finished them">
+                            <span style="font-size: 0.7rem; text-transform: uppercase; letter-spacing: 0.5px; color: var(--text-secondary); font-weight: 700;">You finish</span>
                             <div style="display: flex; align-items: baseline; justify-content: space-between; margin-top: 4px; width: 100%;">
                                 <span id="statsRate" style="font-size: 1.55rem; font-weight: 700; color: var(--text-main); font-family: var(--font-display);">0%</span>
                             </div>
@@ -620,7 +713,7 @@
                         <div class="card-header">
                             <div class="title-with-icon">
                                 <i data-lucide="activity"></i>
-                                <h2 class="card-title">Consistency index</h2>
+                                <h2 class="card-title">How often you finish things</h2>
                             </div>
                             <div class="graph-toggle" role="group" aria-label="History range">
                                 <button type="button" class="toggle-btn active" data-range="7" aria-pressed="true">7 days</button>
@@ -638,9 +731,9 @@
                                 <summary>Show this chart as a table</summary>
                                 <div class="chart-data-table-wrap">
                                     <table class="chart-data-table" id="analyticsDataTable">
-                                        <caption class="sr-only">Daily completion rate</caption>
+                                        <caption class="sr-only">How many things you finished each day</caption>
                                         <thead>
-                                            <tr><th scope="col">Date</th><th scope="col">Completed</th><th scope="col">Due</th><th scope="col">Rate</th></tr>
+                                            <tr><th scope="col">Day</th><th scope="col">Finished</th><th scope="col">Was due</th><th scope="col">How much</th></tr>
                                         </thead>
                                         <tbody id="analyticsDataTableBody">
                                             <tr><td colspan="4">No history yet.</td></tr>
@@ -1021,6 +1114,21 @@
                                 </div>
 
                                 <div class="set-body">
+                                    <!-- Keeping a copy comes first, and physically
+                                         above the delete. There were two separate
+                                         routes to losing everything permanently -
+                                         this button and a forgotten password - and
+                                         no way at all to keep a copy of any of it. -->
+                                    <div class="set-block">
+                                        <h3 class="set-block-title"><i data-lucide="download" aria-hidden="true"></i>Keep a copy</h3>
+                                        <p class="set-block-note">Saves everything &mdash; your tasks, your ticks, your settings &mdash; to a single file on this device. Worth doing before you empty anything, and worth doing now and again regardless.</p>
+                                        <button type="button" id="settingsExportBtn" class="btn btn-secondary set-btn">
+                                            <i data-lucide="download" aria-hidden="true"></i>
+                                            <span>Save everything to a file</span>
+                                        </button>
+                                        <p id="settingsExportStatus" class="field-hint" role="status" aria-live="polite"></p>
+                                    </div>
+
                                     <!-- Two deliberate taps, not one tap and a browser
                                          dialog. An irreversible thing should not be one
                                          reflex away. -->
@@ -1036,6 +1144,7 @@
 
                                         <div class="set-confirm" id="settingsResetConfirm" hidden>
                                             <p class="set-confirm-q">Delete everything and start with an empty app?</p>
+                                            <p class="set-confirm-note">If you have not saved a copy yet, do that first &mdash; the button is just above this one. Nothing here can be got back afterwards.</p>
                                             <div class="set-confirm-row">
                                                 <button type="button" class="btn btn-secondary set-btn" id="settingsResetCancelBtn">Keep my things</button>
                                                 <button type="button" class="btn set-btn set-confirm-go" id="settingsResetConfirmBtn">Yes, delete everything</button>
@@ -1329,7 +1438,11 @@
                         <div class="form-group" id="taskNameInputGroup">
                             <label for="taskName">What is it?</label>
                             <input type="text" id="taskName" required autocomplete="off"
-                                   placeholder="Gym, pay rent, call Mum&hellip;">
+                                   placeholder="Gym, pay rent, call Mum&hellip;"
+                                   aria-describedby="taskNameError">
+                            <!-- Save is never disabled, so this is where the
+                                 answer to "why did nothing happen?" goes. -->
+                            <p class="field-error" id="taskNameError" role="alert" hidden></p>
                         </div>
                     </div>
 
@@ -1374,7 +1487,8 @@
                         </div>
                         <div class="form-group hidden" id="dueDateGroup" style="margin-top: 12px;">
                             <label for="taskDueDate">Which day?</label>
-                            <input type="date" id="taskDueDate">
+                            <input type="date" id="taskDueDate" aria-describedby="taskDueDateError">
+                            <p class="field-error" id="taskDueDateError" role="alert" hidden></p>
                         </div>
                     </div>
 
@@ -1426,7 +1540,16 @@
                             <div class="task-more-pair">
                                 <div class="form-group" id="dueTimeGroup">
                                     <label for="taskDueTime">Exact time <span class="label-optional">optional</span></label>
-                                    <input type="text" id="taskDueTime" aria-describedby="taskDueTimeHint" autocomplete="off" placeholder="--:--">
+                                    <!-- inputmode="numeric" because a phone was
+                                         offering a full QWERTY keyboard to type
+                                         a number into. -->
+                                    <input type="text" id="taskDueTime" aria-describedby="taskDueTimeHint"
+                                           autocomplete="off" inputmode="numeric" placeholder="--:--">
+                                    <!-- Recalling a format and typing it correctly is the
+                                         expensive part. These are this person's own hours,
+                                         filled in by syncTimePresets(), so the common
+                                         answers cost one tap and no memory. -->
+                                    <div class="time-presets" id="timePresets" role="group" aria-label="Common times"></div>
                                     <p class="field-hint" id="taskDueTimeHint"></p>
                                 </div>
                                 <div class="form-group" id="durationInputGroup">
@@ -1578,6 +1701,6 @@
 
     <!-- JS script loading -->
     <script src="js/onboarding.js?v=12"></script>
-    <script src="js/app.js?v=14"></script>
+    <script src="js/app.js?v=15"></script>
 </body>
 </html>
