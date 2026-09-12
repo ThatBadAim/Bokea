@@ -20,11 +20,15 @@ END $$;
 DO $$ BEGIN
     CREATE TYPE interval_type AS ENUM (
         'IntervalBased',
-        'FixedDate'
+        'FixedDate',
+        'Workdays'
     );
 EXCEPTION
     WHEN duplicate_object THEN null;
 END $$;
+
+-- Upgrade path for existing interval_type enums
+ALTER TYPE interval_type ADD VALUE IF NOT EXISTS 'Workdays';
 
 DO $$ BEGIN
     CREATE TYPE task_state AS ENUM (
@@ -139,6 +143,7 @@ CREATE TABLE IF NOT EXISTS public.tasks (
     notify_pref TEXT DEFAULT 'digest',       -- 'digest' or 'silent'
     is_archived BOOLEAN DEFAULT FALSE,      -- archive/pause habit without destroying history
     is_sample BOOLEAN DEFAULT FALSE,        -- example task the user opted into during the tutorial
+    is_commitment BOOLEAN NOT NULL DEFAULT FALSE, -- hard commitment (allowed to turn red)
     last_completed_at TIMESTAMPTZ,
     snoozed_until TIMESTAMPTZ,
     state task_state NOT NULL DEFAULT 'Green',
@@ -167,6 +172,7 @@ CREATE TABLE IF NOT EXISTS public.push_subscriptions (
 );
 
 ALTER TABLE public.tasks ADD COLUMN IF NOT EXISTS is_sample BOOLEAN DEFAULT FALSE;
+ALTER TABLE public.tasks ADD COLUMN IF NOT EXISTS is_commitment BOOLEAN NOT NULL DEFAULT FALSE;
 
 -- 7. Query Performance Indexes
 CREATE INDEX IF NOT EXISTS idx_tasks_user_id ON public.tasks(user_id);

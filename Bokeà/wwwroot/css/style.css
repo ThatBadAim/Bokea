@@ -59,6 +59,35 @@
     -webkit-tap-highlight-color: transparent;
 }
 
+/* Universal mobile touch responsiveness and elimination of 300ms tap delay */
+html, body, button, a, input, select, textarea, [role="button"],
+.btn, .nav-item, .task-row, .tick-btn, .seg, .cal-cell, .time-preset,
+.notification-bell-box, .profile-avatar-box, .close-btn, .row-more, .row-later,
+.action-btn, .stat-card, .pill, .snooze-menu-item, .row-menu button, .wizard-option-btn {
+    touch-action: manipulation;
+    -webkit-tap-highlight-color: transparent;
+}
+
+/* Tactile micro-interaction feedback on tap/touch */
+button:active:not(:disabled),
+.btn:active:not(:disabled),
+.nav-item:active,
+.seg:active,
+.cal-cell:active,
+.time-preset:active,
+.action-btn:active,
+.row-more:active,
+.row-later:active,
+.notification-bell-box:active,
+.profile-avatar-box:active,
+.close-btn:active,
+.notification-item:active,
+.dropdown-item:active,
+.tick-btn:active:not(:disabled) {
+    transform: scale(0.96) !important;
+    transition: transform 0.06s ease !important;
+}
+
 html {
     width: 100%;
     height: 100%;
@@ -730,7 +759,7 @@ body.dark-theme .chart-tooltip {
     display: flex;
     align-items: center;
     justify-content: center;
-    z-index: 1000;
+    z-index: 1200;
     opacity: 0;
     pointer-events: none;
     transition: opacity 0.25s ease;
@@ -745,33 +774,25 @@ body.dark-theme .chart-tooltip {
 }
 
 .modal-content {
-    width: 90%;
-    max-width: 620px;
-    max-height: calc(100vh - 40px);
-    max-height: calc(100dvh - 40px);
+    background: var(--bg-card);
+    width: 100%;
+    max-width: 520px;
+    border-radius: var(--border-radius-lg);
+    box-shadow: 0 20px 40px rgba(0, 0, 0, 0.2);
+    border: 1px solid var(--border-color);
+    position: relative;
+    max-height: 90vh;
+    max-height: 90dvh;
     display: flex;
     flex-direction: column;
-    background: var(--bg-card);
-    border: 1px solid var(--border-color);
-    border-radius: var(--border-radius-lg);
-    box-shadow: 0 20px 40px rgba(0, 0, 0, 0.25);
-    transform: translateY(-10px);
-    opacity: 0;
-    transition: opacity 0.25s ease, transform 0.25s ease;
-    overflow: hidden;
-}
-
-.modal-overlay.open .modal-content {
-    transform: translateY(0);
-    opacity: 1;
 }
 
 .modal-header {
+    padding: 16px 20px;
+    border-bottom: 1px solid var(--border-color);
     display: flex;
     justify-content: space-between;
     align-items: center;
-    padding: 16px 20px;
-    border-bottom: 1px solid var(--border-color);
     flex-shrink: 0;
 }
 
@@ -786,11 +807,19 @@ body.dark-theme .chart-tooltip {
     color: var(--text-secondary);
     font-size: 1.3rem;
     cursor: pointer;
-    transition: color var(--transition-speed);
+    min-width: 44px;
+    min-height: 44px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: var(--border-radius-md);
+    margin: -8px -8px -8px 0;
+    transition: color var(--transition-speed), background-color var(--transition-speed);
 }
 
 .close-btn:hover {
     color: var(--text-main);
+    background-color: var(--bg-hover);
 }
 
 #taskForm {
@@ -1128,7 +1157,15 @@ svg.lucide {
     font-weight: 600;
     font-size: 0.85rem;
     border: 1px solid var(--border-color);
+    position: relative;
     transition: all var(--transition-speed) ease;
+}
+
+.profile-avatar-box::after {
+    content: '';
+    position: absolute;
+    inset: -6px;
+    border-radius: 50%;
 }
 
 .profile-avatar-box:hover {
@@ -1220,6 +1257,13 @@ svg.lucide {
     border: 1px solid var(--border-color);
     transition: all var(--transition-speed) ease;
     position: relative;
+}
+
+.notification-bell-box::after {
+    content: '';
+    position: absolute;
+    inset: -6px;
+    border-radius: 50%;
 }
 
 .notification-bell-box:hover {
@@ -7863,7 +7907,7 @@ body.motion-off .focus-ring-fill { transition: none; }
         margin-left: 0 !important;
         width: 100% !important;
         max-width: 100% !important;
-        padding: 0 0 calc(110px + env(safe-area-inset-bottom, 0px)) 0 !important;
+        padding: 0 0 calc(140px + env(safe-area-inset-bottom, 0px)) 0 !important;
         box-sizing: border-box;
         overflow-x: hidden;
     }
@@ -7886,6 +7930,22 @@ body.motion-off .focus-ring-fill { transition: none; }
         background: var(--bg-body);
         border-bottom: 1px solid var(--border-color);
         box-sizing: border-box;
+    }
+
+    /* Mobile Topbar: on mobile devices, only the Home (Today) page shows the timer and top section.
+       Non-home views (such as Calendar, Everything, Patterns, Profile, Settings) hide the topbar
+       so that they only display their own dedicated content without taking up precious vertical space. */
+    body[data-active-tab]:not([data-active-tab="home"]) .topbar,
+    .main-content[data-active-tab]:not([data-active-tab="home"]) .topbar,
+    .main-content:has(.tab-view:not(#homeView):not(.hidden)) .topbar {
+        display: none !important;
+    }
+
+    /* Provide safe top breathing room and notch clearance when topbar is hidden */
+    body[data-active-tab]:not([data-active-tab="home"]) .main-content-body,
+    .main-content[data-active-tab]:not([data-active-tab="home"]) .main-content-body,
+    .main-content:has(.tab-view:not(#homeView):not(.hidden)) .main-content-body {
+        padding-top: calc(16px + env(safe-area-inset-top, 0px)) !important;
     }
 
     .header {
@@ -8006,9 +8066,9 @@ body.motion-off .focus-ring-fill { transition: none; }
 
     .right-now-actions .btn {
         width: 100%;
-        min-height: 38px !important;
-        padding: 0 10px !important;
-        font-size: 0.82rem !important;
+        min-height: 44px !important;
+        padding: 0 12px !important;
+        font-size: 0.86rem !important;
         justify-content: center;
         border-radius: var(--border-radius-md);
     }
@@ -8410,9 +8470,9 @@ body.motion-off .focus-ring-fill { transition: none; }
 
     .tasks-seg-wrapper .seg {
         flex: 0 0 auto;
-        min-height: 38px;
-        padding: 0 13px;
-        font-size: 0.8rem;
+        min-height: 42px;
+        padding: 0 15px;
+        font-size: 0.84rem;
         gap: 6px;
         white-space: nowrap;
         border-radius: 9999px;
@@ -8478,14 +8538,21 @@ body.motion-off .focus-ring-fill { transition: none; }
         border-radius: 14px 0 0 14px;
     }
 
-    /* Normal document flow tick button */
+    /* Normal document flow tick button with expanded 48x48 touch hitbox */
     .task-row .tick-btn {
-        position: static !important;
-        flex: 0 0 28px;
-        width: 28px;
-        height: 28px;
+        position: relative !important;
+        flex: 0 0 32px;
+        width: 32px;
+        height: 32px;
         margin: 0;
-        z-index: 1;
+        z-index: 2;
+    }
+
+    .task-row .tick-btn::before {
+        content: '';
+        position: absolute;
+        inset: -8px;
+        border-radius: 50%;
     }
 
     /* Primary Task Content Row: Title + Meta */
@@ -8584,16 +8651,32 @@ body.motion-off .focus-ring-fill { transition: none; }
     }
 
     .task-row-actions .row-later {
-        padding: 0 8px;
-        min-height: 26px;
-        font-size: 0.72rem;
-        border-radius: 6px;
+        position: relative;
+        padding: 0 10px;
+        min-height: 32px;
+        font-size: 0.76rem;
+        border-radius: 8px;
+    }
+
+    .task-row-actions .row-later::before {
+        content: '';
+        position: absolute;
+        inset: -6px;
+        border-radius: 10px;
     }
 
     .task-row-actions .row-more {
-        width: 26px;
-        height: 26px;
-        border-radius: 6px;
+        position: relative;
+        width: 32px;
+        height: 32px;
+        border-radius: 8px;
+    }
+
+    .task-row-actions .row-more::before {
+        content: '';
+        position: absolute;
+        inset: -6px;
+        border-radius: 10px;
     }
 
     /* Completed state styling */

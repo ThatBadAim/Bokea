@@ -7,4 +7,4 @@
 ## 2. Project Architecture & Runtime Notes
 - **Backend**: ASP.NET Core 10 Minimal API with SQLite and Entity Framework Core. Located in `Bokeà/`.
 - **Frontend**: Single Page Application served from `Bokeà/wwwroot/` with offline localStorage fallback mode.
-- **Offline Mode**: Supports `offline_mode_token` for standalone local operation without backend API requirements.
+- **Offline Mode**: Supports `bokea_local_mode` (as well as legacy `offline_mode_token`) for standalone local operation without backend API requirements.

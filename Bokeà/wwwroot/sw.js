@@ -1,8 +1,9 @@
-const CACHE_NAME = 'bokea-v28';
+const CACHE_NAME = 'bokea-v30';
 const ASSETS_TO_CACHE = [
   '/',
   '/index.html',
   '/css/style.css',
+  '/js/config.js',
   '/js/a11y.js',
   '/js/onboarding.js',
   '/js/app.js',
@@ -52,7 +53,7 @@ self.addEventListener('fetch', (event) => {
           }
           return networkResponse;
         })
-        .catch(() => caches.match(event.request))
+        .catch(() => caches.match(event.request, { ignoreSearch: true }))
     );
     return;
   }
@@ -72,7 +73,7 @@ self.addEventListener('fetch', (event) => {
           }
           return networkResponse;
         })
-        .catch(() => caches.match(event.request))
+        .catch(() => caches.match(event.request, { ignoreSearch: true }))
     );
     return;
   }
@@ -81,7 +82,7 @@ self.addEventListener('fetch', (event) => {
   // Supabase client) - these don't change on our deploys, so serving the
   // cached copy immediately and refreshing in the background is fine.
   event.respondWith(
-    caches.match(event.request).then((cachedResponse) => {
+    caches.match(event.request, { ignoreSearch: true }).then((cachedResponse) => {
       const fetchPromise = fetch(event.request).then((networkResponse) => {
         if (networkResponse && networkResponse.status === 200 && (networkResponse.type === 'basic' || networkResponse.type === 'cors')) {
           const responseToCache = networkResponse.clone();

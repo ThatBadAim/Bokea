@@ -86,6 +86,9 @@ namespace Bokea.Endpoints
                         user.BedTime,
                         user.WorkStartTime,
                         user.WorkEndTime,
+                        workDays = user.WorkDays != null
+                            ? user.WorkDays.Split(',', StringSplitOptions.RemoveEmptyEntries).ToList()
+                            : new System.Collections.Generic.List<string>(),
                         user.WorkDays
                     } 
                 });
@@ -123,6 +126,9 @@ namespace Bokea.Endpoints
                         user.BedTime,
                         user.WorkStartTime,
                         user.WorkEndTime,
+                        workDays = user.WorkDays != null
+                            ? user.WorkDays.Split(',', StringSplitOptions.RemoveEmptyEntries).ToList()
+                            : new System.Collections.Generic.List<string>(),
                         user.WorkDays
                     } 
                 });
@@ -155,6 +161,9 @@ namespace Bokea.Endpoints
                     user.BedTime,
                     user.WorkStartTime,
                     user.WorkEndTime,
+                    workDays = user.WorkDays != null
+                        ? user.WorkDays.Split(',', StringSplitOptions.RemoveEmptyEntries).ToList()
+                        : new System.Collections.Generic.List<string>(),
                     user.WorkDays
                 });
             }).RequireAuthorization();
@@ -198,8 +207,24 @@ namespace Bokea.Endpoints
                     user.BedTime,
                     user.WorkStartTime,
                     user.WorkEndTime,
+                    workDays = user.WorkDays != null
+                        ? user.WorkDays.Split(',', StringSplitOptions.RemoveEmptyEntries).ToList()
+                        : new System.Collections.Generic.List<string>(),
                     user.WorkDays
                 });
+            }).RequireAuthorization();
+
+            // GET /api/auth/profile/about - Get current user profile details
+            group.MapGet("/profile/about", async (AppDbContext db, ClaimsPrincipal userClaim) =>
+            {
+                int userId = int.Parse(userClaim.FindFirstValue(ClaimTypes.NameIdentifier) ?? "0");
+                var user = await db.Users.FindAsync(userId);
+                if (user == null)
+                {
+                    return Results.NotFound("User not found.");
+                }
+
+                return Results.Ok(ProfilePayload(user));
             }).RequireAuthorization();
 
             // PUT /api/auth/profile/about - Update who the user is, as opposed

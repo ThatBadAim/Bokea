@@ -112,11 +112,26 @@ public class TaskWatchdogService : BackgroundService
             return TaskState.Green;
         }
 
+        // Determine user local time from user's TimeZoneName if configured
+        TimeZoneInfo userTz = TimeZoneInfo.Utc;
+        if (!string.IsNullOrEmpty(task.User?.TimeZoneName))
+        {
+            try
+            {
+                userTz = TimeZoneInfo.FindSystemTimeZoneById(task.User.TimeZoneName);
+            }
+            catch
+            {
+                // Fallback to Utc if identifier unrecognized
+            }
+        }
+        var userLocalTime = TimeZoneInfo.ConvertTimeFromUtc(currentTime, userTz);
+
         if (task.IntervalType == IntervalType.Workdays)
         {
             var userWorkDays = task.User?.WorkDays?.Split(',', StringSplitOptions.RemoveEmptyEntries)
                 ?? new[] { "Monday", "Tuesday", "Wednesday", "Thursday", "Friday" };
-            var currentDayName = currentTime.DayOfWeek.ToString();
+            var currentDayName = userLocalTime.DayOfWeek.ToString();
 
             // If today is NOT a workday, task is relaxed and safe (Green)
             if (!userWorkDays.Contains(currentDayName, StringComparer.OrdinalIgnoreCase))
@@ -124,28 +139,48 @@ public class TaskWatchdogService : BackgroundService
                 return TaskState.Green;
             }
 
-            // If already completed today, it's Green
-            if (task.LastCompletedAt.HasValue && task.LastCompletedAt.Value.Date == currentTime.Date)
+            // If already completed today in user's local time, it's Green
+            if (task.LastCompletedAt.HasValue)
             {
-                return TaskState.Green;
+                var lastCompLocal = TimeZoneInfo.ConvertTimeFromUtc(task.LastCompletedAt.Value, userTz);
+                if (lastCompLocal.Date == userLocalTime.Date)
+                {
+                    return TaskState.Green;
+                }
             }
 
             // On a workday: if past due time (if specified) or during the day
             if (!string.IsNullOrEmpty(task.DueTime) && TimeSpan.TryParse(task.DueTime, out var dueTimeSpan))
             {
-                var dueToday = currentTime.Date.Add(dueTimeSpan);
-                if (currentTime > dueToday)
+                var dueToday = userLocalTime.Date.Add(dueTimeSpan);
+                if (userLocalTime > dueToday)
                 {
                     return task.IsCommitment ? TaskState.Red : TaskState.Amber;
                 }
-                else if ((dueToday - currentTime).TotalHours <= 2)
+                else if ((dueToday - userLocalTime).TotalHours <= 2)
                 {
                     return TaskState.Amber;
                 }
                 return TaskState.Green;
             }
 
-            return TaskState.Amber;
+            // Untimed workday task: relax to Green during work hours; escalate to Amber near/after workday end
+            var workEndSpan = TimeSpan.FromHours(17);
+            if (!string.IsNullOrEmpty(task.User?.WorkEndTime) && TimeSpan.TryParse(task.User.WorkEndTime, out var parsedEnd))
+            {
+                workEndSpan = parsedEnd;
+            }
+            var endOfWorkDay = userLocalTime.Date.Add(workEndSpan);
+
+            if (userLocalTime >= endOfWorkDay)
+            {
+                return task.IsCommitment ? TaskState.Red : TaskState.Amber;
+            }
+            else if (userLocalTime >= endOfWorkDay.AddHours(-2))
+            {
+                return TaskState.Amber;
+            }
+            return TaskState.Green;
         }
 
         if (task.IntervalType == IntervalType.IntervalBased)
@@ -163,12 +198,6 @@ public class TaskWatchdogService : BackgroundService
             // Amber when it comes due; red only once the grace band has gone
             // by as well, and then only for a hard commitment. A soft habit
             // ages to amber and waits there.
-            //
-            // The old rule went red the moment the interval elapsed, with no
-            // slack at all, so an every-two-days task was permanently red 48
-            // hours later. ADHD consistency is spiky, and a screen that turns
-            // red for every gap is the thing that makes people stop opening
-            // the app. Kept in step with calculateTaskState() in app.js.
             if (ratio < 0.8)
             {
                 return TaskState.Green;
@@ -188,10 +217,14 @@ public class TaskWatchdogService : BackgroundService
                 return TaskState.Green;
             }
 
-            // If task was completed on or after due date (or completed since task created and before/at deadline), keep it Green
-            if (task.LastCompletedAt.HasValue && task.LastCompletedAt.Value.Date >= task.DueDate.Value.Date)
+            // If task was completed on or after due date (in local date), keep it Green
+            if (task.LastCompletedAt.HasValue)
             {
-                return TaskState.Green;
+                var lastCompLocal = TimeZoneInfo.ConvertTimeFromUtc(task.LastCompletedAt.Value, userTz);
+                if (lastCompLocal.Date >= task.DueDate.Value.Date)
+                {
+                    return TaskState.Green;
+                }
             }
 
             var remainingTime = task.DueDate.Value - currentTime;

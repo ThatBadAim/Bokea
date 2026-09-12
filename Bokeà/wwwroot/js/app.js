@@ -3,6 +3,11 @@
 const API_BASE = '/api';
 const parseTaskId = id => isNaN(Number(id)) ? id : Number(id);
 
+// Enable instant :active pseudo-class on iOS Safari and mobile WebKit
+if (typeof document !== 'undefined') {
+    document.addEventListener('touchstart', () => {}, { passive: true });
+}
+
 // Supabase Client Initialization
 let supabaseClient = null;
 if (window.supabase && window.ENV && typeof window.ENV.isConfigured === 'function' && window.ENV.isConfigured()) {
@@ -548,6 +553,7 @@ async function apiRequest(endpoint, method = 'GET', body = null) {
                 notify_pref: body.notifyPref || 'digest',
                 is_archived: false,
                 is_sample: body.isSample === true,
+                is_commitment: body.isCommitment === true,
                 state: 'Green',
                 display_order: body.displayOrder || 0
             };
@@ -555,6 +561,32 @@ async function apiRequest(endpoint, method = 'GET', body = null) {
             const { data, error } = await supabaseClient.from('tasks').insert([newTaskRow]).select().single();
             if (error) throw error;
             return mapBackendTask(data);
+        }
+
+        // PUT /tasks/reorder
+        if (endpoint === '/tasks/reorder' && method === 'PUT') {
+            const requests = Array.isArray(body) ? body : [];
+            const sectorMap = {
+                'Health & Vitality': 'HealthAndVitality',
+                'Career & Finance': 'CareerAndFinance',
+                'Relationships & Social': 'RelationshipsAndSocial',
+                'Mind & Environment': 'MindAndEnvironment'
+            };
+            for (const req of requests) {
+                const id = parseTaskId(req.id || req.Id);
+                const updateRow = {};
+                if (req.order !== undefined || req.Order !== undefined) {
+                    updateRow.display_order = req.order !== undefined ? req.order : req.Order;
+                }
+                const sec = req.sector || req.Sector;
+                if (sec) {
+                    updateRow.sector = sectorMap[sec] || sec;
+                }
+                if (Object.keys(updateRow).length > 0) {
+                    await supabaseClient.from('tasks').update(updateRow).eq('id', id);
+                }
+            }
+            return { success: true };
         }
 
         // PUT /tasks/{id}
@@ -578,6 +610,7 @@ async function apiRequest(endpoint, method = 'GET', body = null) {
             if (body.dueTime !== undefined) updatePayload.due_time = body.dueTime;
             if (body.timeSlot !== undefined) updatePayload.time_slot = body.timeSlot;
             if (body.durationMinutes !== undefined) updatePayload.duration_minutes = body.durationMinutes;
+            if (body.isCommitment !== undefined) updatePayload.is_commitment = body.isCommitment === true;
             if (body.notifyPref !== undefined) updatePayload.notify_pref = body.notifyPref;
             if (body.isArchived !== undefined) updatePayload.is_archived = body.isArchived;
 
@@ -614,7 +647,7 @@ async function apiRequest(endpoint, method = 'GET', body = null) {
                 if (prevCompleted) {
                     nextDue = new Date(new Date(prevCompleted).getTime() + days * 86400000).toISOString();
                 } else {
-                    nextDue = currentTask.created_at || new Date().toISOString();
+                    nextDue = new Date(new Date(currentTask.created_at || Date.now()).getTime() + days * 86400000).toISOString();
                 }
             }
 
@@ -733,7 +766,7 @@ async function apiRequest(endpoint, method = 'GET', body = null) {
             const now = new Date();
             for (let i = 29; i >= 0; i--) {
                 const target = new Date(now.getTime() - i * 86400000);
-                const targetStr = target.toISOString().split('T')[0];
+                const targetStr = calDateStr(target);
                 const completed = logs.filter(l => (l.completed_at || '').startsWith(targetStr)).length;
                 let expectedDue = 0;
                 mappedTasks.forEach(t => {
@@ -747,8 +780,13 @@ async function apiRequest(endpoint, method = 'GET', body = null) {
                 });
                 let total = Math.round(expectedDue);
                 if (total < completed) total = completed;
-                if (total === 0) total = 1;
-                const rate = Math.min(100, Math.round((completed / total) * 100));
+                let rate = 100;
+                if (total > 0) {
+                    rate = Math.min(100, Math.round((completed / total) * 100));
+                } else if (completed === 0) {
+                    total = 0;
+                    rate = 100;
+                }
                 historyList.push({ date: targetStr, completed, total, rate });
             }
             return historyList;
@@ -1061,6 +1099,22 @@ function handleLocalStorageFallback(endpoint, method, body) {
         updateLocalHistory();
         return newTask;
     }
+
+    // PUT /tasks/reorder
+    if (endpoint === '/tasks/reorder' && method === 'PUT') {
+        const requests = Array.isArray(body) ? body : [];
+        requests.forEach(req => {
+            const taskId = req.id || req.Id;
+            const t = localTasks.find(item => String(item.id) === String(taskId));
+            if (t) {
+                if (req.order !== undefined) t.displayOrder = req.order;
+                if (req.Order !== undefined) t.displayOrder = req.Order;
+                if (req.sector || req.Sector) t.category = req.sector || req.Sector;
+            }
+        });
+        localStorage.setItem(STORAGE_KEYS.TASKS, JSON.stringify(localTasks));
+        return { success: true };
+    }
     
     // PUT /tasks/:id
     match = endpoint.match(/^\/tasks\/(.+)$/);
@@ -1122,6 +1176,21 @@ function handleLocalStorageFallback(endpoint, method, body) {
         }
         return { success: true };
     }
+
+    // GET /push/vapid-public-key
+    if (endpoint === '/push/vapid-public-key' && method === 'GET') {
+        return { publicKey: window.ENV?.VAPID_PUBLIC_KEY || '' };
+    }
+
+    // POST /push/subscribe
+    if (endpoint === '/push/subscribe' && method === 'POST') {
+        return { success: true };
+    }
+
+    // POST /push/unsubscribe
+    if (endpoint === '/push/unsubscribe' && method === 'POST') {
+        return { success: true };
+    }
     
     throw new Error(`Unsupported fallback endpoint: ${method} ${endpoint}`);
 }
@@ -1145,13 +1214,20 @@ function updateLocalHistory() {
     }).length;
     
     const totalDue = completedToday + amberRedCount;
+    const total = totalDue < completedToday ? completedToday : totalDue;
+    let rate = 100;
+    if (total > 0) {
+        rate = Math.min(100, Math.round((completedToday / total) * 100));
+    } else if (completedToday === 0) {
+        rate = 100;
+    }
     
     let todayLogIdx = localHistory.findIndex(h => h.date === todayStr);
     const newLog = {
         date: todayStr,
         completed: completedToday,
-        total: totalDue || 1,
-        rate: Math.round((completedToday / (totalDue || 1)) * 100)
+        total: total,
+        rate: rate
     };
     
     if (todayLogIdx !== -1) {
@@ -1176,7 +1252,7 @@ function renderNotifications() {
 
     // Filter tasks that are Red or Amber
     const warningTasks = tasks.filter(t => {
-        const state = t.state || calculateTaskState(t);
+        const state = calculateTaskState(t);
         return state === 'Red' || state === 'Amber';
     });
 
@@ -1186,7 +1262,7 @@ function renderNotifications() {
         badge.classList.remove('hidden');
         listContainer.innerHTML = '';
         warningTasks.forEach(task => {
-            const state = task.state || calculateTaskState(task);
+            const state = calculateTaskState(task);
             const stateLower = state.toLowerCase();
             const noteItem = document.createElement('a');
             noteItem.href = '#';
@@ -1222,15 +1298,13 @@ async function loadDashboardData() {
         tasks = tasksData || [];
         historyData = historyLogs || [];
         
-        // Calculate states client-side if the API tasks list items don't have a state field
+        // Calculate states client-side dynamically
         const durations = JSON.parse(localStorage.getItem('bokea_task_durations') || '{}');
         tasks.forEach(t => {
             if (durations[t.id]) {
                 t.durationMinutes = durations[t.id];
             }
-            if (!t.state) {
-                t.state = calculateTaskState(t);
-            }
+            t.state = calculateTaskState(t);
         });
         
         // Render active panels
@@ -1251,12 +1325,12 @@ async function loadDashboardData() {
 
 // Stats panel rendering
 function renderStats() {
-    const todayStr = new Date().toISOString().split('T')[0];
+    const todayStr = calDateStr(new Date());
     
     // 1. Done Today
     const completedCount = tasks.filter(t => {
         if (!t.lastCompleted) return false;
-        const compDateStr = new Date(t.lastCompleted).toISOString().split('T')[0];
+        const compDateStr = calDateStr(new Date(t.lastCompleted));
         return compDateStr === todayStr;
     }).length;
     document.getElementById('statsCompletedToday').textContent = completedCount;
@@ -1267,7 +1341,7 @@ function renderStats() {
     if (historyData && historyData.length > 0) {
         const sorted = [...historyData].sort((a, b) => new Date(b.date) - new Date(a.date));
 
-        const isFullyComplete = (log) => !!log && log.rate >= 100;
+        const isFullyComplete = (log) => !!log && (log.total === 0 || log.rate >= 100);
 
         let checkDate = new Date();
         const todayLog = sorted.find(h => h.date === todayStr);
@@ -1278,7 +1352,7 @@ function renderStats() {
         }
 
         while (true) {
-            const dateStr = checkDate.toISOString().split('T')[0];
+            const dateStr = calDateStr(checkDate);
             const log = sorted.find(h => h.date === dateStr);
             if (isFullyComplete(log)) {
                 streak++;
@@ -1318,13 +1392,13 @@ function renderStats() {
 // this screen is smaller, greyer, or folded away.
 // ============================================================
 function renderNextUpTask() {
-    const todayStr = new Date().toISOString().split('T')[0];
+    const todayStr = calDateStr(new Date());
     const isTodayWorkday = isDateWorkday(new Date());
 
     const decorated = (Array.isArray(tasks) ? tasks : [])
         .filter(t => {
             if (t.lastCompleted) {
-                const done = new Date(t.lastCompleted).toISOString().split('T')[0];
+                const done = calDateStr(new Date(t.lastCompleted));
                 if (done === todayStr) return false;
             }
             if (t.snoozeUntil && new Date(t.snoozeUntil) > new Date()) return false;
@@ -1333,7 +1407,7 @@ function renderNextUpTask() {
             }
             return true;
         })
-        .map(t => Object.assign({}, t, { _calculatedState: t.state || calculateTaskState(t) }));
+        .map(t => Object.assign({}, t, { _calculatedState: calculateTaskState(t) }));
 
     // Parked thoughts are not part of the day. They have no date, they cannot
     // be late, and they belong in their own tray rather than in the queue.
@@ -1651,10 +1725,10 @@ function renderNavCount(open) {
 function renderMomentum() {
     const el = document.getElementById('homeMomentum');
     const status = document.getElementById('userStatusLine');
-    const todayStr = new Date().toISOString().split('T')[0];
+    const todayStr = calDateStr(new Date());
     const done = (Array.isArray(tasks) ? tasks : []).filter(t => {
         if (!t.lastCompleted) return false;
-        return new Date(t.lastCompleted).toISOString().split('T')[0] === todayStr;
+        return calDateStr(new Date(t.lastCompleted)) === todayStr;
     }).length;
 
     const line = done === 0
@@ -1900,7 +1974,7 @@ function renderAllTasksGrid() {
     const searchQuery = (document.getElementById('taskSearchInput')?.value || '').toLowerCase().trim();
     const sortMode = document.getElementById('taskSortSelect')?.value || 'urgency';
 
-    const decorated = tasks.map(t => Object.assign({}, t, { _calculatedState: t.state || calculateTaskState(t) }));
+    const decorated = tasks.map(t => Object.assign({}, t, { _calculatedState: calculateTaskState(t) }));
 
     // Counts live inside the control, so nothing has to be scanned to be counted
     document.querySelectorAll('[data-seg-count]').forEach(el => {
@@ -2353,6 +2427,15 @@ function hideChartTooltip() {
 // date on by a whole interval. That is a lot to happen from one tap eight
 // pixels from the row above, so every one of these offers the way back.
 async function completeTask(id) {
+    const row = document.querySelector(`.task-row[data-task-id="${id}"]`);
+    const btn = row ? row.querySelector('.tick-btn') : null;
+    if (btn) {
+        btn.disabled = true;
+        btn.setAttribute('aria-pressed', 'true');
+    }
+    if (row) {
+        row.classList.add('is-done');
+    }
     try {
         await apiRequest(`/tasks/${id}/complete`, 'POST');
         // Plain, past tense, no exclamation mark, and no mention of a streak -
@@ -2363,17 +2446,40 @@ async function completeTask(id) {
         });
         await loadDashboardData();
     } catch (err) {
+        if (btn) {
+            btn.disabled = false;
+            btn.setAttribute('aria-pressed', 'false');
+        }
+        if (row) {
+            row.classList.remove('is-done');
+        }
         console.error("Failed completing task.", err);
         showToast("Could not mark that done. It is still on your list.", "error");
     }
 }
 
 async function uncompleteTask(id) {
+    const row = document.querySelector(`.task-row[data-task-id="${id}"]`);
+    const btn = row ? row.querySelector('.tick-btn') : null;
+    if (btn) {
+        btn.disabled = true;
+        btn.setAttribute('aria-pressed', 'false');
+    }
+    if (row) {
+        row.classList.remove('is-done');
+    }
     try {
         await apiRequest(`/tasks/${id}/complete`, 'DELETE');
         showToast('Put back.');
         await loadDashboardData();
     } catch (err) {
+        if (btn) {
+            btn.disabled = false;
+            btn.setAttribute('aria-pressed', 'true');
+        }
+        if (row) {
+            row.classList.add('is-done');
+        }
         console.error("Failed undoing completion.", err);
         showToast("Could not undo that.", "error");
     }
@@ -3317,11 +3423,6 @@ taskForm.addEventListener('submit', async (e) => {
         return;
     }
 
-    if (type === 'fixed' && !dueDate) {
-        showFieldError('taskDueDate', 'taskDueDateError', 'Pick the day this one happens.');
-        return;
-    }
-
     const isWorkdays = type === 'workdays';
     const payload = {
         name,
@@ -3330,7 +3431,7 @@ taskForm.addEventListener('submit', async (e) => {
         type: isWorkdays ? 'workdays' : type,
         intervalType: isWorkdays ? 'Workdays' : (type === 'fixed' ? 'FixedDate' : 'IntervalBased'),
         intervalDays: type === 'interval' ? parseInt(intervalDays) || 1 : null,
-        dueDate: type === 'fixed' ? dueDate : null,
+        dueDate: (type === 'fixed' && dueDate) ? dueDate : null,
         dueTime: dueTime || null,
         timeSlot: timeSlot || 'anytime',
         durationMinutes: durationMinutes || 15,
@@ -3362,12 +3463,16 @@ taskForm.addEventListener('submit', async (e) => {
         
         closeModal();
         await loadDashboardData();
-        // Filing something into a part of the day is the first moment those
-        // words have to mean particular hours, so that is when we ask.
-        maybeAskForSchedule(askedSlot);
+
+        // If the task has a slot assigned, switch to that slot's tab
+        // to immediately show the created/edited task in context.
+        if (askedSlot && askedSlot !== 'anytime') {
+            const segBtn = document.querySelector(`.seg[data-seg="${askedSlot}"]`);
+            if (segBtn) segBtn.click();
+        }
     } catch (err) {
-        console.error("Error saving task.", err);
-        showToast("Could not save that. Nothing was lost \u2014 try again.", "error");
+        console.error("Failed to save task", err);
+        showToast("Error saving task: " + err.message, "error");
     }
 });
 
@@ -3382,6 +3487,8 @@ function showToast(message, type = 'success', opts) {
 
     toast.textContent = '';
     toast.className = 'toast';
+    toast.style.borderColor = '';
+    toast.style.boxShadow = '';
 
     const text = document.createElement('span');
     text.className = 'toast-text';
@@ -4049,6 +4156,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     duration_minutes: t.durationMinutes || 15,
                     notify_pref: t.notifyPref || 'digest',
                     is_archived: false,
+                    is_commitment: t.isCommitment === true,
                     state: t.state || 'Green',
                     last_completed_at: t.lastCompleted || null,
                     snoozed_until: t.snoozeUntil || null,
@@ -4427,7 +4535,7 @@ document.addEventListener('DOMContentLoaded', () => {
         
         // Snooze all Red and Amber tasks to green
         const warningTasks = tasks.filter(t => {
-            const state = t.state || calculateTaskState(t);
+            const state = calculateTaskState(t);
             return state === 'Red' || state === 'Amber';
         });
         
@@ -5343,6 +5451,11 @@ document.addEventListener('DOMContentLoaded', () => {
         const options = opts || {};
         if (!tab || !TAB_ROUTES[tab]) tab = 'home';
 
+        // Keep active tab attribute in sync on body and main container
+        document.body.setAttribute('data-active-tab', tab);
+        const mainContentEl = document.getElementById('mainContent');
+        if (mainContentEl) mainContentEl.setAttribute('data-active-tab', tab);
+
         // Toggle active state on nav items
         document.querySelectorAll('.nav-menu .nav-item').forEach(i => {
             const isTarget = i.getAttribute('data-tab') === tab;
@@ -5538,8 +5651,8 @@ document.addEventListener('DOMContentLoaded', () => {
             const deltaY = touch.clientY - startY;
 
             if (isHorizontal === null) {
-                if (Math.abs(deltaX) > 22 || Math.abs(deltaY) > 22) {
-                    if (Math.abs(deltaX) > Math.abs(deltaY) * 1.35) {
+                if (Math.abs(deltaX) > 40 || Math.abs(deltaY) > 40) {
+                    if (Math.abs(deltaX) > Math.abs(deltaY) * 1.5) {
                         isHorizontal = true;
                         isDragging = true;
                         suppressNavClick = true;
@@ -5648,6 +5761,8 @@ document.addEventListener('DOMContentLoaded', () => {
                     resetGestureState();
                 }, 280);
             } else {
+                // Not a completed swipe gesture: immediately un-suppress click so taps register cleanly
+                suppressNavClick = false;
                 activeView.classList.add('gesture-animating');
                 activeView.style.transform = `translate3d(0, 0, 0)`;
 
@@ -5698,8 +5813,8 @@ document.addEventListener('DOMContentLoaded', () => {
             // Apply initial tab without adding duplicate history entry
             switchTab(initialTab, { replace: true, focusHeading: false });
         } else {
-            // Ensure state exists for initial home route
-            history.replaceState({ tab: 'home' }, '', window.location.pathname === '/' ? '/' : TAB_ROUTES['home']);
+            // Ensure state and active tab attributes exist for initial home route
+            switchTab('home', { replace: true, focusHeading: false });
         }
     })();
 
@@ -6159,7 +6274,19 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     if (resetConfirmBtn) {
-        resetConfirmBtn.addEventListener('click', () => {
+        resetConfirmBtn.addEventListener('click', async () => {
+            if (supabaseClient && !isLocalMode()) {
+                try {
+                    const { data: userResp } = await supabaseClient.auth.getUser();
+                    const userId = userResp?.user?.id;
+                    if (userId) {
+                        await supabaseClient.from('task_completion_logs').delete().eq('user_id', userId);
+                        await supabaseClient.from('tasks').delete().eq('user_id', userId);
+                    }
+                } catch (err) {
+                    console.error("Failed to delete remote data from Supabase:", err);
+                }
+            }
             localStorage.removeItem(STORAGE_KEYS.TASKS);
             localStorage.removeItem(STORAGE_KEYS.HISTORY);
             initLocalStorage();
@@ -6168,7 +6295,7 @@ document.addEventListener('DOMContentLoaded', () => {
             const homeNavItem = document.querySelector('.nav-menu .nav-item[data-tab="home"]');
             if (homeNavItem) homeNavItem.click();
 
-            loadDashboardData();
+            await loadDashboardData();
             showToast("All data cleared. Your app is empty.", "warning");
         });
     }
@@ -6224,8 +6351,8 @@ async function getExistingPushSubscription() {
 }
 
 async function enablePushNotifications() {
-    if (isFallbackMode) {
-        showToast("Bokeà cannot reach the server right now, so notifications cannot be set up.", "warning");
+    if (isFallbackMode || isLocalMode()) {
+        showToast("Push notifications require an active server connection and are not available in offline/local mode.", "warning");
         return;
     }
     if (!('serviceWorker' in navigator) || !('PushManager' in window)) {
@@ -6265,7 +6392,11 @@ async function disablePushNotifications() {
     try {
         const subscription = await getExistingPushSubscription();
         if (subscription) {
-            await apiRequest('/push/unsubscribe', 'POST', { endpoint: subscription.endpoint });
+            try {
+                await apiRequest('/push/unsubscribe', 'POST', { endpoint: subscription.endpoint });
+            } catch (apiErr) {
+                console.warn("API push unsubscription failed, continuing with browser unsubscription:", apiErr);
+            }
             await subscription.unsubscribe();
         }
         showToast("Push notifications disabled.");
@@ -6361,7 +6492,7 @@ function renderDailyScheduleTimeline() {
     }
     
     // Calculate Life Admin minutes from active tasks with intelligent placement
-    const todayStr = new Date().toISOString().split('T')[0];
+    const todayStr = calDateStr(new Date());
 
     tasks.forEach(t => {
         // Determine if task is active for today's timeline
@@ -6659,10 +6790,10 @@ function calIsDaily(task) {
 }
 
 // What actually lands on this specific day.
-function calDatedTasksForDate(dateStr) {
-    return getTasksForDate(dateStr)
-        .filter(t => !calIsDaily(t))
-        .map(t => Object.assign({}, t, { _calculatedState: t.state || calculateTaskState(t) }));
+function calDatedTasksForDate(dateStr, includeDaily = false) {
+    return getTasksForDate(dateStr, includeDaily)
+        .filter(t => includeDaily || !calIsDaily(t))
+        .map(t => Object.assign({}, t, { _calculatedState: calculateTaskState(t) }));
 }
 
 const CAL_RANK = { Red: 1, Amber: 2, Green: 3 };
@@ -6953,7 +7084,7 @@ function renderCalendarDay(dateStr) {
         titleEl.textContent = `${when} · ${d.getDate()} ${CAL_MONTHS[d.getMonth()]}`;
     }
 
-    const list = calDatedTasksForDate(dateStr);
+    const list = calDatedTasksForDate(dateStr, true);
 
     // A day runs forwards. Sorting it by urgency turned it into a ranked
     // list that happened to share a date; sorting it by the clock makes it
@@ -7112,7 +7243,7 @@ function calOpenDayFocus(wasOpen, dialog) {
 window.renderCalendar = renderCalendar;
 window.renderCalendarDay = renderCalendarDay;
 
-function getTasksForDate(dateStr) {
+function getTasksForDate(dateStr, includeDaily = false) {
     const matching = [];
     if (!Array.isArray(tasks)) return matching;
 
@@ -7120,16 +7251,23 @@ function getTasksForDate(dateStr) {
 
     tasks.forEach(t => {
         const mapped = mapBackendTask(t);
-        // Daily tasks take place every day — the calendar only displays one-off events or weekly/monthly/interval tasks
-        if (calIsDaily(mapped)) return;
+        // Daily tasks take place every day — the calendar month grid excludes them, but the day sheet can include them
+        if (!includeDaily && calIsDaily(mapped)) return;
 
-        if (mapped.type === 'fixed') {
+        if (mapped.type === 'workdays' || mapped.intervalType === 'Workdays') {
+            if (isDateWorkday(cellDate)) {
+                matching.push(mapped);
+            }
+        } else if (mapped.type === 'fixed') {
             if (mapped.dueDate === dateStr) {
                 matching.push(mapped);
             }
         } else if (mapped.type === 'interval') {
             const interval = parseInt(mapped.intervalDays, 10) || 1;
-            if (interval <= 1) return;
+            if (interval <= 1) {
+                if (includeDaily) matching.push(mapped);
+                return;
+            }
 
             // Multi-day interval (e.g. every 2 days, weekly, monthly)
             const anchorDate = mapped.lastCompleted
@@ -7396,7 +7534,7 @@ function formatAppTime(value, options = {}) {
     if (value === null || value === undefined || value === '') return '';
     let totalMinutes;
     if (typeof value === 'number') {
-        if (value >= 0 && value <= 1440 && !options.isTimestamp) {
+        if (!options.isTimestamp && value >= 0 && value < 2880) {
             totalMinutes = Math.round(value);
         } else {
             const d = new Date(value);
@@ -7530,7 +7668,17 @@ var SLOT_ORDER = ['morning', 'afternoon', 'evening', 'anytime'];
 // before it starts.
 function slotWindow(slot, shape) {
     const s = shape || dayShape();
-    const span = (from, to) => ({ from: from, to: to > from ? to : from + 60 });
+    const span = (from, to) => {
+        let adjustedTo = to;
+        if (adjustedTo <= from) {
+            if (adjustedTo < 720) {
+                adjustedTo += 1440;
+            } else {
+                adjustedTo = from + 60;
+            }
+        }
+        return { from: from, to: adjustedTo };
+    };
     if (slot === 'morning') return span(s.wake, s.workStart);
     if (slot === 'afternoon') return span(s.workStart, s.workEnd);
     if (slot === 'evening') return span(s.workEnd, s.bed);

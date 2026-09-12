@@ -396,6 +396,11 @@ namespace Bokea.Endpoints
                 var now = DateTime.UtcNow;
                 var historyList = new System.Collections.Generic.List<object>();
 
+                // Get user workdays for workday cadence calculation
+                var userEntity = await db.Users.AsNoTracking().FirstOrDefaultAsync(u => u.Id == userId);
+                var userWorkDays = userEntity?.WorkDays?.Split(',', StringSplitOptions.RemoveEmptyEntries)
+                    ?? new[] { "Monday", "Tuesday", "Wednesday", "Thursday", "Friday" };
+
                 // Get tasks and logs in memory to calculate analytics for the user (read-only)
                 var allTasks = await db.Tasks.AsNoTracking().Where(t => t.UserId == userId).ToListAsync();
                 var taskIds = allTasks.Select(t => t.Id).ToList();
@@ -410,6 +415,8 @@ namespace Bokea.Endpoints
                 {
                     var targetDate = now.AddDays(-i).Date;
                     var dateStr = targetDate.ToString("yyyy-MM-dd");
+                    var dayName = targetDate.DayOfWeek.ToString();
+                    bool isWorkday = userWorkDays.Contains(dayName, StringComparer.OrdinalIgnoreCase);
 
                     // Count completions on this day (UTC) in O(1)
                     int completed = completionsByDate.GetValueOrDefault(targetDate, 0);
@@ -420,7 +427,11 @@ namespace Bokea.Endpoints
 
                     foreach (var task in activeTasks)
                     {
-                        if (task.IntervalType == IntervalType.IntervalBased)
+                        if (task.IntervalType == IntervalType.Workdays)
+                        {
+                            if (isWorkday) expectedDue += 1.0;
+                        }
+                        else if (task.IntervalType == IntervalType.IntervalBased)
                         {
                             int days = task.IntervalDays ?? 1;
                             expectedDue += 1.0 / days;
@@ -433,10 +444,20 @@ namespace Bokea.Endpoints
 
                     int total = (int)Math.Round(expectedDue);
                     if (total < completed) total = completed;
-                    if (total == 0) total = 1; // prevent division by zero
 
-                    int rate = (int)Math.Round((double)completed / total * 100);
-                    if (rate > 100) rate = 100;
+                    int rate;
+                    if (total == 0 && completed == 0)
+                    {
+                        // A rest or clear day with nothing due and nothing missed is 100% compliant
+                        total = 0;
+                        rate = 100;
+                    }
+                    else
+                    {
+                        if (total == 0) total = 1; // prevent division by zero
+                        rate = (int)Math.Round((double)completed / total * 100);
+                        if (rate > 100) rate = 100;
+                    }
 
                     historyList.Add(new
                     {

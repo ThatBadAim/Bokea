@@ -1,108 +1,111 @@
 # Graph Report - Bokea  (2026-09-12)
 
 ## Corpus Check
-- 22 files · ~54,669 words
-- Verdict: corpus is large enough that graph structure adds value.
+- cluster-only mode — file stats not available
 
 ## Summary
-- 500 nodes · 1031 edges · 32 communities (28 shown, 3 thin omitted)
-- Extraction: 98% EXTRACTED · 2% INFERRED · 0% AMBIGUOUS · INFERRED: 23 edges (avg confidence: 0.85)
+- 505 nodes · 1042 edges · 36 communities (30 shown, 5 thin omitted)
+- Extraction: 97% EXTRACTED · 3% INFERRED · 0% AMBIGUOUS · INFERRED: 27 edges (avg confidence: 0.85)
 - Token cost: 0 input · 0 output
 
 ## Graph Freshness
-- Built from commit: `8a1d02e9`
+- Built from commit: `594be96b`
 - Run `git rev-parse HEAD` and compare to check if the graph is stale.
 - Run `graphify update .` after code changes (no API cost).
 
 ## Community Hubs (Navigation)
-- taskWhen
-- app.js
-- DueDateType
+- calDateStr
 - DigestTaskDto
+- app.js
 - ProfileAboutRequest
 - apiRequest
 - User
+- loadProfileIntoForm
 - onboarding.js
 - TaskItem
 - a11y.js
-- loadProfileIntoForm
-- TaskCompletionLog
-- .MapTaskEndpoints
+- PushSubscription
+- DueDateType
 - AppDbContext
-- Sector
+- .MapTaskEndpoints
+- calculateTaskState
 - http
-- switchTab
+- renderAllTasksGrid
 - Bokea.csproj
 - manifest.json
+- toggleRowMenu
 - vercel.json
-- TaskState
-- openEditTaskModal
-- openSnoozeMenu
-- sw.js
-- Agent Instructions & Guidelines
+- Sector
 - applyUiPrefs
 - promptSignUpFromLocal
-- getTasksForDate
 - loadSettingsIntoForm
 - IntervalType
-- flashSaved
+- TaskState
+- calDatedTasksForDate
+- openSnoozeMenu
+- renderAnalyticsGraph
+- sw.js
+- Agent Instructions & Guidelines
+- List
+- User
+- ILogger
 
 ## God Nodes (most connected - your core abstractions)
 1. `TaskItem` - 34 edges
 2. `User` - 31 edges
-3. `apiRequest()` - 24 edges
-4. `AppDbContext` - 19 edges
-5. `loadDashboardData()` - 19 edges
-6. `taskWhen()` - 19 edges
-7. `loadProfileIntoForm()` - 18 edges
-8. `renderCalendarDay()` - 17 edges
-9. `renderNextUpTask()` - 16 edges
-10. `showToast()` - 16 edges
+3. `apiRequest()` - 25 edges
+4. `calDateStr()` - 20 edges
+5. `taskWhen()` - 19 edges
+6. `loadDashboardData()` - 19 edges
+7. `AppDbContext` - 18 edges
+8. `loadProfileIntoForm()` - 18 edges
+9. `renderCalendarDay()` - 17 edges
+10. `renderNextUpTask()` - 17 edges
 
 ## Surprising Connections (you probably didn't know these)
+- `DigestService` --references--> `AppDbContext`  [EXTRACTED]
+  Bokeà/Services/DigestService.cs → Bokeà/Database/AppDbContext.cs
+- `PushNotificationService` --references--> `AppDbContext`  [EXTRACTED]
+  Bokeà/Services/PushNotificationService.cs → Bokeà/Database/AppDbContext.cs
+- `AppDbContext` --references--> `PushSubscription`  [EXTRACTED]
+  Bokeà/Database/AppDbContext.cs → Bokeà/Database/Models.cs
 - `AppDbContext` --references--> `TaskCompletionLog`  [EXTRACTED]
   Bokeà/Database/AppDbContext.cs → Bokeà/Database/Models.cs
 - `AppDbContext` --references--> `TaskItem`  [EXTRACTED]
-  Bokeà/Database/AppDbContext.cs → Bokeà/Database/Models.cs
-- `AppDbContext` --references--> `User`  [EXTRACTED]
-  Bokeà/Database/AppDbContext.cs → Bokeà/Database/Models.cs
-- `DigestService` --references--> `AppDbContext`  [EXTRACTED]
-  Bokeà/Services/DigestService.cs → Bokeà/Database/AppDbContext.cs
-- `AppDbContext` --references--> `PushSubscription`  [EXTRACTED]
   Bokeà/Database/AppDbContext.cs → Bokeà/Database/Models.cs
 
 ## Import Cycles
 - None detected.
 
-## Communities (32 total, 3 thin omitted)
+## Communities (36 total, 5 thin omitted)
 
-### Community 0 - "taskWhen"
-Cohesion: 0.12
-Nodes (51): areaMeta(), autoSegment(), cadenceText(), calCloseDay(), calculateTaskState(), calDatedTasksForDate(), calDateStr(), calGridKeydown() (+43 more)
-
-### Community 1 - "app.js"
-Cohesion: 0.05
-Nodes (32): CAL_DAYS, CAL_MONTHS, CAL_RANK, calFocusStr, calOpenDayFocus(), calStateCls(), calViewDate, clearTimeFieldComplaint() (+24 more)
-
-### Community 2 - "DueDateType"
-Cohesion: 0.17
-Nodes (10): DueDateType, HasValue, Value, DueDateTypeJsonConverter, IEquatable, JsonConverter, JsonSerializerOptions, Type (+2 more)
-
-### Community 3 - "DigestTaskDto"
-Cohesion: 0.08
-Nodes (24): DigestEndpoints, IEndpointRouteBuilder, PushSubscriptionKeys, PushSubscriptionRequest, UnsubscribeRequest, DigestService, DigestTaskDto, Description (+16 more)
-
-### Community 4 - "ProfileAboutRequest"
+### Community 0 - "calDateStr"
 Cohesion: 0.07
-Nodes (26): LoginRequest, Email, Password, ProfileAboutRequest, AvatarDataUrl, Bio, City, Country (+18 more)
+Nodes (69): areaMeta(), cadenceText(), calCloseDay(), calDateStr(), calGridKeydown(), calNowLine(), calOpenDayFocus(), calParse() (+61 more)
 
-### Community 5 - "apiRequest"
+### Community 1 - "DigestTaskDto"
+Cohesion: 0.05
+Nodes (38): AppDbContext, BackgroundService, Task, DigestEndpoints, IEndpointRouteBuilder, PushEndpoints, PushSubscriptionKeys, PushSubscriptionRequest (+30 more)
+
+### Community 2 - "app.js"
+Cohesion: 0.06
+Nodes (22): CAL_DAYS, CAL_MONTHS, CAL_RANK, calFocusStr, calViewDate, dismissFirstRun(), dueDateGroup, firstRunDismissed() (+14 more)
+
+### Community 3 - "ProfileAboutRequest"
+Cohesion: 0.07
+Nodes (29): AuthEndpoints, LoginRequest, Email, Password, ProfileAboutRequest, AvatarDataUrl, Bio, City (+21 more)
+
+### Community 4 - "apiRequest"
+Cohesion: 0.14
+Nodes (32): addSampleTasks(), apiRequest(), applyLocalModeChrome(), captureTime(), checkAuthToken(), clearStaleLocalSession(), closeFocus(), commitCapture() (+24 more)
+
+### Community 5 - "User"
 Cohesion: 0.09
-Nodes (47): addSampleTasks(), apiRequest(), applyLocalModeChrome(), captureTime(), checkAuthToken(), clearStaleLocalSession(), closeFocus(), closeRowConfirm() (+39 more)
+Nodes (23): User, AvatarDataUrl, BedTime, Bio, City, Country, CreatedAt, DateOfBirth (+15 more)
 
-### Community 6 - "User"
-Cohesion: 0.08
-Nodes (26): User, AvatarDataUrl, BedTime, Bio, City, Country, CreatedAt, DateOfBirth (+18 more)
+### Community 6 - "loadProfileIntoForm"
+Cohesion: 0.20
+Nodes (23): ageFromDob(), applyAvatarEverywhere(), collectProfile(), deviceTimeZone(), fillCountryList(), fillTimeZoneSelect(), flashSaved(), keepUnlistedOption() (+15 more)
 
 ### Community 7 - "onboarding.js"
 Cohesion: 0.23
@@ -116,33 +119,33 @@ Nodes (21): TaskItem, CompletionLogs, CreatedAt, Description, DisplayOrder, DueD
 Cohesion: 0.18
 Nodes (15): announce(), apply(), ensureRegions(), focusableWithin(), load(), prefersReducedMotion(), save(), set() (+7 more)
 
-### Community 10 - "loadProfileIntoForm"
-Cohesion: 0.26
-Nodes (18): ageFromDob(), applyAvatarEverywhere(), collectProfile(), deviceTimeZone(), fillCountryList(), fillTimeZoneSelect(), keepUnlistedOption(), loadProfileIntoForm() (+10 more)
+### Community 10 - "PushSubscription"
+Cohesion: 0.13
+Nodes (15): PushSubscription, Auth, CreatedAt, Endpoint, Id, P256dh, User, UserId (+7 more)
 
-### Community 11 - "TaskCompletionLog"
-Cohesion: 0.25
-Nodes (7): TaskCompletionLog, CompletedAt, Id, Notes, TaskId, DateTime, ModelBuilder
+### Community 11 - "DueDateType"
+Cohesion: 0.17
+Nodes (10): DueDateType, HasValue, Value, DueDateTypeJsonConverter, IEquatable, JsonConverter, JsonSerializerOptions, Type (+2 more)
 
-### Community 12 - ".MapTaskEndpoints"
+### Community 12 - "AppDbContext"
+Cohesion: 0.18
+Nodes (10): AppDbContext, PushSubscriptions, TaskCompletionLogs, Tasks, Users, DbInitializer, User, DbContext (+2 more)
+
+### Community 13 - ".MapTaskEndpoints"
 Cohesion: 0.19
 Nodes (10): Sector, CompleteTaskRequest, CreateTaskRequest, ReorderTaskRequest, SnoozeTaskRequest, TaskEndpoints, UpdateTaskRequest, WhenInTheDay (+2 more)
 
-### Community 13 - "AppDbContext"
-Cohesion: 0.07
-Nodes (30): BackgroundService, AppDbContext, PushSubscriptions, TaskCompletionLogs, Tasks, Users, DbInitializer, User (+22 more)
-
-### Community 14 - "Sector"
-Cohesion: 0.40
-Nodes (5): Sector, CareerAndFinance, HealthAndVitality, MindAndEnvironment, RelationshipsAndSocial
+### Community 14 - "calculateTaskState"
+Cohesion: 0.19
+Nodes (13): calculateTaskState(), currentStorageScope(), handleLocalStorageFallback(), initLocalStorage(), invalidateDayShapeCache(), migrateLegacyStorage(), readStore(), refreshStorageScope() (+5 more)
 
 ### Community 15 - "http"
 Cohesion: 0.20
 Nodes (9): ASPNETCORE_ENVIRONMENT, applicationUrl, commandName, dotnetRunMessages, environmentVariables, launchBrowser, profiles, http (+1 more)
 
-### Community 16 - "switchTab"
-Cohesion: 0.22
-Nodes (10): cleanupIncomingView(), hideChartTooltip(), onTouchEnd(), onTouchMove(), prepareIncomingView(), renderAnalyticsDataTable(), renderAnalyticsGraph(), resetGestureState() (+2 more)
+### Community 16 - "renderAllTasksGrid"
+Cohesion: 0.24
+Nodes (10): autoSegment(), cleanupIncomingView(), onTouchEnd(), onTouchMove(), prepareIncomingView(), renderAllTasksGrid(), resetGestureState(), segmentOf() (+2 more)
 
 ### Community 17 - "Bokea.csproj"
 Cohesion: 0.22
@@ -152,61 +155,69 @@ Nodes (8): net10.0, BCrypt.Net-Next (4.2.0), Microsoft.AspNetCore.Authentication
 Cohesion: 0.22
 Nodes (8): background_color, description, display, icons, name, short_name, start_url, theme_color
 
-### Community 19 - "vercel.json"
+### Community 19 - "toggleRowMenu"
+Cohesion: 0.40
+Nodes (6): closeRowConfirm(), closeRowMenus(), closeRowMenusAndReturn(), closeRowMenusOnOutside(), deleteTask(), toggleRowMenu()
+
+### Community 20 - "vercel.json"
 Cohesion: 0.33
 Nodes (5): cleanUrls, outputDirectory, routes, trailingSlash, version
 
-### Community 20 - "TaskState"
-Cohesion: 0.50
-Nodes (4): TaskState, Amber, Green, Red
+### Community 21 - "Sector"
+Cohesion: 0.40
+Nodes (5): Sector, CareerAndFinance, HealthAndVitality, MindAndEnvironment, RelationshipsAndSocial
 
-### Community 21 - "openEditTaskModal"
-Cohesion: 0.15
-Nodes (20): clearFieldError(), clearValidationErrors(), closeRowMenus(), closeRowMenusAndReturn(), closeRowMenusOnOutside(), formatWorkDaysSummary(), getUserWorkDays(), openCreateTaskModal() (+12 more)
-
-### Community 22 - "openSnoozeMenu"
-Cohesion: 0.83
-Nodes (4): closeSnoozeMenu(), closeSnoozeMenuOnEscape(), closeSnoozeMenuOnOutside(), openSnoozeMenu()
-
-### Community 25 - "applyUiPrefs"
+### Community 22 - "applyUiPrefs"
 Cohesion: 0.40
 Nodes (5): applyUiPrefs(), loadUiPrefs(), saveUiPrefs(), syncTimeInputsClockFormat(), wireAccessibilityBehaviour()
 
-### Community 26 - "promptSignUpFromLocal"
+### Community 23 - "promptSignUpFromLocal"
 Cohesion: 0.40
 Nodes (5): authBackendReady(), promptSignUpFromLocal(), setLocalMode(), showAuthError(), showAuthForm()
 
-### Community 27 - "getTasksForDate"
-Cohesion: 0.67
-Nodes (3): calIsDaily(), getTasksForDate(), mapBackendTask()
-
-### Community 29 - "loadSettingsIntoForm"
+### Community 24 - "loadSettingsIntoForm"
 Cohesion: 0.40
 Nodes (5): calculateSleepDuration(), loadSettingsIntoForm(), setTheme(), updateSleepHealthMeter(), updateThemeCardSelection()
 
-### Community 30 - "IntervalType"
+### Community 25 - "IntervalType"
 Cohesion: 0.50
 Nodes (4): IntervalType, FixedDate, IntervalBased, Workdays
 
+### Community 26 - "TaskState"
+Cohesion: 0.50
+Nodes (4): TaskState, Amber, Green, Red
+
+### Community 27 - "calDatedTasksForDate"
+Cohesion: 0.67
+Nodes (4): calDatedTasksForDate(), calIsDaily(), getTasksForDate(), mapBackendTask()
+
+### Community 28 - "openSnoozeMenu"
+Cohesion: 0.83
+Nodes (4): closeSnoozeMenu(), closeSnoozeMenuOnEscape(), closeSnoozeMenuOnOutside(), openSnoozeMenu()
+
+### Community 29 - "renderAnalyticsGraph"
+Cohesion: 0.67
+Nodes (4): hideChartTooltip(), renderAnalyticsDataTable(), renderAnalyticsGraph(), showChartTooltip()
+
 ## Knowledge Gaps
-- **146 isolated node(s):** `net10.0`, `BCrypt.Net-Next (4.2.0)`, `Microsoft.AspNetCore.Authentication.JwtBearer (10.0.9)`, `Microsoft.EntityFrameworkCore.Sqlite (10.0.8)`, `SQLitePCLRaw.bundle_e_sqlite3 (2.1.13)` (+141 more)
-  These have ≤1 connection - possible missing edges or undocumented components. (Counts symbols only; 191 node(s) total have ≤1 connection when file, concept and rationale nodes are included.)
-- **3 thin communities (<3 nodes) omitted from report** — run `graphify query` to explore isolated nodes.
+- **146 isolated node(s):** `UnsubscribeRequest`, `ReorderTaskRequest`, `Description`, `DueDate`, `Id` (+141 more)
+  These have ≤1 connection - possible missing edges or undocumented components. (Counts symbols only; 195 node(s) total have ≤1 connection when file, concept and rationale nodes are included.)
+- **5 thin communities (<3 nodes) omitted from report** — run `graphify query` to explore isolated nodes.
 
 ## Suggested Questions
 _Questions this graph is uniquely positioned to answer:_
 
-- **Why does `TaskItem` connect `TaskItem` to `DueDateType`, `DigestTaskDto`, `User`, `TaskCompletionLog`, `.MapTaskEndpoints`, `AppDbContext`, `TaskState`, `IntervalType`?**
-  _High betweenness centrality (0.052) - this node is a cross-community bridge._
-- **Why does `Bokea.Database` connect `DigestTaskDto` to `DueDateType`, `.MapTaskEndpoints`, `ProfileAboutRequest`, `AppDbContext`?**
-  _High betweenness centrality (0.050) - this node is a cross-community bridge._
-- **Why does `User` connect `User` to `TaskItem`, `DueDateType`, `TaskCompletionLog`, `AppDbContext`?**
-  _High betweenness centrality (0.043) - this node is a cross-community bridge._
-- **What connects `net10.0`, `BCrypt.Net-Next (4.2.0)`, `Microsoft.AspNetCore.Authentication.JwtBearer (10.0.9)` to the rest of the system?**
+- **Why does `TaskItem` connect `TaskItem` to `DigestTaskDto`, `User`, `PushSubscription`, `DueDateType`, `AppDbContext`, `.MapTaskEndpoints`, `IntervalType`, `TaskState`?**
+  _High betweenness centrality (0.053) - this node is a cross-community bridge._
+- **Why does `Bokea.Database` connect `DigestTaskDto` to `ProfileAboutRequest`, `DueDateType`, `AppDbContext`, `.MapTaskEndpoints`?**
+  _High betweenness centrality (0.042) - this node is a cross-community bridge._
+- **Why does `User` connect `User` to `ProfileAboutRequest`, `TaskItem`, `PushSubscription`, `DueDateType`, `AppDbContext`?**
+  _High betweenness centrality (0.041) - this node is a cross-community bridge._
+- **What connects `UnsubscribeRequest`, `ReorderTaskRequest`, `Description` to the rest of the system?**
   _146 weakly-connected nodes found - possible documentation gaps or missing edges._
-- **Should `taskWhen` be split into smaller, more focused modules?**
-  _Cohesion score 0.11686274509803922 - nodes in this community are weakly interconnected._
-- **Should `app.js` be split into smaller, more focused modules?**
-  _Cohesion score 0.045328399629972246 - nodes in this community are weakly interconnected._
+- **Should `calDateStr` be split into smaller, more focused modules?**
+  _Cohesion score 0.0733162830349531 - nodes in this community are weakly interconnected._
 - **Should `DigestTaskDto` be split into smaller, more focused modules?**
-  _Cohesion score 0.08199643493761141 - nodes in this community are weakly interconnected._
+  _Cohesion score 0.05152394775036284 - nodes in this community are weakly interconnected._
+- **Should `app.js` be split into smaller, more focused modules?**
+  _Cohesion score 0.05855855855855856 - nodes in this community are weakly interconnected._

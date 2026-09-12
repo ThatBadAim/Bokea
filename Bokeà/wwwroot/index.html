@@ -14,7 +14,7 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Outfit:wght@300;400;500;600;700&family=Playfair+Display:ital,wght@0,400..900;1,400..900&display=swap" rel="stylesheet">
     <!-- CSS -->
-    <link rel="stylesheet" href="css/style.css?v=17">
+    <link rel="stylesheet" href="css/style.css?v=18">
     <!-- PWA Settings -->
     <link rel="manifest" href="manifest.json">
     <meta name="theme-color" content="#09090b">
@@ -30,7 +30,7 @@
          never flashes at the wrong size or contrast. -->
     <script src="js/a11y.js"></script>
 </head>
-<body>
+<body data-active-tab="home">
     <!-- First stop for keyboard and screen reader users: jump past the chrome. -->
     <a href="#mainContent" class="skip-link">Skip to main content</a>
     <!-- Authentication Screen -->
@@ -333,7 +333,7 @@
         </aside>
 
         <!-- Main Content Area -->
-        <main class="main-content" id="mainContent" tabindex="-1">
+        <main class="main-content" id="mainContent" data-active-tab="home" tabindex="-1">
             <!-- Topbar -->
             <div class="topbar">
                 <!-- Now bar: the clock is always on screen. Time blindness is the enemy.
