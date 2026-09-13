@@ -1313,7 +1313,13 @@ async function loadDashboardData() {
         renderNotifications();
         renderNextUpTask();
         renderDailyScheduleTimeline();
-        renderAllTasksGrid();
+        // The tasks grid is a full innerHTML rebuild of every task row, so
+        // only pay for it when the Everything tab is actually the one on
+        // screen. switchTab() already re-renders it on entry, so nothing is
+        // stale when the user gets there.
+        if (!document.getElementById('tasksView')?.classList.contains('hidden')) {
+            renderAllTasksGrid();
+        }
         // Keep the month in step when the calendar is the visible tab.
         if (!document.getElementById('calendarFullView')?.classList.contains('hidden')) {
             renderCalendar();

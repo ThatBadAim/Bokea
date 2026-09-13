@@ -186,7 +186,9 @@ body {
     text-decoration: none;
     font-weight: 500;
     font-size: 0.9rem;
-    transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+    transition-property: background-color, border-color, color, box-shadow, transform, opacity;
+    transition-duration: 0.2s;
+    transition-timing-function: cubic-bezier(0.16, 1, 0.3, 1);
     border: 1px solid transparent;
 }
 
@@ -287,7 +289,9 @@ body.dark-theme .nav-avatar-disc.has-photo {
     gap: 12px;
     padding-top: 20px;
     border-top: 1px solid var(--border-color);
-    transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+    transition-property: background-color, border-color, color, box-shadow, transform, opacity;
+    transition-duration: 0.2s;
+    transition-timing-function: cubic-bezier(0.16, 1, 0.3, 1);
 }
 
 .user-profile:hover .avatar {
@@ -396,7 +400,9 @@ body.dark-theme .nav-avatar-disc.has-photo {
     background: rgba(0, 0, 0, 0.025);
     color: var(--text-main);
     outline: none;
-    transition: all var(--transition-speed) ease;
+    transition-property: background-color, border-color, color, box-shadow, transform, opacity;
+    transition-duration: var(--transition-speed);
+    transition-timing-function: ease;
 }
 
 #taskSearchInput::placeholder {
@@ -694,7 +700,9 @@ body.dark-theme #taskSearchInput:focus {
     font-weight: 500;
     border-radius: var(--border-radius-sm);
     cursor: pointer;
-    transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+    transition-property: background-color, border-color, color, box-shadow, transform, opacity;
+    transition-duration: 0.2s;
+    transition-timing-function: cubic-bezier(0.16, 1, 0.3, 1);
 }
 
 .toggle-btn:hover {
@@ -968,7 +976,9 @@ svg.lucide {
     font-size: 0.85rem;
     font-weight: 600;
     cursor: pointer;
-    transition: all var(--transition-speed) ease;
+    transition-property: background-color, border-color, color, box-shadow, transform, opacity;
+    transition-duration: var(--transition-speed);
+    transition-timing-function: ease;
     border: 1px solid transparent;
 }
 
@@ -1009,7 +1019,9 @@ svg.lucide {
     border-radius: var(--border-radius-md);
     box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
     z-index: 2000;
-    transition: all var(--transition-speed) ease;
+    transition-property: background-color, border-color, color, box-shadow, transform, opacity;
+    transition-duration: var(--transition-speed);
+    transition-timing-function: ease;
     display: flex;
     align-items: center;
     gap: 10px;
@@ -1138,7 +1150,9 @@ svg.lucide {
     font-weight: 600;
     border-radius: var(--border-radius-md);
     cursor: pointer;
-    transition: all var(--transition-speed) ease;
+    transition-property: background-color, border-color, color, box-shadow, transform, opacity;
+    transition-duration: var(--transition-speed);
+    transition-timing-function: ease;
 }
 
 .btn-link-welcome {
@@ -1185,7 +1199,9 @@ svg.lucide {
     font-size: 0.85rem;
     border: 1px solid var(--border-color);
     position: relative;
-    transition: all var(--transition-speed) ease;
+    transition-property: background-color, border-color, color, box-shadow, transform, opacity;
+    transition-duration: var(--transition-speed);
+    transition-timing-function: ease;
 }
 
 .profile-avatar-box::after {
@@ -1241,7 +1257,9 @@ svg.lucide {
     text-decoration: none;
     font-size: 0.82rem;
     font-weight: 500;
-    transition: all var(--transition-speed) ease;
+    transition-property: background-color, border-color, color, box-shadow, transform, opacity;
+    transition-duration: var(--transition-speed);
+    transition-timing-function: ease;
 }
 
 .dropdown-item i, .dropdown-item svg {
@@ -1282,7 +1300,9 @@ svg.lucide {
     justify-content: center;
     cursor: pointer;
     border: 1px solid var(--border-color);
-    transition: all var(--transition-speed) ease;
+    transition-property: background-color, border-color, color, box-shadow, transform, opacity;
+    transition-duration: var(--transition-speed);
+    transition-timing-function: ease;
     position: relative;
 }
 
@@ -1436,7 +1456,9 @@ svg.lucide {
     justify-content: center;
     cursor: pointer;
     border: 1px solid var(--border-color);
-    transition: all var(--transition-speed) ease;
+    transition-property: background-color, border-color, color, box-shadow, transform, opacity;
+    transition-duration: var(--transition-speed);
+    transition-timing-function: ease;
     margin-left: 10px;
 }
 
@@ -1896,7 +1918,9 @@ body.theme-transitioning * {
     height: 32px;
     margin: 0 auto;
     border-radius: 50%;
-    transition: all var(--transition-speed) ease;
+    transition-property: background-color, border-color, color, box-shadow, transform, opacity;
+    transition-duration: var(--transition-speed);
+    transition-timing-function: ease;
 }
 
 .calendar-day.empty {
@@ -2151,7 +2175,9 @@ body.dark-theme .calendar-day.today {
     border: 1.5px solid var(--border-color);
     border-radius: var(--border-radius-lg);
     cursor: pointer;
-    transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+    transition-property: background-color, border-color, color, box-shadow, transform, opacity;
+    transition-duration: 0.25s;
+    transition-timing-function: cubic-bezier(0.16, 1, 0.3, 1);
     color: var(--text-main);
     text-align: left;
     position: relative;
@@ -2185,7 +2211,9 @@ body.dark-theme .calendar-day.today {
     right: 24px;
     top: 50%;
     transform: translateY(-50%);
-    transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+    transition-property: background-color, border-color, color, box-shadow, transform, opacity;
+    transition-duration: 0.25s;
+    transition-timing-function: cubic-bezier(0.16, 1, 0.3, 1);
     background: transparent;
 }
 
@@ -2423,7 +2451,9 @@ body.dark-theme .clock-panel {
     color: var(--text-secondary);
     pointer-events: none;
     opacity: 0.5;
-    transition: all var(--transition-speed) ease;
+    transition-property: background-color, border-color, color, box-shadow, transform, opacity;
+    transition-duration: var(--transition-speed);
+    transition-timing-function: ease;
     z-index: 2;
 }
 
@@ -2438,7 +2468,9 @@ body.dark-theme .clock-panel {
     color: var(--text-main) !important;
     font-family: var(--font-inter);
     outline: none;
-    transition: all var(--transition-speed) ease;
+    transition-property: background-color, border-color, color, box-shadow, transform, opacity;
+    transition-duration: var(--transition-speed);
+    transition-timing-function: ease;
 }
 
 .sidebar-search #taskSearchInput::placeholder {
@@ -2516,7 +2548,9 @@ body.dark-theme .sidebar-search #taskSearchInput:focus {
     font-size: 0.8rem;
     font-weight: 600;
     border: 1px solid var(--border-color);
-    transition: all var(--transition-speed) ease;
+    transition-property: background-color, border-color, color, box-shadow, transform, opacity;
+    transition-duration: var(--transition-speed);
+    transition-timing-function: ease;
 }
 
 .weekday-pill:hover span {
@@ -2542,7 +2576,9 @@ body.dark-theme .weekday-pill input[type="checkbox"]:checked + span {
 }
 
 .sleep-health-card {
-    transition: all 0.3s ease;
+    transition-property: background-color, border-color, color, box-shadow, transform, opacity;
+    transition-duration: 0.3s;
+    transition-timing-function: ease;
 }
 
 .health-badge {
@@ -2622,7 +2658,9 @@ body.dark-theme .meter-bar-bg {
     font-weight: 600;
     font-family: var(--font-inter);
     cursor: pointer;
-    transition: all var(--transition-speed) ease;
+    transition-property: background-color, border-color, color, box-shadow, transform, opacity;
+    transition-duration: var(--transition-speed);
+    transition-timing-function: ease;
     box-shadow: 0 4px 12px rgba(74, 124, 89, 0.2);
 }
 
@@ -2761,7 +2799,9 @@ body.dark-theme {
     position: relative;
     border-radius: 8px;
     cursor: pointer;
-    transition: all var(--transition-speed) ease;
+    transition-property: background-color, border-color, color, box-shadow, transform, opacity;
+    transition-duration: var(--transition-speed);
+    transition-timing-function: ease;
     margin: 0 auto;
 }
 
@@ -2812,7 +2852,9 @@ body.dark-theme .calendar-panel.compact .calendar-day.today {
     align-items: center;
     justify-content: center;
     cursor: pointer;
-    transition: all var(--transition-speed) ease;
+    transition-property: background-color, border-color, color, box-shadow, transform, opacity;
+    transition-duration: var(--transition-speed);
+    transition-timing-function: ease;
 }
 
 .btn-calendar-nav:hover {
@@ -2870,7 +2912,9 @@ body.dark-theme .btn-calendar-nav:hover {
     align-items: center;
     justify-content: center;
     border-radius: 50%;
-    transition: all var(--transition-speed) ease;
+    transition-property: background-color, border-color, color, box-shadow, transform, opacity;
+    transition-duration: var(--transition-speed);
+    transition-timing-function: ease;
     letter-spacing: 0;
     text-align: center;
 }
@@ -3123,7 +3167,9 @@ body.motion-off *::after {
     font-size: 0.88rem;
     font-weight: 600;
     cursor: pointer;
-    transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+    transition-property: background-color, border-color, color, box-shadow, transform, opacity;
+    transition-duration: 0.2s;
+    transition-timing-function: cubic-bezier(0.16, 1, 0.3, 1);
 }
 
 .seg:hover {
@@ -3180,7 +3226,9 @@ body.motion-off *::after {
     font-size: 0.82rem;
     font-weight: 600;
     cursor: pointer;
-    transition: all var(--transition-speed) ease;
+    transition-property: background-color, border-color, color, box-shadow, transform, opacity;
+    transition-duration: var(--transition-speed);
+    transition-timing-function: ease;
 }
 
 .area-chip:hover {
@@ -3256,7 +3304,9 @@ body.motion-off *::after {
     background: var(--bg-card);
     border: 1px solid var(--border-color);
     border-radius: var(--border-radius-lg);
-    transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+    transition-property: background-color, border-color, color, box-shadow, transform, opacity;
+    transition-duration: 0.2s;
+    transition-timing-function: cubic-bezier(0.16, 1, 0.3, 1);
     animation: taskRowFadeIn 0.22s cubic-bezier(0.16, 1, 0.3, 1) both;
 }
 
@@ -3398,7 +3448,9 @@ body.motion-off *::after {
     justify-content: center;
     cursor: pointer;
     flex: 0 0 auto;
-    transition: all var(--transition-speed) ease;
+    transition-property: background-color, border-color, color, box-shadow, transform, opacity;
+    transition-duration: var(--transition-speed);
+    transition-timing-function: ease;
 }
 
 .tick-btn i, .tick-btn svg {
@@ -3433,7 +3485,9 @@ body.motion-off *::after {
     align-items: center;
     justify-content: center;
     gap: 9px;
-    transition: all var(--transition-speed) ease;
+    transition-property: background-color, border-color, color, box-shadow, transform, opacity;
+    transition-duration: var(--transition-speed);
+    transition-timing-function: ease;
 }
 
 .show-more-btn:hover {
@@ -3462,7 +3516,9 @@ body.motion-off *::after {
     gap: 8px;
     white-space: nowrap;
     flex: 0 0 auto;
-    transition: all var(--transition-speed) ease;
+    transition-property: background-color, border-color, color, box-shadow, transform, opacity;
+    transition-duration: var(--transition-speed);
+    transition-timing-function: ease;
 }
 
 .cap-toggle:hover {
@@ -3836,7 +3892,9 @@ body.density-compact .right-now-body {
     font-size: 0.95rem;
     padding: 16px 130px 16px 48px;
     outline: none;
-    transition: all var(--transition-speed) ease;
+    transition-property: background-color, border-color, color, box-shadow, transform, opacity;
+    transition-duration: var(--transition-speed);
+    transition-timing-function: ease;
 }
 
 body.dark-theme .capture-input {
@@ -3929,7 +3987,9 @@ body.dark-theme .capture-input {
     align-items: center;
     padding: 3px;
     flex: 0 0 auto;
-    transition: all var(--transition-speed) ease;
+    transition-property: background-color, border-color, color, box-shadow, transform, opacity;
+    transition-duration: var(--transition-speed);
+    transition-timing-function: ease;
 }
 
 .sw-knob {
@@ -3937,7 +3997,9 @@ body.dark-theme .capture-input {
     height: 20px;
     border-radius: 50%;
     background: var(--text-muted);
-    transition: all var(--transition-speed) ease;
+    transition-property: background-color, border-color, color, box-shadow, transform, opacity;
+    transition-duration: var(--transition-speed);
+    transition-timing-function: ease;
 }
 
 .sw.on .sw-track {
@@ -5612,7 +5674,9 @@ body.motion-off *::after {
     font-family: var(--font-inter);
     text-align: left;
     cursor: pointer;
-    transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+    transition-property: background-color, border-color, color, box-shadow, transform, opacity;
+    transition-duration: 0.2s;
+    transition-timing-function: cubic-bezier(0.16, 1, 0.3, 1);
 }
 
 .set-tab:hover {
@@ -7975,8 +8039,12 @@ body.motion-off .focus-ring-fill { transition: none; }
         border: 1px solid var(--border-color);
         background: var(--bg-card);
         background: rgba(var(--bg-card-rgb, 255, 255, 255), 0.94);
-        backdrop-filter: blur(24px);
-        -webkit-backdrop-filter: blur(24px);
+        /* This bar is fixed on screen and stays over scrolling content on
+           every frame, so the blur radius directly costs scroll smoothness
+           on mobile. 12px reads as the same frosted glass at a fraction of
+           the GPU cost of the 24px this used to be. */
+        backdrop-filter: blur(12px);
+        -webkit-backdrop-filter: blur(12px);
         box-shadow: 0 10px 35px rgba(0, 0, 0, 0.14), 0 2px 8px rgba(0, 0, 0, 0.05);
         z-index: 1000;
         transition: transform 0.2s cubic-bezier(0.16, 1, 0.3, 1), background-color var(--transition-speed);
@@ -8258,8 +8326,10 @@ body.motion-off .focus-ring-fill { transition: none; }
         z-index: 880;
         margin: 0;
         box-shadow: 0 -6px 24px rgba(0, 0, 0, .12);
-        backdrop-filter: blur(16px);
-        -webkit-backdrop-filter: blur(16px);
+        /* Also fixed over scrolling content on every frame - same tradeoff
+           as the bottom nav bar above. */
+        backdrop-filter: blur(10px);
+        -webkit-backdrop-filter: blur(10px);
     }
 
     @media (max-width: 480px) {
