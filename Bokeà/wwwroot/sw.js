@@ -1,4 +1,4 @@
-const CACHE_NAME = 'bokea-v36';
+const CACHE_NAME = 'bokea-v37';
 const ASSETS_TO_CACHE = [
   '/',
   '/index.html',
@@ -14,6 +14,14 @@ const ASSETS_TO_CACHE = [
   'https://unpkg.com/lucide@latest',
   'https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2'
 ];
+
+// The only third-party hosts whose responses are cached. Everything else that
+// leaves this origin is live data - Supabase above all - and it used to go
+// through the stale-while-revalidate branch below. With ignoreSearch on, every
+// query against a table shared one cache entry, so reloading after a tick
+// painted the list from before it, and another device kept showing an old
+// list until it happened to refresh twice.
+const CDN_HOSTS = ['fonts.googleapis.com', 'fonts.gstatic.com', 'unpkg.com', 'cdn.jsdelivr.net'];
 
 self.addEventListener('install', (event) => {
   event.waitUntil(
@@ -42,6 +50,10 @@ self.addEventListener('fetch', (event) => {
   if (event.request.method !== 'GET') return;
 
   const url = new URL(event.request.url);
+
+  // Live data is never answered from the cache.
+  if (url.origin !== self.location.origin && !CDN_HOSTS.includes(url.hostname)) return;
+  if (url.origin === self.location.origin && url.pathname.startsWith('/api/')) return;
 
   // Network-first policy for runtime configuration to prevent stale credentials
   if (url.pathname.endsWith('config.js') || url.pathname.includes('/js/config.js')) {

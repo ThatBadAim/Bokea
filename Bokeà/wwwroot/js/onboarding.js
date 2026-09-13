@@ -89,7 +89,13 @@
             var client = window.supabaseClient || null;
             var uid = localStorage.getItem('bokea_user_id');
             if (client && uid) {
-                client.from('profiles').update({ has_completed_tutorial: true }).eq('id', uid);
+                // A Supabase query is only sent once something waits on it.
+                // Without the .then() this update was built and never made,
+                // so the tour came back on every other device.
+                client.from('profiles').update({ has_completed_tutorial: true }).eq('id', uid)
+                    .then(function (res) {
+                        if (res && res.error) console.warn('Could not save tutorial progress to the account.', res.error);
+                    }, function () { /* offline: the flag on this device still holds */ });
             }
         } catch (e) { /* not fatal */ }
     }

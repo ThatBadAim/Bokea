@@ -36,10 +36,10 @@
     "semantic_hash": "4c0de416d676315faae8ab74b8601b3c"
   },
   "Boke\u00e0/Program.cs": {
-    "mtime": 1789228103.0752797,
-    "seen": 1789243450.9717114,
-    "ast_hash": "651bf28dae560bae0cf30689de5ffc57",
-    "semantic_hash": "651bf28dae560bae0cf30689de5ffc57"
+    "mtime": 1789263039.7704215,
+    "seen": 1789289685.1111305,
+    "ast_hash": "247c00e2037feec5e4b2495690c3e7a8",
+    "semantic_hash": ""
   },
   "Boke\u00e0/Properties/launchSettings.json": {
     "mtime": 1781034663.0,
@@ -66,10 +66,10 @@
     "semantic_hash": "c52f435e4bcaf2bd106befb5823b841e"
   },
   "Boke\u00e0/wwwroot/js/app.js": {
-    "mtime": 1789259109.3938205,
-    "seen": 1789259991.5408623,
-    "ast_hash": "b070e5bed4edd8c7f7fcd545dc0cc806",
-    "semantic_hash": "b070e5bed4edd8c7f7fcd545dc0cc806"
+    "mtime": 1789291335.5676172,
+    "seen": 1789291519.6822584,
+    "ast_hash": "4237f6ab20b5f3c95cc97e6c5249827b",
+    "semantic_hash": ""
   },
   "Boke\u00e0/wwwroot/manifest.json": {
     "mtime": 1788973935.0335922,
@@ -78,10 +78,10 @@
     "semantic_hash": "e38e6347cfd75ae30017fa0ee340711d"
   },
   "Boke\u00e0/wwwroot/sw.js": {
-    "mtime": 1789249462.6684825,
-    "seen": 1789249471.0350964,
-    "ast_hash": "8026735429fc309271d72cf47ac034d2",
-    "semantic_hash": "8026735429fc309271d72cf47ac034d2"
+    "mtime": 1789289643.7824156,
+    "seen": 1789289685.1112921,
+    "ast_hash": "0358719b2ae9b81e0b5d07ebcc380657",
+    "semantic_hash": ""
   },
   "Boke\u00e0/Endpoints/PushEndpoints.cs": {
     "mtime": 1788888987.3830833,
@@ -96,15 +96,15 @@
     "semantic_hash": "8f4e72fbf4511191a6dee0c05abfe9ea"
   },
   "AGENTS.md": {
-    "mtime": 1788886392.3201156,
-    "seen": 1788889167.5423546,
-    "ast_hash": "4253c9434380fe89993071cdba575923",
+    "mtime": 1789211981.2804039,
+    "seen": 1789289685.1113079,
+    "ast_hash": "a5e37576ea1e2ba09bd74066d0cd4fe4",
     "semantic_hash": ""
   },
   "Boke\u00e0/wwwroot/index.html": {
-    "mtime": 1789169827.7910168,
-    "seen": 1789169833.0298314,
-    "ast_hash": "8ae63ea947f890dc37e0930f84a37231",
+    "mtime": 1789263003.9227505,
+    "seen": 1789289685.1113112,
+    "ast_hash": "1e99bcf51aa3d990a515cc302ef36fca",
     "semantic_hash": ""
   },
   "Boke\u00e0/wwwroot/assets/icon.svg": {
@@ -132,9 +132,21 @@
     "semantic_hash": "dc4307cf07e7e9b79e38e3e44498903a"
   },
   "Boke\u00e0/wwwroot/js/onboarding.js": {
-    "mtime": 1788969781.6198893,
-    "seen": 1788973725.357141,
-    "ast_hash": "18856a51c5717732a2d50f9e90ff3645",
-    "semantic_hash": "18856a51c5717732a2d50f9e90ff3645"
+    "mtime": 1789291335.5703287,
+    "seen": 1789291519.6822784,
+    "ast_hash": "1debb6807a836468ac84305a3e2d1662",
+    "semantic_hash": ""
+  },
+  "Boke\u00e0/wwwroot/404.html": {
+    "mtime": 1789228096.764929,
+    "seen": 1789289685.1113095,
+    "ast_hash": "be68a326494c6904b9ad2b03c8461b28",
+    "semantic_hash": ""
+  },
+  "NEXT-STEPS.md": {
+    "mtime": 1789291512.6651201,
+    "seen": 1789291519.6823735,
+    "ast_hash": "396b3dd00ed34074a86ca85c5a128a1e",
+    "semantic_hash": ""
   }
 }

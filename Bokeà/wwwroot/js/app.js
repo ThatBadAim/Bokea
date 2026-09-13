@@ -261,6 +261,9 @@ function clearScopedStorage(scope) {
         localStorage.removeItem(`bokea_history_${target}`);
         localStorage.removeItem(`bokea_profile_${target}`);
         localStorage.removeItem(`bokea_tutorial_done_${target}`);
+        localStorage.removeItem(`bokea_dismissed_notifications_${target}`);
+        // The best streak used to be one key for everyone on the device.
+        localStorage.removeItem('bokea_longest_streak');
         localStorage.removeItem(LEGACY_STORAGE_KEYS.TASKS);
         localStorage.removeItem(LEGACY_STORAGE_KEYS.HISTORY);
         localStorage.removeItem(LEGACY_STORAGE_KEYS.PROFILE);
@@ -356,20 +359,18 @@ function calculateTaskState(task) {
     }
 
     if (task.type === 'fixed' || task.intervalType === 'FixedDate') {
+        // A one-off is finished once it has been ticked, whenever that was.
+        // Comparing the tick with the due date meant anything done early came
+        // back as due - and unticked - the next morning, which reads exactly
+        // as if the tick had never been saved.
+        if (task.lastCompleted) return 'Green';
+
         // A fixed task with no date is a parked thought. It has never been
         // scheduled, so it cannot be late, and it is not allowed to carry a
         // colour at all - that is the whole point of parking something.
         if (!task.dueDate) return 'Parked';
 
         const dueDateStr = (typeof task.dueDate === 'string' ? task.dueDate : (task.dueDate.value || '')).split('T')[0];
-
-        // Check if fixed date task was already completed on or after due date
-        if (task.lastCompleted) {
-            const lastCompDate = calDateStr(new Date(task.lastCompleted));
-            if (lastCompDate >= dueDateStr) {
-                return 'Green';
-            }
-        }
 
         // Parse deadline using target time if provided, or end of day (23:59:59) so tasks due today aren't red mid-day
         let dueDateTime;
@@ -495,7 +496,42 @@ function mapBackendTask(task) {
 }
 
 // 3. Supabase BaaS Client & API Request Router
+
+// Ticking and unticking as one transaction on the server (complete_task and
+// uncomplete_task in schema.sql). Done as two separate requests, a failure
+// between them left history and the task disagreeing: a completion logged
+// against a task that still showed open, or a task still ticked with its log
+// already gone. Until that migration has been run the functions do not exist;
+// this then returns null and the caller does the two writes itself.
+let taskRpcMissing = false;
+async function callTaskRpc(fn, args) {
+    if (taskRpcMissing) return null;
+    const { data, error } = await supabaseClient.rpc(fn, args);
+    if (!error) return mapBackendTask(data);
+    if (error.code === 'PGRST202' || error.code === '42883') {
+        taskRpcMissing = true;
+        return null;
+    }
+    throw error;
+}
+
+// Writes are counted so a background reload that was already on its way when
+// one started can tell its answer is out of date. See loadDashboardData.
+let writesInFlight = 0;
+let writeEpoch = 0;
+
 async function apiRequest(endpoint, method = 'GET', body = null) {
+    if (method === 'GET') return routeApiRequest(endpoint, method, body);
+    writeEpoch++;
+    writesInFlight++;
+    try {
+        return await routeApiRequest(endpoint, method, body);
+    } finally {
+        writesInFlight--;
+    }
+}
+
+async function routeApiRequest(endpoint, method = 'GET', body = null) {
     // localStorage is a cushion for a server that has gone quiet mid-session
     // (isFallbackMode), not a way to run without one. Reaching here without a
     // client at all means no session was ever granted, so there is nothing to
@@ -614,14 +650,27 @@ async function apiRequest(endpoint, method = 'GET', body = null) {
             if (body.notifyPref !== undefined) updatePayload.notify_pref = body.notifyPref;
             if (body.isArchived !== undefined) updatePayload.is_archived = body.isArchived;
 
-            const { data, error } = await supabaseClient.from('tasks').update(updatePayload).eq('id', id).select().single();
+            // expectedUpdatedAt is the version the form was filled in from.
+            // Sending every field meant a form opened before a change made on
+            // another device quietly put the old values back. If the row has
+            // moved on, the update matches nothing and the caller is told.
+            let query = supabaseClient.from('tasks').update(updatePayload).eq('id', id);
+            if (body.expectedUpdatedAt) query = query.eq('updated_at', body.expectedUpdatedAt);
+            const { data, error } = await query.select();
             if (error) throw error;
-            return mapBackendTask(data);
+            if (!data || data.length === 0) {
+                const conflict = new Error('This task was changed somewhere else.');
+                conflict.code = 'conflict';
+                throw conflict;
+            }
+            return mapBackendTask(data[0]);
         }
 
         // DELETE /tasks/{id}/complete - undo the most recent completion
         if (endpoint.includes('/complete') && method === 'DELETE') {
             const id = parseTaskId(endpoint.split('/')[2]);
+            const undone = await callTaskRpc('uncomplete_task', { p_task_id: id });
+            if (undone) return undone;
             // Find and delete the newest completion log for this task
             const { data: logs, error: logsErr } = await supabaseClient
                 .from('task_completion_logs')
@@ -632,7 +681,8 @@ async function apiRequest(endpoint, method = 'GET', body = null) {
             if (logsErr) throw logsErr;
 
             if (logs && logs.length > 0) {
-                await supabaseClient.from('task_completion_logs').delete().eq('id', logs[0].id);
+                const { error: delErr } = await supabaseClient.from('task_completion_logs').delete().eq('id', logs[0].id);
+                if (delErr) throw delErr;
             }
 
             const prevCompleted = (logs && logs.length > 1) ? logs[1].completed_at : null;
@@ -672,6 +722,8 @@ async function apiRequest(endpoint, method = 'GET', body = null) {
         // POST /tasks/{id}/complete
         if (endpoint.includes('/complete') && method === 'POST') {
             const id = parseTaskId(endpoint.split('/')[2]);
+            const completed = await callTaskRpc('complete_task', { p_task_id: id, p_notes: body?.notes || null });
+            if (completed) return completed;
             const { data: task, error: fetchErr } = await supabaseClient.from('tasks').select('*').eq('id', id).single();
             if (fetchErr) throw fetchErr;
 
@@ -683,14 +735,17 @@ async function apiRequest(endpoint, method = 'GET', body = null) {
                 nextDue = new Date(now.getTime() + days * 86400000).toISOString();
             }
 
-            // Log completion
+            // Log completion. A log that failed to write used to be ignored,
+            // so the task showed ticked while the history, streak and chart
+            // never heard about it.
             const { data: userResp } = await supabaseClient.auth.getUser();
-            await supabaseClient.from('task_completion_logs').insert([{
+            const { error: logErr } = await supabaseClient.from('task_completion_logs').insert([{
                 task_id: id,
                 user_id: userResp?.user?.id,
                 completed_at: nowIso,
                 notes: body?.notes || null
             }]);
+            if (logErr) throw logErr;
 
             // Update task
             const { data, error } = await supabaseClient.from('tasks').update({
@@ -758,8 +813,17 @@ async function apiRequest(endpoint, method = 'GET', body = null) {
 
         // GET /history or GET /tasks/history
         if ((endpoint === '/history' || endpoint === '/tasks/history') && method === 'GET') {
-            const { data: allTasks } = await supabaseClient.from('tasks').select('*');
-            const { data: allLogs } = await supabaseClient.from('task_completion_logs').select('*');
+            // Only the window being drawn. An unbounded select is capped at
+            // 1000 rows by the server, in no particular order, so a busy
+            // account had its recent completions silently cut off the chart.
+            const since = new Date(Date.now() - 31 * 86400000).toISOString();
+            const { data: allTasks, error: tasksErr } = await supabaseClient.from('tasks').select('*');
+            if (tasksErr) throw tasksErr;
+            const { data: allLogs, error: logsErr } = await supabaseClient
+                .from('task_completion_logs')
+                .select('completed_at')
+                .gte('completed_at', since);
+            if (logsErr) throw logsErr;
             const mappedTasks = (allTasks || []).map(mapBackendTask);
             const logs = allLogs || [];
             const historyList = [];
@@ -767,9 +831,18 @@ async function apiRequest(endpoint, method = 'GET', body = null) {
             for (let i = 29; i >= 0; i--) {
                 const target = new Date(now.getTime() - i * 86400000);
                 const targetStr = calDateStr(target);
-                const completed = logs.filter(l => (l.completed_at || '').startsWith(targetStr)).length;
+                // Bucketed by the local day, the same way "Done today" counts.
+                // Matching the UTC timestamp's prefix put an evening tick on
+                // tomorrow (or an early-morning one on yesterday), so the
+                // chart and streak disagreed with the number beside them.
+                const completed = logs.filter(l => l.completed_at && calDateStr(new Date(l.completed_at)) === targetStr).length;
                 let expectedDue = 0;
                 mappedTasks.forEach(t => {
+                    // A task is only due on days it existed. Counting it on
+                    // every day of the window meant adding one daily habit
+                    // marked the whole past month unfinished and reset the
+                    // streak to nothing.
+                    if (t.createdAt && calDateStr(new Date(t.createdAt)) > targetStr) return;
                     if (t.type === 'workdays' || t.interval_type === 'Workdays') {
                         if (isDateWorkday(target)) expectedDue += 1.0;
                     } else if (t.type === 'interval' || t.interval_type === 'IntervalBased') {
@@ -922,8 +995,18 @@ async function apiRequest(endpoint, method = 'GET', body = null) {
         // Default fallback to LocalStorage
         return handleLocalStorageFallback(endpoint, method, body);
     } catch (err) {
+        // Once somebody is signed in, task data has one home: the server.
+        // Answering from localStorage instead used to flip the whole session
+        // over on a single dropped request - every later tick was written to
+        // this device alone (where the ids do not even match), so it never
+        // reached another screen or device, and the list was read back from a
+        // store that did not have it. Say the request failed instead, and let
+        // the last good data stay on screen.
+        if (/^\/(tasks|history|digest)(\/|$)/.test(endpoint)) {
+            console.warn(`Supabase operation failed for ${method} ${endpoint}.`, err);
+            throw err;
+        }
         console.warn(`Supabase operation failed for ${method} ${endpoint}. Falling back to localStorage.`, err);
-        isFallbackMode = true;
         showToast("Operating in local offline storage mode.", "warning");
         return handleLocalStorageFallback(endpoint, method, body);
     }
@@ -1245,24 +1328,60 @@ function updateLocalHistory() {
 
 // 4. Data Loading and Screen Rendering Functions
 
+// "Clear all" dismisses what is showing rather than snoozing it. A dismissal
+// remembers the task as it was, so the notification comes back by itself once
+// that task moves on - a new state, a tick, a snooze running out.
+function dismissedNotificationsKey() {
+    return `bokea_dismissed_notifications_${storageScope}`;
+}
+
+function notificationSignature(task, state) {
+    return [state, task.lastCompleted || '', task.snoozeUntil || '', task.dueDate || ''].join('|');
+}
+
+function readDismissedNotifications() {
+    try {
+        const parsed = JSON.parse(localStorage.getItem(dismissedNotificationsKey()) || '{}');
+        return parsed && typeof parsed === 'object' ? parsed : {};
+    } catch (e) {
+        return {};
+    }
+}
+
+function writeDismissedNotifications(map) {
+    try { localStorage.setItem(dismissedNotificationsKey(), JSON.stringify(map)); } catch (e) { /* storage blocked */ }
+}
+
 function renderNotifications() {
     const listContainer = document.getElementById('notificationList');
     const badge = document.getElementById('notificationBadge');
     if (!listContainer || !badge) return;
 
-    // Filter tasks that are Red or Amber
-    const warningTasks = tasks.filter(t => {
-        const state = calculateTaskState(t);
-        return state === 'Red' || state === 'Amber';
+    // Red or Amber, and not dismissed in the state it is in now
+    const dismissed = readDismissedNotifications();
+    const stillDismissed = {};
+    const warningTasks = [];
+    tasks.forEach(task => {
+        const state = calculateTaskState(task);
+        if (state !== 'Red' && state !== 'Amber') return;
+        const sig = notificationSignature(task, state);
+        if (dismissed[task.id] === sig) {
+            stillDismissed[task.id] = sig;
+            return;
+        }
+        warningTasks.push({ task, state });
     });
+    // Anything that has moved on is forgotten, so it is free to notify again.
+    if (Object.keys(stillDismissed).length !== Object.keys(dismissed).length) {
+        writeDismissedNotifications(stillDismissed);
+    }
 
     const count = warningTasks.length;
     if (count > 0) {
         badge.textContent = count;
         badge.classList.remove('hidden');
         listContainer.innerHTML = '';
-        warningTasks.forEach(task => {
-            const state = calculateTaskState(task);
+        warningTasks.forEach(({ task, state }) => {
             const stateLower = state.toLowerCase();
             const noteItem = document.createElement('a');
             noteItem.href = '#';
@@ -1270,7 +1389,7 @@ function renderNotifications() {
             noteItem.innerHTML = `
                 <span class="dot dot-${stateLower}" style="margin-top: 4px; flex-shrink: 0;"></span>
                 <div class="notification-item-text">
-                    <span class="notification-item-title" style="font-weight: 600;">${task.name}</span>
+                    <span class="notification-item-title" style="font-weight: 600;">${esc(task.name)}</span>
                     <span class="notification-item-desc">Overdue: Action required (${state} status)</span>
                 </div>
             `;
@@ -1287,21 +1406,57 @@ function renderNotifications() {
     }
 }
 
-async function loadDashboardData() {
+let dashboardLoadSeq = 0;
+let lastDashboardSignature = null;
+
+// opts.quiet is a background reload: it stands aside while a write is on its
+// way, and only repaints when something on screen would actually differ.
+async function loadDashboardData(opts) {
+    const quiet = !!(opts && opts.quiet);
+    if (quiet && writesInFlight > 0) return;
+    const seq = ++dashboardLoadSeq;
+    const epoch = writeEpoch;
     try {
         // Fetch tasks and history in parallel to eliminate sequential waterfall
         const [tasksData, historyLogs] = await Promise.all([
             apiRequest('/tasks', 'GET'),
-            apiRequest('/history', 'GET').catch(() => apiRequest('/tasks/history', 'GET'))
+            apiRequest('/history', 'GET')
+                .catch(() => apiRequest('/tasks/history', 'GET'))
+                .catch(() => null)
         ]);
 
+        // A slower reload that started before a newer one - or before a tick -
+        // must not land on top of it and paint the task back as undone.
+        if (seq !== dashboardLoadSeq) return;
+        if (quiet && (epoch !== writeEpoch || writesInFlight > 0)) return;
+
+        // Data alone is not enough to tell. A task turns due at an hour, not on
+        // a write, and yesterday's ticks stop counting at midnight - so the
+        // states, the date and the quarter-hour are part of what is compared.
+        const signature = JSON.stringify([
+            tasksData,
+            historyLogs,
+            calDateStr(new Date()),
+            Math.floor(nowMinutes() / 15),
+            (tasksData || []).map(t => calculateTaskState(t))
+        ]);
+        if (quiet && signature === lastDashboardSignature) return;
+        // Not while a menu is open over a row: the redraw would pull the row
+        // out from under it. The next pass tries again.
+        if (quiet && document.querySelector('#rowMenu, #snoozeMenu')) return;
+        lastDashboardSignature = signature;
+
         tasks = tasksData || [];
-        historyData = historyLogs || [];
+        // A chart that failed to load keeps what it had rather than going blank.
+        historyData = historyLogs || historyData || [];
         
         // Calculate states client-side dynamically
         const durations = JSON.parse(localStorage.getItem('bokea_task_durations') || '{}');
         tasks.forEach(t => {
-            if (durations[t.id]) {
+            // This device's remembered length only fills a gap. Letting it win
+            // over the server meant an edit made on another device never
+            // showed up here.
+            if (durations[t.id] && !t.durationMinutes) {
                 t.durationMinutes = durations[t.id];
             }
             t.state = calculateTaskState(t);
@@ -1371,7 +1526,9 @@ function renderStats() {
     document.getElementById('statsStreak').textContent = `${streak}d`;
 
     // Track the best streak ever seen so it survives beyond the rolling history window.
-    const longestStreakKey = 'bokea_longest_streak';
+    // Per account: a shared key handed one person's best streak to the next
+    // account signed in on the same device.
+    const longestStreakKey = `bokea_longest_streak_${storageScope}`;
     const longestStreak = Math.max(streak, parseInt(localStorage.getItem(longestStreakKey)) || 0);
     localStorage.setItem(longestStreakKey, longestStreak);
     const streakCard = document.querySelector('.stat-card.streak');
@@ -1403,10 +1560,7 @@ function renderNextUpTask() {
 
     const decorated = (Array.isArray(tasks) ? tasks : [])
         .filter(t => {
-            if (t.lastCompleted) {
-                const done = calDateStr(new Date(t.lastCompleted));
-                if (done === todayStr) return false;
-            }
+            if (taskDoneOn(t, todayStr)) return false;
             if (t.snoozeUntil && new Date(t.snoozeUntil) > new Date()) return false;
             if ((t.type === 'workdays' || t.intervalType === 'Workdays') && !isTodayWorkday) {
                 return false;
@@ -1558,11 +1712,17 @@ async function scheduleParked(id, when) {
             dueTime: task.dueTime || null,
             timeSlot: task.timeSlot || 'anytime',
             durationMinutes: taskMinutes(task),
-            isCommitment: !!task.isCommitment
+            isCommitment: !!task.isCommitment,
+            expectedUpdatedAt: task.updatedAt || undefined
         });
         showToast(when === 'tomorrow' ? 'Moved to tomorrow.' : 'On today.');
         await loadDashboardData();
     } catch (err) {
+        if (err && err.code === 'conflict') {
+            await loadDashboardData();
+            showToast('That changed on another device. Take another look and try again.', 'warning');
+            return;
+        }
         console.error('Could not schedule parked task:', err);
         showToast('Could not move that.', 'error');
     }
@@ -1974,6 +2134,8 @@ document.addEventListener('keydown', (e) => {
 function renderAllTasksGrid() {
     const grid = document.getElementById('allTasksGrid');
     if (!grid) return;
+    // Redraws now happen in the background too; an open fold stays open.
+    const completedWasOpen = !!grid.querySelector('details.completed-tasks-wrap[open]');
     grid.innerHTML = '';
     if (!Array.isArray(tasks)) return;
 
@@ -2115,7 +2277,7 @@ function renderAllTasksGrid() {
     if (doneTasks.length > 0) {
         if (activeTasks.length > 0) {
             html += `
-                <details class="completed-tasks-wrap">
+                <details class="completed-tasks-wrap"${completedWasOpen ? ' open' : ''}>
                     <summary class="completed-tasks-summary">
                         <i data-lucide="check-circle-2" style="width: 14px; height: 14px;"></i>
                         <span>Completed (${doneTasks.length})</span>
@@ -2432,7 +2594,15 @@ function hideChartTooltip() {
 // Completing writes a permanent log, clears the snooze and pushes the due
 // date on by a whole interval. That is a lot to happen from one tap eight
 // pixels from the row above, so every one of these offers the way back.
+//
+// One request per task at a time. The Right Now button does not disable
+// itself, so a double tap used to write two completion logs; Undo then only
+// took one back, and the task stayed ticked after being put back.
+const taskActionsInFlight = new Set();
+
 async function completeTask(id) {
+    const key = String(id);
+    if (taskActionsInFlight.has(key)) return;
     const row = document.querySelector(`.task-row[data-task-id="${id}"]`);
     const btn = row ? row.querySelector('.tick-btn') : null;
     if (btn) {
@@ -2443,7 +2613,12 @@ async function completeTask(id) {
         row.classList.add('is-done');
     }
     try {
-        await apiRequest(`/tasks/${id}/complete`, 'POST');
+        taskActionsInFlight.add(key);
+        try {
+            await apiRequest(`/tasks/${id}/complete`, 'POST');
+        } finally {
+            taskActionsInFlight.delete(key);
+        }
         // Plain, past tense, no exclamation mark, and no mention of a streak -
         // streaks are off by default and reporting one to somebody who turned
         // them off is the app talking about itself instead of to them.
@@ -2465,6 +2640,8 @@ async function completeTask(id) {
 }
 
 async function uncompleteTask(id) {
+    const key = String(id);
+    if (taskActionsInFlight.has(key)) return;
     const row = document.querySelector(`.task-row[data-task-id="${id}"]`);
     const btn = row ? row.querySelector('.tick-btn') : null;
     if (btn) {
@@ -2475,7 +2652,12 @@ async function uncompleteTask(id) {
         row.classList.remove('is-done');
     }
     try {
-        await apiRequest(`/tasks/${id}/complete`, 'DELETE');
+        taskActionsInFlight.add(key);
+        try {
+            await apiRequest(`/tasks/${id}/complete`, 'DELETE');
+        } finally {
+            taskActionsInFlight.delete(key);
+        }
         showToast('Put back.');
         await loadDashboardData();
     } catch (err) {
@@ -3138,6 +3320,7 @@ function openCreateTaskModal(category, presetDate) {
     clearValidationErrors();
     document.getElementById('modalTitle').textContent = "New task";
     document.getElementById('taskId').value = "";
+    document.getElementById('taskId').dataset.updatedAt = '';
     document.getElementById('taskName').value = "";
     document.getElementById('taskDescription').value = "";
     document.getElementById('taskDuration').value = "15";
@@ -3226,6 +3409,7 @@ function openEditTaskModal(id) {
     
     document.getElementById('modalTitle').textContent = "Edit task";
     document.getElementById('taskId').value = task.id;
+    document.getElementById('taskId').dataset.updatedAt = task.updatedAt || '';
     document.getElementById('taskName').value = task.name || "";
     document.getElementById('taskCategory').value = task.category || "Health & Vitality";
     document.getElementById('taskDescription').value = task.description || "";
@@ -3451,7 +3635,8 @@ taskForm.addEventListener('submit', async (e) => {
         let savedTask = null;
         if (id) {
             // Edit
-            savedTask = await apiRequest(`/tasks/${id}`, 'PUT', payload);
+            const expectedUpdatedAt = document.getElementById('taskId').dataset.updatedAt || undefined;
+            savedTask = await apiRequest(`/tasks/${id}`, 'PUT', Object.assign({}, payload, { expectedUpdatedAt }));
             showToast("Saved.");
         } else {
             // Create
@@ -3477,6 +3662,21 @@ taskForm.addEventListener('submit', async (e) => {
             if (segBtn) segBtn.click();
         }
     } catch (err) {
+        if (err && err.code === 'conflict') {
+            // Changed somewhere else - usually you, on another device - after
+            // this form was opened. Keep what was typed, fetch the new version,
+            // and let a second Save decide which one stands.
+            await loadDashboardData();
+            const fresh = tasks.find(t => t.id == id);
+            if (!fresh) {
+                closeModal();
+                showToast('That task was deleted on another device.', 'warning');
+                return;
+            }
+            document.getElementById('taskId').dataset.updatedAt = fresh.updatedAt || '';
+            showToast('This task was changed on another device. Press Save again to keep your version.', 'warning');
+            return;
+        }
         console.error("Failed to save task", err);
         showToast("Error saving task: " + err.message, "error");
     }
@@ -3762,6 +3962,106 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
 
+    // Brings what this device keeps about the account in line with the profile
+    // row: name, schedule, profile fields and preferences. It runs on load and
+    // again in the background, so a change made on another device arrives
+    // without a reload. Returns what changed, so a background pass only
+    // redraws what it has to.
+    function applyProfileRow(profile, user, opts) {
+        const background = !!(opts && opts.background);
+        const changed = { name: false, schedule: false, profile: false };
+
+        const name = profile.first_name || user.user_metadata?.first_name || user.email?.split('@')[0] || '';
+        if (name && localStorage.getItem('bokea_username') !== name) {
+            localStorage.setItem('bokea_username', name);
+            changed.name = true;
+        }
+        localStorage.setItem('bokea_setup_completed', profile.is_setup_completed ? 'true' : 'false');
+
+        const scheduleKeys = ['bokea_wakeup_time', 'bokea_bed_time', 'bokea_work_start', 'bokea_work_end', 'bokea_work_days'];
+        const scheduleBefore = scheduleKeys.map(k => localStorage.getItem(k)).join('|');
+        if (profile.wake_up_time) localStorage.setItem('bokea_wakeup_time', profile.wake_up_time);
+        if (profile.bed_time) localStorage.setItem('bokea_bed_time', profile.bed_time);
+        if (profile.work_start_time) localStorage.setItem('bokea_work_start', profile.work_start_time);
+        if (profile.work_end_time) localStorage.setItem('bokea_work_end', profile.work_end_time);
+        if (profile.work_days) localStorage.setItem('bokea_work_days', JSON.stringify(profile.work_days));
+        if (scheduleKeys.map(k => localStorage.getItem(k)).join('|') !== scheduleBefore) {
+            changed.schedule = true;
+            invalidateDayShapeCache();
+        }
+
+        const cleanScope = `u_${String(user.id).replace(/[^a-zA-Z0-9_-]/g, '')}`;
+        let localProf = {};
+        try {
+            localProf = JSON.parse(localStorage.getItem(`bokea_profile_${cleanScope}`) || localStorage.getItem('bokea_profile') || '{}') || {};
+        } catch (e) {
+            localProf = {};
+        }
+        const profileBefore = JSON.stringify(localProf);
+
+        localProf.firstName = profile.first_name || localProf.firstName || name;
+        if (profile.display_name !== undefined) localProf.displayName = profile.display_name || '';
+        if (profile.pronouns !== undefined) localProf.pronouns = profile.pronouns || '';
+        if (profile.date_of_birth !== undefined) localProf.dateOfBirth = profile.date_of_birth || '';
+        if (profile.gender !== undefined) localProf.gender = profile.gender || '';
+        if (profile.bio !== undefined) localProf.bio = profile.bio || '';
+        if (profile.country !== undefined) localProf.country = profile.country || '';
+        if (profile.city !== undefined) localProf.city = profile.city || '';
+        if (profile.time_zone !== undefined) localProf.timeZoneName = profile.time_zone || '';
+        if (profile.phone_number !== undefined) localProf.phoneNumber = profile.phone_number || '';
+        localProf.avatarDataUrl = profile.avatar_data_url || '';
+        localProf.email = user.email || '';
+
+        changed.profile = JSON.stringify(localProf) !== profileBefore;
+        if (changed.profile || !background) {
+            try {
+                localStorage.setItem(`bokea_profile_${cleanScope}`, JSON.stringify(localProf));
+                localStorage.setItem('bokea_profile', JSON.stringify(localProf));
+            } catch (e) {
+                console.warn("Could not cache synced profile:", e);
+            }
+            if (typeof applyAvatarEverywhere === 'function') {
+                applyAvatarEverywhere(localProf.avatarDataUrl || '');
+            }
+        }
+
+        applyRemotePreferences(profile.preferences);
+        return changed;
+    }
+
+    // The background half of the above. Settings and Profile are skipped while
+    // open: they are where these values are typed, and writing the server's
+    // copy over a field mid-edit would undo what was just typed.
+    let lastAccountRefresh = 0;
+    window.refreshAccountFromServer = async function () {
+        if (!supabaseClient || isLocalMode()) return;
+        const tab = document.body.getAttribute('data-active-tab');
+        if (tab === 'settings' || tab === 'profile') return;
+        if (Date.now() - lastAccountRefresh < 55000) return;
+        lastAccountRefresh = Date.now();
+        try {
+            const { data: sessionData } = await supabaseClient.auth.getSession();
+            const user = sessionData?.session?.user;
+            if (!user) return;
+            const { data: profile, error } = await supabaseClient.from('profiles').select('*').eq('id', user.id).single();
+            if (error || !profile) return;
+
+            const changed = applyProfileRow(profile, user, { background: true });
+            if (changed.name) updateGreetings(localStorage.getItem('bokea_username') || '');
+            if (changed.profile && typeof renderProfileCard === 'function') renderProfileCard(readLocalProfile());
+            if (changed.schedule) {
+                renderDailyScheduleTimeline();
+                renderNowBlock();
+                renderTimelineNow();
+                renderNextUpTask();
+                if (!document.getElementById('tasksView')?.classList.contains('hidden')) renderAllTasksGrid();
+                if (!document.getElementById('calendarFullView')?.classList.contains('hidden')) renderCalendar();
+            }
+        } catch (e) {
+            console.warn('Could not refresh the account profile.', e);
+        }
+    };
+
     async function checkAuthToken() {
         // Nobody is signed in on purpose, so there is no session to ask about -
         // and asking would clear the name and scope that local mode is using.
@@ -3773,48 +4073,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     localStorage.setItem('bokea_auth_token', session.access_token);
                     localStorage.setItem('bokea_user_id', session.user.id);
                     const { data: profile } = await supabaseClient.from('profiles').select('*').eq('id', session.user.id).single();
-                    if (profile) {
-                        const name = profile.first_name || session.user.user_metadata?.first_name || session.user.email?.split('@')[0] || '';
-                        if (name) localStorage.setItem('bokea_username', name);
-                        localStorage.setItem('bokea_setup_completed', profile.is_setup_completed ? 'true' : 'false');
-                        if (profile.wake_up_time) localStorage.setItem('bokea_wakeup_time', profile.wake_up_time);
-                        if (profile.bed_time) localStorage.setItem('bokea_bed_time', profile.bed_time);
-                        if (profile.work_start_time) localStorage.setItem('bokea_work_start', profile.work_start_time);
-                        if (profile.work_end_time) localStorage.setItem('bokea_work_end', profile.work_end_time);
-                        if (profile.work_days) localStorage.setItem('bokea_work_days', JSON.stringify(profile.work_days));
-
-                        const cleanScope = `u_${String(session.user.id).replace(/[^a-zA-Z0-9_-]/g, '')}`;
-                        let localProf = {};
-                        try {
-                            localProf = JSON.parse(localStorage.getItem(`bokea_profile_${cleanScope}`) || localStorage.getItem('bokea_profile') || '{}') || {};
-                        } catch (e) {
-                            localProf = {};
-                        }
-
-                        localProf.firstName = profile.first_name || localProf.firstName || name;
-                        if (profile.display_name !== undefined) localProf.displayName = profile.display_name || '';
-                        if (profile.pronouns !== undefined) localProf.pronouns = profile.pronouns || '';
-                        if (profile.date_of_birth !== undefined) localProf.dateOfBirth = profile.date_of_birth || '';
-                        if (profile.gender !== undefined) localProf.gender = profile.gender || '';
-                        if (profile.bio !== undefined) localProf.bio = profile.bio || '';
-                        if (profile.country !== undefined) localProf.country = profile.country || '';
-                        if (profile.city !== undefined) localProf.city = profile.city || '';
-                        if (profile.time_zone !== undefined) localProf.timeZoneName = profile.time_zone || '';
-                        if (profile.phone_number !== undefined) localProf.phoneNumber = profile.phone_number || '';
-                        localProf.avatarDataUrl = profile.avatar_data_url || '';
-                        localProf.email = session.user.email || '';
-
-                        try {
-                            localStorage.setItem(`bokea_profile_${cleanScope}`, JSON.stringify(localProf));
-                            localStorage.setItem('bokea_profile', JSON.stringify(localProf));
-                        } catch (e) {
-                            console.warn("Could not cache synced profile:", e);
-                        }
-
-                        if (typeof applyAvatarEverywhere === 'function') {
-                            applyAvatarEverywhere(localProf.avatarDataUrl || '');
-                        }
-                    }
+                    if (profile) applyProfileRow(profile, session.user);
                 } else {
                     // No session on the server means no session here. The
                     // browser does not get to disagree with it.
@@ -4617,22 +4876,17 @@ document.addEventListener('DOMContentLoaded', () => {
         // Wait for CSS animation to finish (300ms)
         await new Promise(resolve => setTimeout(resolve, 300));
         
-        // Snooze all Red and Amber tasks to green
-        const warningTasks = tasks.filter(t => {
+        // Dismiss, don't snooze. This used to push every late task back by a
+        // whole snooze length, so a tap meant to tidy the bell also hid the
+        // day's overdue work from the Today screen.
+        const dismissed = readDismissedNotifications();
+        tasks.forEach(t => {
             const state = calculateTaskState(t);
-            return state === 'Red' || state === 'Amber';
+            if (state === 'Red' || state === 'Amber') dismissed[t.id] = notificationSignature(t, state);
         });
-        
-        for (const task of warningTasks) {
-            try {
-                await apiRequest(`/tasks/${task.id}/snooze`, 'POST');
-            } catch (err) {
-                console.error("Failed to snooze task", task.id, err);
-            }
-        }
-        
-        await loadDashboardData();
-        showToast("All notifications snoozed and cleared!");
+        writeDismissedNotifications(dismissed);
+        renderNotifications();
+        showToast("Cleared. Anything that changes will show up again.");
     });
 
     // Dark Mode Toggle
@@ -4663,11 +4917,15 @@ document.addEventListener('DOMContentLoaded', () => {
         document.body.classList.add('theme-transitioning');
         const isDark = document.body.classList.contains('dark-theme');
         setTheme(isDark ? 'light' : 'dark');
+        markPreferencesChanged();
         announce(isDark ? 'Light theme on.' : 'Dark theme on.');
         setTimeout(() => {
             document.body.classList.remove('theme-transitioning');
         }, 500);
     });
+
+    // Preferences arriving from the account need to switch the theme too.
+    window.bokeaSetTheme = setTheme;
 
     // Initial theme load
     const savedTheme = localStorage.getItem('bokea_theme');
@@ -6304,6 +6562,7 @@ document.addEventListener('DOMContentLoaded', () => {
         const darkCard = document.getElementById('themeDarkCard');
         const theme = (darkCard && darkCard.classList.contains('active')) ? 'dark' : 'light';
         setTheme(theme);
+        markPreferencesChanged();
 
         // Save Schedule to API
         const token = localStorage.getItem('bokea_auth_token');
@@ -6627,6 +6886,30 @@ Object.defineProperty(window, 'supabaseClient', {
     get: function () { return supabaseClient; },
     configurable: true
 });
+
+// Keeping other screens honest
+//
+// A tick on the phone has to reach a laptop left open, and the other way round.
+// Nothing reloaded tasks after the first paint, so an open tab went on showing
+// whatever it loaded that morning. Reload when the app comes back into view or
+// back online, and once a minute while it is on screen. The profile, schedule
+// and preferences come along too.
+function refreshDashboardInBackground() {
+    if (document.visibilityState !== 'visible') return;
+    try {
+        if (!localStorage.getItem('bokea_auth_token') && !isLocalMode()) return;
+    } catch (e) {
+        return;
+    }
+    loadDashboardData({ quiet: true });
+    if (typeof window.refreshAccountFromServer === 'function') window.refreshAccountFromServer();
+}
+
+document.addEventListener('visibilitychange', refreshDashboardInBackground);
+window.addEventListener('focus', refreshDashboardInBackground);
+window.addEventListener('online', refreshDashboardInBackground);
+window.addEventListener('pageshow', (e) => { if (e.persisted) refreshDashboardInBackground(); });
+setInterval(refreshDashboardInBackground, 60000);
 
 // Register Service Worker for PWA
 if ('serviceWorker' in navigator) {
@@ -7613,6 +7896,7 @@ function loadUiPrefs() {
 function saveUiPrefs() {
     try { localStorage.setItem(BOKEA_PREFS_KEY, JSON.stringify(uiPrefs)); } catch (e) { /* storage full or blocked */ }
     applyUiPrefs();
+    markPreferencesChanged();
 }
 
 function applyUiPrefs() {
@@ -7633,6 +7917,109 @@ function applyUiPrefs() {
     // Rule 7: a broken streak is not information
     const streakCard = document.querySelector('.stat-card.streak');
     if (streakCard) streakCard.classList.toggle('hidden', !uiPrefs.streaks);
+}
+
+// ---------- Preferences follow the account ----------
+//
+// Theme, clock format, default snooze and the switches above were kept on each
+// device alone, so a phone and a laptop on the same account disagreed about all
+// of them. They now ride along on the profile row (profiles.preferences), and
+// the most recent change wins. Until that column exists the first write fails
+// and they quietly stay on the device, as before.
+
+function prefsDeviceKey(name) {
+    let uid = 'guest';
+    try { uid = localStorage.getItem('bokea_user_id') || 'guest'; } catch (e) { /* storage blocked */ }
+    return `bokea_${name}_${String(uid).replace(/[^a-zA-Z0-9_-]/g, '')}`;
+}
+
+function collectPreferences() {
+    return {
+        theme: localStorage.getItem('bokea_theme') === 'dark' ? 'dark' : 'light',
+        clockFormat: localStorage.getItem('bokea_clock_format') === '24h' ? '24h' : '12h',
+        defaultSnooze: localStorage.getItem('bokea_default_snooze') || '24',
+        ui: Object.assign({}, uiPrefs)
+    };
+}
+
+var prefsColumnMissing = false;
+var prefsPushTimer = null;
+
+// Called after a preference has been changed by hand. Nothing is sent when the
+// values are what they already were.
+function markPreferencesChanged() {
+    try {
+        const json = JSON.stringify(collectPreferences());
+        if (json === localStorage.getItem(prefsDeviceKey('prefs_last'))) return;
+        localStorage.setItem(prefsDeviceKey('prefs_last'), json);
+        localStorage.setItem(prefsDeviceKey('prefs_updated_at'), new Date().toISOString());
+    } catch (e) {
+        return;
+    }
+    schedulePreferencesPush();
+}
+
+function schedulePreferencesPush() {
+    if (prefsColumnMissing || !supabaseClient || isLocalMode()) return;
+    clearTimeout(prefsPushTimer);
+    prefsPushTimer = setTimeout(pushPreferences, 1500);
+}
+
+async function pushPreferences() {
+    try {
+        const uid = localStorage.getItem('bokea_user_id');
+        const stamp = localStorage.getItem(prefsDeviceKey('prefs_updated_at'));
+        if (!uid || !stamp || prefsColumnMissing) return;
+        const preferences = Object.assign(collectPreferences(), { updatedAt: stamp });
+        const { error } = await supabaseClient.from('profiles').update({ preferences }).eq('id', uid);
+        if (!error) return;
+        if (error.code === 'PGRST204' || error.code === '42703') {
+            prefsColumnMissing = true;
+            console.info('profiles.preferences does not exist yet, so preferences stay on this device. See schema.sql section 10.');
+        } else {
+            console.warn('Could not save preferences to the account.', error);
+        }
+    } catch (e) {
+        console.warn('Could not save preferences to the account.', e);
+    }
+}
+
+// remote is profiles.preferences as read from the server.
+function applyRemotePreferences(remote) {
+    let localStamp = null;
+    try { localStamp = localStorage.getItem(prefsDeviceKey('prefs_updated_at')); } catch (e) { return; }
+
+    const remoteStamp = remote && typeof remote.updatedAt === 'string' ? remote.updatedAt : null;
+    if (!remoteStamp || (localStamp && localStamp >= remoteStamp)) {
+        // Nothing newer on the account. If this device has something newer, send it up.
+        if (localStamp && localStamp !== remoteStamp) schedulePreferencesPush();
+        return;
+    }
+
+    try {
+        const before = collectPreferences();
+        localStorage.setItem('bokea_theme', remote.theme === 'dark' ? 'dark' : 'light');
+        localStorage.setItem('bokea_clock_format', remote.clockFormat === '24h' ? '24h' : '12h');
+        if (remote.defaultSnooze) localStorage.setItem('bokea_default_snooze', String(remote.defaultSnooze));
+        uiPrefs = Object.assign({}, BOKEA_PREF_DEFAULTS, remote.ui || {});
+        localStorage.setItem(BOKEA_PREFS_KEY, JSON.stringify(uiPrefs));
+
+        const after = collectPreferences();
+        localStorage.setItem(prefsDeviceKey('prefs_last'), JSON.stringify(after));
+        localStorage.setItem(prefsDeviceKey('prefs_updated_at'), remoteStamp);
+
+        if (after.theme !== before.theme && typeof window.bokeaSetTheme === 'function') {
+            window.bokeaSetTheme(after.theme);
+        }
+        if (JSON.stringify(after.ui) !== JSON.stringify(before.ui)) {
+            applyUiPrefs();
+            renderNextUpTask();
+            renderAllTasksGrid();
+        }
+        if (after.clockFormat !== before.clockFormat) propagateClockFormatChange();
+    } catch (e) {
+        console.warn('Could not apply preferences from the account.', e);
+    }
 }
 
 // ---------- Shared vocabulary ----------
@@ -7909,6 +8296,7 @@ window.syncTimeInputsClockFormat = syncTimeInputsClockFormat;
 function propagateClockFormatChange(newFormat) {
     if (newFormat) {
         try { localStorage.setItem('bokea_clock_format', newFormat); } catch(e) {}
+        markPreferencesChanged();
     }
     syncTimeInputsClockFormat();
     updateLiveClock(nowMinutes(), true);
@@ -8092,6 +8480,9 @@ function taskDoneOn(task, dateStr) {
     if (!task || !task.lastCompleted) return false;
     const d = new Date(task.lastCompleted);
     if (isNaN(d.getTime())) return false;
+    // A one-off happens once, so once it is ticked it is done on every day it
+    // is shown on, not only on the day the tick happened.
+    if (task.type === 'fixed' || task.intervalType === 'FixedDate') return true;
     return calDateStr(d) === (dateStr || calDateStr(new Date()));
 }
 
@@ -8532,6 +8923,8 @@ async function parkFocusThought() {
             notifyPref: 'digest'
         });
         announce('Parked.');
+        // Into the tray now, not whenever the next reload happens.
+        await loadDashboardData();
     } catch (err) {
         console.error('Could not park that thought:', err);
         showToast('Could not park that.', 'error');

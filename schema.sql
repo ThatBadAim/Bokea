@@ -155,7 +155,9 @@ CREATE TABLE IF NOT EXISTS public.tasks (
 -- 5. Task Completion Logs Table
 CREATE TABLE IF NOT EXISTS public.task_completion_logs (
     id BIGINT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
-    task_id BIGINT NOT NULL REFERENCES public.tasks(id) ON DELETE CASCADE,
+    -- Nullable, and SET NULL on delete: a completion is part of the day it
+    -- happened on, and deleting the task must not rewrite that day's history.
+    task_id BIGINT REFERENCES public.tasks(id) ON DELETE SET NULL,
     user_id UUID NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE,
     completed_at TIMESTAMPTZ DEFAULT NOW(),
     notes TEXT
@@ -248,3 +250,146 @@ CREATE POLICY "Users can insert own push subscriptions" ON public.push_subscript
 DROP POLICY IF EXISTS "Users can delete own push subscriptions" ON public.push_subscriptions;
 CREATE POLICY "Users can delete own push subscriptions" ON public.push_subscriptions
     FOR DELETE USING (auth.uid() = user_id);
+
+-- ==========================================================
+-- 10. Sync & consistency upgrades (2026-09-13)
+-- Safe to run more than once. On an existing project, run this whole section
+-- in the Supabase SQL editor. The app works without it and falls back to its
+-- older behaviour until it has been run.
+-- ==========================================================
+
+-- 10a. Completions outlive their task.
+-- ON DELETE CASCADE removed a task's completion logs with it, so deleting a
+-- finished habit took its ticks out of past days and could break a streak
+-- after the fact.
+ALTER TABLE public.task_completion_logs ALTER COLUMN task_id DROP NOT NULL;
+ALTER TABLE public.task_completion_logs DROP CONSTRAINT IF EXISTS task_completion_logs_task_id_fkey;
+ALTER TABLE public.task_completion_logs
+    ADD CONSTRAINT task_completion_logs_task_id_fkey
+    FOREIGN KEY (task_id) REFERENCES public.tasks(id) ON DELETE SET NULL;
+
+-- 10b. updated_at that actually moves.
+-- The client sends the updated_at it last saw when saving an edit, and the save
+-- only applies if the row still has it. That stops a form opened before a change
+-- on another device from silently putting the old values back.
+CREATE OR REPLACE FUNCTION public.touch_updated_at()
+RETURNS TRIGGER
+LANGUAGE plpgsql
+SET search_path = ''
+AS $$
+BEGIN
+    NEW.updated_at := clock_timestamp();
+    RETURN NEW;
+END;
+$$;
+
+DROP TRIGGER IF EXISTS tasks_touch_updated_at ON public.tasks;
+CREATE TRIGGER tasks_touch_updated_at
+    BEFORE UPDATE ON public.tasks
+    FOR EACH ROW EXECUTE FUNCTION public.touch_updated_at();
+
+DROP TRIGGER IF EXISTS profiles_touch_updated_at ON public.profiles;
+CREATE TRIGGER profiles_touch_updated_at
+    BEFORE UPDATE ON public.profiles
+    FOR EACH ROW EXECUTE FUNCTION public.touch_updated_at();
+
+-- 10c. Ticking and unticking as one transaction.
+-- Done from the browser these were two requests (write the log, then update the
+-- task), and a failure between them left the two disagreeing. SECURITY INVOKER,
+-- so the RLS policies above still decide what the caller may touch.
+CREATE OR REPLACE FUNCTION public.complete_task(p_task_id BIGINT, p_notes TEXT DEFAULT NULL)
+RETURNS public.tasks
+LANGUAGE plpgsql
+SECURITY INVOKER
+SET search_path = ''
+AS $$
+DECLARE
+    v_task public.tasks;
+    v_now TIMESTAMPTZ := clock_timestamp();
+BEGIN
+    SELECT * INTO v_task
+    FROM public.tasks
+    WHERE id = p_task_id AND user_id = auth.uid()
+    FOR UPDATE;
+
+    IF NOT FOUND THEN
+        RAISE EXCEPTION 'Task not found' USING ERRCODE = 'P0002';
+    END IF;
+
+    INSERT INTO public.task_completion_logs (task_id, user_id, completed_at, notes)
+    VALUES (p_task_id, auth.uid(), v_now, p_notes);
+
+    UPDATE public.tasks
+    SET last_completed_at = v_now,
+        snoozed_until = NULL,
+        state = 'Green',
+        due_date = CASE
+            WHEN interval_type = 'IntervalBased'
+                THEN v_now + make_interval(days => COALESCE(interval_days, 1))
+            ELSE due_date
+        END
+    WHERE id = p_task_id
+    RETURNING * INTO v_task;
+
+    RETURN v_task;
+END;
+$$;
+
+CREATE OR REPLACE FUNCTION public.uncomplete_task(p_task_id BIGINT)
+RETURNS public.tasks
+LANGUAGE plpgsql
+SECURITY INVOKER
+SET search_path = ''
+AS $$
+DECLARE
+    v_task public.tasks;
+    v_prev TIMESTAMPTZ;
+BEGIN
+    SELECT * INTO v_task
+    FROM public.tasks
+    WHERE id = p_task_id AND user_id = auth.uid()
+    FOR UPDATE;
+
+    IF NOT FOUND THEN
+        RAISE EXCEPTION 'Task not found' USING ERRCODE = 'P0002';
+    END IF;
+
+    DELETE FROM public.task_completion_logs
+    WHERE id = (
+        SELECT id FROM public.task_completion_logs
+        WHERE task_id = p_task_id
+        ORDER BY completed_at DESC
+        LIMIT 1
+    );
+
+    SELECT completed_at INTO v_prev
+    FROM public.task_completion_logs
+    WHERE task_id = p_task_id
+    ORDER BY completed_at DESC
+    LIMIT 1;
+
+    UPDATE public.tasks
+    SET last_completed_at = v_prev,
+        due_date = CASE
+            WHEN interval_type = 'IntervalBased'
+                THEN COALESCE(v_prev, created_at) + make_interval(days => COALESCE(interval_days, 1))
+            ELSE due_date
+        END
+    WHERE id = p_task_id
+    RETURNING * INTO v_task;
+
+    RETURN v_task;
+END;
+$$;
+
+REVOKE ALL ON FUNCTION public.complete_task(BIGINT, TEXT) FROM PUBLIC, anon;
+REVOKE ALL ON FUNCTION public.uncomplete_task(BIGINT) FROM PUBLIC, anon;
+GRANT EXECUTE ON FUNCTION public.complete_task(BIGINT, TEXT) TO authenticated;
+GRANT EXECUTE ON FUNCTION public.uncomplete_task(BIGINT) TO authenticated;
+
+-- 10d. Preferences that follow the account (theme, clock format, default
+-- snooze, display switches). Written and read by the app as one JSON object.
+ALTER TABLE public.profiles ADD COLUMN IF NOT EXISTS preferences JSONB;
+
+-- Tell the API about the new functions and column straight away.
+NOTIFY pgrst, 'reload schema';
