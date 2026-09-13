@@ -9,7 +9,7 @@
 - Token cost: 0 input · 0 output
 
 ## Graph Freshness
-- Built from commit: `436ba95e`
+- Built from commit: `900401bd`
 - Run `git rev-parse HEAD` and compare to check if the graph is stale.
 - Run `graphify update .` after code changes (no API cost).
 
@@ -195,7 +195,7 @@ Cohesion: 0.83
 Nodes (4): closeSnoozeMenu(), closeSnoozeMenuOnEscape(), closeSnoozeMenuOnOutside(), openSnoozeMenu()
 
 ## Knowledge Gaps
-- **146 isolated node(s):** `UnsubscribeRequest`, `ReorderTaskRequest`, `RecommendedActions`, `TasksBySector`, `TotalWarningTasks` (+141 more)
+- **146 isolated node(s):** `UnsubscribeRequest`, `ReorderTaskRequest`, `Description`, `DueDate`, `Id` (+141 more)
   These have ≤1 connection - possible missing edges or undocumented components. (Counts symbols only; 198 node(s) total have ≤1 connection when file, concept and rationale nodes are included.)
 - **5 thin communities (<3 nodes) omitted from report** — run `graphify query` to explore isolated nodes.
 
@@ -208,7 +208,7 @@ _Questions this graph is uniquely positioned to answer:_
   _High betweenness centrality (0.040) - this node is a cross-community bridge._
 - **Why does `User` connect `User` to `TaskItem`, `DueDateType`, `TaskCompletionLog`, `ProfileAboutRequest`?**
   _High betweenness centrality (0.039) - this node is a cross-community bridge._
-- **What connects `UnsubscribeRequest`, `ReorderTaskRequest`, `RecommendedActions` to the rest of the system?**
+- **What connects `UnsubscribeRequest`, `ReorderTaskRequest`, `Description` to the rest of the system?**
   _146 weakly-connected nodes found - possible documentation gaps or missing edges._
 - **Should `calDateStr` be split into smaller, more focused modules?**
   _Cohesion score 0.10572390572390572 - nodes in this community are weakly interconnected._

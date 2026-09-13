@@ -753,7 +753,7 @@
     },
     {
       "type": "isolated_nodes",
-      "question": "What connects `UnsubscribeRequest`, `ReorderTaskRequest`, `RecommendedActions` to the rest of the system?",
+      "question": "What connects `UnsubscribeRequest`, `ReorderTaskRequest`, `Description` to the rest of the system?",
       "why": "146 weakly-connected nodes found - possible documentation gaps or missing edges."
     },
     {
