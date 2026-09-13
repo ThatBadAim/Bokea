@@ -7630,12 +7630,25 @@ body.motion-off .tick-btn:active {
     overscroll-behavior: contain;
 }
 
-.task-form-stack > * {
-    margin-bottom: 20px;
+.task-form-col {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+    margin-bottom: 16px;
 }
 
-.task-form-stack > *:last-child {
+.task-form-col:last-child {
     margin-bottom: 0;
+}
+
+.task-form-col-main > .wizard-step,
+.task-form-col-main > .form-group {
+    margin-bottom: 0;
+}
+
+#taskDescGroup textarea {
+    min-height: 54px;
+    resize: vertical;
 }
 
 #taskForm .modal-footer {
@@ -7851,6 +7864,65 @@ body.dark-theme #workdaysHint {
 }
 
 body.motion-off .task-more-chevron { transition: none; }
+
+/* ---------- Desktop Two-Column Layout for Task Form ---------- */
+@media (min-width: 768px) {
+    #taskModal .modal-content {
+        max-width: 880px;
+        width: 92vw;
+    }
+
+    .task-form-stack {
+        display: grid;
+        grid-template-columns: 1.05fr 1fr;
+        gap: 28px;
+        padding-right: 4px;
+        overflow-y: auto;
+    }
+
+    .task-form-col {
+        margin-bottom: 0;
+        gap: 16px;
+        min-width: 0;
+    }
+
+    .task-more {
+        border: none;
+        background: transparent;
+        border-radius: 0;
+    }
+
+    .task-more-summary {
+        display: none !important;
+    }
+
+    .task-more-body {
+        padding: 0;
+        border-top: none;
+        gap: 14px;
+        display: flex !important;
+    }
+
+    /* 4-across compact grid for Which part of life on desktop */
+    .wizard-step[data-step="1"] .wizard-button-grid {
+        grid-template-columns: repeat(4, minmax(0, 1fr));
+        gap: 6px;
+    }
+
+    .wizard-step[data-step="1"] .wizard-option-btn {
+        padding: 8px 6px;
+        min-height: 40px;
+        gap: 6px;
+    }
+
+    .wizard-step[data-step="1"] .wizard-option-btn span {
+        font-size: 0.8rem;
+    }
+
+    .wizard-step[data-step="1"] .wizard-option-btn::after {
+        display: none;
+    }
+}
 
 /* ---------- Focus ----------
    One task, its own clock, and nothing else. */

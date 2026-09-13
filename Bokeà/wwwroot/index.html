@@ -1453,195 +1453,199 @@
                      they are simply all on screen at once.
                      ============================================================ -->
                 <div class="task-form-stack">
-
-                    <!-- The thought, first, before anything is asked about it -->
-                    <div class="wizard-step" data-step="2">
-                        <div class="form-group" id="taskNameInputGroup">
-                            <label for="taskName">What is it?</label>
-                            <input type="text" id="taskName" required autocomplete="off"
-                                   placeholder="Gym, pay rent, call Mum&hellip;"
-                                   aria-describedby="taskNameError">
-                            <!-- Save is never disabled, so this is where the
-                                 answer to "why did nothing happen?" goes. -->
-                            <p class="field-error" id="taskNameError" role="alert" hidden></p>
+                    <div class="task-form-col task-form-col-main">
+                        <!-- The thought, first, before anything is asked about it -->
+                        <div class="wizard-step" data-step="2">
+                            <div class="form-group" id="taskNameInputGroup">
+                                <label for="taskName">What is it?</label>
+                                <input type="text" id="taskName" required autocomplete="off"
+                                       placeholder="Gym, pay rent, call Mum&hellip;"
+                                       aria-describedby="taskNameError">
+                                <!-- Save is never disabled, so this is where the
+                                     answer to "why did nothing happen?" goes. -->
+                                <p class="field-error" id="taskNameError" role="alert" hidden></p>
+                            </div>
                         </div>
-                    </div>
 
-                    <!-- How often. The only other thing that genuinely has to be asked. -->
-                    <div class="wizard-step" data-step="3">
-                        <span class="when-block-label" id="cadenceLabel">How often?</span>
-                        <div class="wizard-button-grid freq-grid" role="group" aria-labelledby="cadenceLabel">
-                            <button type="button" class="wizard-option-btn active" data-freq-type="interval" data-freq-val="1">
-                                <i data-lucide="refresh-cw" aria-hidden="true"></i>
-                                <span>Every day</span>
-                            </button>
-                            <button type="button" class="wizard-option-btn" id="btnWorkDays" data-freq-type="workdays">
-                                <i data-lucide="briefcase" aria-hidden="true"></i>
-                                <span>Workdays</span>
-                            </button>
-                            <button type="button" class="wizard-option-btn" data-freq-type="interval" data-freq-val="7">
-                                <i data-lucide="calendar-days" aria-hidden="true"></i>
-                                <span>Every week</span>
-                            </button>
-                            <button type="button" class="wizard-option-btn" data-freq-type="interval" data-freq-val="30">
-                                <i data-lucide="calendar-range" aria-hidden="true"></i>
-                                <span>Every month</span>
-                            </button>
-                            <button type="button" class="wizard-option-btn" id="btnCustomDays" data-freq-type="custom">
-                                <i data-lucide="settings-2" aria-hidden="true"></i>
-                                <span>Every few days</span>
-                            </button>
-                            <button type="button" class="wizard-option-btn" id="btnFixedDate" data-freq-type="fixed">
+                        <!-- How often. The only other thing that genuinely has to be asked. -->
+                        <div class="wizard-step" data-step="3">
+                            <span class="when-block-label" id="cadenceLabel">How often?</span>
+                            <div class="wizard-button-grid freq-grid" role="group" aria-labelledby="cadenceLabel">
+                                <button type="button" class="wizard-option-btn active" data-freq-type="interval" data-freq-val="1">
+                                    <i data-lucide="refresh-cw" aria-hidden="true"></i>
+                                    <span>Every day</span>
+                                </button>
+                                <button type="button" class="wizard-option-btn" id="btnWorkDays" data-freq-type="workdays">
+                                    <i data-lucide="briefcase" aria-hidden="true"></i>
+                                    <span>Workdays</span>
+                                </button>
+                                <button type="button" class="wizard-option-btn" data-freq-type="interval" data-freq-val="7">
+                                    <i data-lucide="calendar-days" aria-hidden="true"></i>
+                                    <span>Every week</span>
+                                </button>
+                                <button type="button" class="wizard-option-btn" data-freq-type="interval" data-freq-val="30">
+                                    <i data-lucide="calendar-range" aria-hidden="true"></i>
+                                    <span>Every month</span>
+                                </button>
+                                <button type="button" class="wizard-option-btn" id="btnCustomDays" data-freq-type="custom">
+                                    <i data-lucide="settings-2" aria-hidden="true"></i>
+                                    <span>Every few days</span>
+                                </button>
+                                <button type="button" class="wizard-option-btn" id="btnFixedDate" data-freq-type="fixed">
+                                    <i data-lucide="calendar" aria-hidden="true"></i>
+                                    <span>One date</span>
+                                </button>
+                            </div>
+
+                            <div class="form-hint hidden" id="workdaysHint">
                                 <i data-lucide="calendar" aria-hidden="true"></i>
-                                <span>One date</span>
-                            </button>
-                        </div>
-
-                        <div class="form-hint hidden" id="workdaysHint">
-                            <i data-lucide="calendar" aria-hidden="true"></i>
-                            <span>Active on your work days: <strong id="workdaysHintText">Monday&ndash;Friday</strong></span>
-                        </div>
-
-                        <div class="form-group hidden" id="intervalGroup" style="margin-top: 12px;">
-                            <label for="taskInterval">Every how many days?</label>
-                            <input type="number" id="taskInterval" min="1" value="1">
-                        </div>
-                        <div class="form-group hidden" id="dueDateGroup" style="margin-top: 12px;">
-                            <label for="taskDueDate">Which day?</label>
-                            <input type="date" id="taskDueDate" aria-describedby="taskDueDateError">
-                            <p class="field-error" id="taskDueDateError" role="alert" hidden></p>
-                        </div>
-                        <div class="form-group hidden" id="weeklyDayGroup" style="margin-top: 12px;">
-                            <label id="weeklyDayLabel">Which day of the week?</label>
-                            <div class="weekday-picker" role="group" aria-labelledby="weeklyDayLabel" id="weeklyDayPicker">
-                                <button type="button" class="weekday-btn" data-day="1">Mon</button>
-                                <button type="button" class="weekday-btn" data-day="2">Tue</button>
-                                <button type="button" class="weekday-btn" data-day="3">Wed</button>
-                                <button type="button" class="weekday-btn" data-day="4">Thu</button>
-                                <button type="button" class="weekday-btn" data-day="5">Fri</button>
-                                <button type="button" class="weekday-btn" data-day="6">Sat</button>
-                                <button type="button" class="weekday-btn" data-day="0">Sun</button>
+                                <span>Active on your work days: <strong id="workdaysHintText">Monday&ndash;Friday</strong></span>
                             </div>
+
+                            <div class="form-group hidden" id="intervalGroup" style="margin-top: 12px;">
+                                <label for="taskInterval">Every how many days?</label>
+                                <input type="number" id="taskInterval" min="1" value="1">
+                            </div>
+                            <div class="form-group hidden" id="dueDateGroup" style="margin-top: 12px;">
+                                <label for="taskDueDate">Which day?</label>
+                                <input type="date" id="taskDueDate" aria-describedby="taskDueDateError">
+                                <p class="field-error" id="taskDueDateError" role="alert" hidden></p>
+                            </div>
+                            <div class="form-group hidden" id="weeklyDayGroup" style="margin-top: 12px;">
+                                <label id="weeklyDayLabel">Which day of the week?</label>
+                                <div class="weekday-picker" role="group" aria-labelledby="weeklyDayLabel" id="weeklyDayPicker">
+                                    <button type="button" class="weekday-btn" data-day="1">Mon</button>
+                                    <button type="button" class="weekday-btn" data-day="2">Tue</button>
+                                    <button type="button" class="weekday-btn" data-day="3">Wed</button>
+                                    <button type="button" class="weekday-btn" data-day="4">Thu</button>
+                                    <button type="button" class="weekday-btn" data-day="5">Fri</button>
+                                    <button type="button" class="weekday-btn" data-day="6">Sat</button>
+                                    <button type="button" class="weekday-btn" data-day="0">Sun</button>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Notes -->
+                        <div class="form-group" id="taskDescGroup">
+                            <label for="taskDescription">Notes <span class="label-optional">optional</span></label>
+                            <textarea id="taskDescription" rows="2" placeholder="Anything you want to remember about it"></textarea>
                         </div>
                     </div>
 
-                    <!-- Everything that already had a good default. Nothing in
-                         here has to be opened for the task to be correct. -->
-                    <details class="task-more" id="taskMore">
-                        <summary class="task-more-summary">
-                            <i data-lucide="chevron-right" class="task-more-chevron" aria-hidden="true"></i>
-                            <span>More &mdash; when in the day, how long, which area</span>
-                        </summary>
+                    <div class="task-form-col task-form-col-details">
+                        <!-- Everything that already had a good default. Nothing in
+                             here has to be opened for the task to be correct. -->
+                        <details class="task-more" id="taskMore">
+                            <summary class="task-more-summary">
+                                <i data-lucide="chevron-right" class="task-more-chevron" aria-hidden="true"></i>
+                                <span>More &mdash; when in the day, how long, which area</span>
+                            </summary>
 
-                        <div class="task-more-body">
+                            <div class="task-more-body">
 
-                            <div class="form-group">
-                                <label for="taskDescription">Notes <span class="label-optional">optional</span></label>
-                                <textarea id="taskDescription" rows="2" placeholder="Anything you want to remember about it"></textarea>
-                            </div>
-
-                            <!-- WHEN IN THE DAY
-                                 A date on its own never made anything happen. The
-                                 block comes first because it is the answer most
-                                 people actually have; the clock time is there for
-                                 the ones that genuinely have one. Each block shows
-                                 the hours it means for this person, read from their
-                                 own wake, work and bed times, so "Morning" is never
-                                 a word you have to guess the boundaries of. -->
-                            <div class="form-group when-block">
-                                <span class="when-block-label" id="whenBlockLabel">When in the day?</span>
-                                <div class="time-slot-grid" id="timeSlotGrid" role="group" aria-labelledby="whenBlockLabel">
-                                    <button type="button" class="wizard-option-btn slot-btn" data-slot="morning">
-                                        <span class="slot-btn-name">Morning</span>
-                                        <span class="slot-btn-range" data-slot-range="morning">&nbsp;</span>
-                                    </button>
-                                    <button type="button" class="wizard-option-btn slot-btn" data-slot="afternoon">
-                                        <span class="slot-btn-name">Daytime</span>
-                                        <span class="slot-btn-range" data-slot-range="afternoon">&nbsp;</span>
-                                    </button>
-                                    <button type="button" class="wizard-option-btn slot-btn" data-slot="evening">
-                                        <span class="slot-btn-name">Evening</span>
-                                        <span class="slot-btn-range" data-slot-range="evening">&nbsp;</span>
-                                    </button>
-                                    <button type="button" class="wizard-option-btn slot-btn active" data-slot="anytime">
-                                        <span class="slot-btn-name">Any time</span>
-                                        <span class="slot-btn-range">No set hour</span>
-                                    </button>
+                                <!-- WHEN IN THE DAY
+                                     A date on its own never made anything happen. The
+                                     block comes first because it is the answer most
+                                     people actually have; the clock time is there for
+                                     the ones that genuinely have one. Each block shows
+                                     the hours it means for this person, read from their
+                                     own wake, work and bed times, so "Morning" is never
+                                     a word you have to guess the boundaries of. -->
+                                <div class="form-group when-block">
+                                    <span class="when-block-label" id="whenBlockLabel">When in the day?</span>
+                                    <div class="time-slot-grid" id="timeSlotGrid" role="group" aria-labelledby="whenBlockLabel">
+                                        <button type="button" class="wizard-option-btn slot-btn" data-slot="morning">
+                                            <span class="slot-btn-name">Morning</span>
+                                            <span class="slot-btn-range" data-slot-range="morning">&nbsp;</span>
+                                        </button>
+                                        <button type="button" class="wizard-option-btn slot-btn" data-slot="afternoon">
+                                            <span class="slot-btn-name">Daytime</span>
+                                            <span class="slot-btn-range" data-slot-range="afternoon">&nbsp;</span>
+                                        </button>
+                                        <button type="button" class="wizard-option-btn slot-btn" data-slot="evening">
+                                            <span class="slot-btn-name">Evening</span>
+                                            <span class="slot-btn-range" data-slot-range="evening">&nbsp;</span>
+                                        </button>
+                                        <button type="button" class="wizard-option-btn slot-btn active" data-slot="anytime">
+                                            <span class="slot-btn-name">Any time</span>
+                                            <span class="slot-btn-range">No set hour</span>
+                                        </button>
+                                    </div>
                                 </div>
-                            </div>
 
-                            <div class="task-more-pair">
-                                <div class="form-group" id="dueTimeGroup">
-                                    <label for="taskDueTime">Exact time <span class="label-optional">optional</span></label>
-                                    <!-- inputmode="numeric" because a phone was
-                                         offering a full QWERTY keyboard to type
-                                         a number into. -->
-                                    <input type="text" id="taskDueTime" aria-describedby="taskDueTimeHint"
-                                           autocomplete="off" inputmode="numeric" placeholder="--:--">
-                                    <!-- Recalling a format and typing it correctly is the
-                                         expensive part. These are this person's own hours,
-                                         filled in by syncTimePresets(), so the common
-                                         answers cost one tap and no memory. -->
-                                    <div class="time-presets" id="timePresets" role="group" aria-label="Common times"></div>
-                                    <p class="field-hint" id="taskDueTimeHint"></p>
+                                <div class="task-more-pair">
+                                    <div class="form-group" id="dueTimeGroup">
+                                        <label for="taskDueTime">Exact time <span class="label-optional">optional</span></label>
+                                        <!-- inputmode="numeric" because a phone was
+                                             offering a full QWERTY keyboard to type
+                                             a number into. -->
+                                        <input type="text" id="taskDueTime" aria-describedby="taskDueTimeHint"
+                                               autocomplete="off" inputmode="numeric" placeholder="--:--">
+                                        <!-- Recalling a format and typing it correctly is the
+                                             expensive part. These are this person's own hours,
+                                             filled in by syncTimePresets(), so the common
+                                             answers cost one tap and no memory. -->
+                                        <div class="time-presets" id="timePresets" role="group" aria-label="Common times"></div>
+                                        <p class="field-hint" id="taskDueTimeHint"></p>
+                                    </div>
+                                    <div class="form-group" id="durationInputGroup">
+                                        <label for="taskDurationInput">How long <span class="label-optional">minutes</span></label>
+                                        <input type="number" id="taskDurationInput" min="1" max="480" value="15">
+                                    </div>
                                 </div>
-                                <div class="form-group" id="durationInputGroup">
-                                    <label for="taskDurationInput">How long <span class="label-optional">minutes</span></label>
-                                    <input type="number" id="taskDurationInput" min="1" max="480" value="15">
+
+                                <!-- Which area of life. Pre-answered, and moved out of
+                                     the way: it is a filing question, and filing is not
+                                     what somebody opened this form to do. -->
+                                <div class="wizard-step" data-step="1">
+                                    <span class="when-block-label" id="areaLabel">Which part of life?</span>
+                                    <div class="wizard-button-grid" role="group" aria-labelledby="areaLabel">
+                                        <button type="button" class="wizard-option-btn active" data-value="Health &amp; Vitality">
+                                            <i data-lucide="heart" class="icon-health" aria-hidden="true"></i>
+                                            <span>Health</span>
+                                        </button>
+                                        <button type="button" class="wizard-option-btn" data-value="Career &amp; Finance">
+                                            <i data-lucide="briefcase" class="icon-career" aria-hidden="true"></i>
+                                            <span>Money</span>
+                                        </button>
+                                        <button type="button" class="wizard-option-btn" data-value="Relationships &amp; Social">
+                                            <i data-lucide="users" class="icon-social" aria-hidden="true"></i>
+                                            <span>People</span>
+                                        </button>
+                                        <button type="button" class="wizard-option-btn" data-value="Mind &amp; Environment">
+                                            <i data-lucide="sparkles" class="icon-mind" aria-hidden="true"></i>
+                                            <span>Mind</span>
+                                        </button>
+                                    </div>
                                 </div>
-                            </div>
 
-                            <!-- Which area of life. Pre-answered, and moved out of
-                                 the way: it is a filing question, and filing is not
-                                 what somebody opened this form to do. -->
-                            <div class="wizard-step" data-step="1">
-                                <span class="when-block-label" id="areaLabel">Which part of life?</span>
-                                <div class="wizard-button-grid" role="group" aria-labelledby="areaLabel">
-                                    <button type="button" class="wizard-option-btn active" data-value="Health &amp; Vitality">
-                                        <i data-lucide="heart" class="icon-health" aria-hidden="true"></i>
-                                        <span>Health</span>
-                                    </button>
-                                    <button type="button" class="wizard-option-btn" data-value="Career &amp; Finance">
-                                        <i data-lucide="briefcase" class="icon-career" aria-hidden="true"></i>
-                                        <span>Money</span>
-                                    </button>
-                                    <button type="button" class="wizard-option-btn" data-value="Relationships &amp; Social">
-                                        <i data-lucide="users" class="icon-social" aria-hidden="true"></i>
-                                        <span>People</span>
-                                    </button>
-                                    <button type="button" class="wizard-option-btn" data-value="Mind &amp; Environment">
-                                        <i data-lucide="sparkles" class="icon-mind" aria-hidden="true"></i>
-                                        <span>Mind</span>
-                                    </button>
+                                <!-- Whether missing this is allowed to go red. Off by
+                                     default: soft habits age to amber and stop there. -->
+                                <button type="button" class="sw" id="taskCommitmentSw" role="switch" aria-checked="false">
+                                    <span class="sw-text">
+                                        <span class="sw-label">This one really matters</span>
+                                    </span>
+                                    <span class="sw-side"><span class="sw-word">Off</span><span class="sw-track"><span class="sw-knob"></span></span></span>
+                                </button>
+
+                                <!-- Notifications. Two options, said plainly. -->
+                                <div class="wizard-step" data-step="4">
+                                    <span class="when-block-label" id="notifyLabel">Reminders</span>
+                                    <div class="wizard-button-grid" role="group" aria-labelledby="notifyLabel">
+                                        <button type="button" class="wizard-option-btn active" data-value="digest">
+                                            <i data-lucide="bell" aria-hidden="true"></i>
+                                            <span>Tell me in the morning</span>
+                                        </button>
+                                        <button type="button" class="wizard-option-btn" data-value="silent">
+                                            <i data-lucide="bell-off" aria-hidden="true"></i>
+                                            <span>Don&rsquo;t tell me</span>
+                                        </button>
+                                    </div>
                                 </div>
+
                             </div>
-
-                            <!-- Whether missing this is allowed to go red. Off by
-                                 default: soft habits age to amber and stop there. -->
-                            <button type="button" class="sw" id="taskCommitmentSw" role="switch" aria-checked="false">
-                                <span class="sw-text">
-                                    <span class="sw-label">This one really matters</span>
-                                </span>
-                                <span class="sw-side"><span class="sw-word">Off</span><span class="sw-track"><span class="sw-knob"></span></span></span>
-                            </button>
-
-                            <!-- Notifications. Two options, said plainly. -->
-                            <div class="wizard-step" data-step="4">
-                                <span class="when-block-label" id="notifyLabel">Reminders</span>
-                                <div class="wizard-button-grid" role="group" aria-labelledby="notifyLabel">
-                                    <button type="button" class="wizard-option-btn active" data-value="digest">
-                                        <i data-lucide="bell" aria-hidden="true"></i>
-                                        <span>Tell me in the morning</span>
-                                    </button>
-                                    <button type="button" class="wizard-option-btn" data-value="silent">
-                                        <i data-lucide="bell-off" aria-hidden="true"></i>
-                                        <span>Don&rsquo;t tell me</span>
-                                    </button>
-                                </div>
-                            </div>
-
-                        </div>
-                    </details>
+                        </details>
+                    </div>
                 </div>
 
                 <!-- Save exists from the moment there is a name. A task with

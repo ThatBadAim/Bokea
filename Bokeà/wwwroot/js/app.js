@@ -3448,10 +3448,9 @@ function openCreateTaskModal(category, presetDate) {
     
     setCommitmentSwitch(false);
 
-    // "More" starts closed on a new task: everything inside it already has a
-    // sensible answer, and the point of the screen is the field above it.
+    // "More" starts closed on mobile, but opens on desktop for the 2-column view
     const more = document.getElementById('taskMore');
-    if (more) more.open = false;
+    if (more) more.open = (window.innerWidth >= 768);
 
     showStep(1);
     openModal('New task');
@@ -3616,6 +3615,10 @@ function openModal(announceAs) {
     // The presets read the day shape and the clock format, both of which can
     // have changed in Settings since the form was last built.
     syncTimePresets();
+    const more = document.getElementById('taskMore');
+    if (more && window.innerWidth >= 768) {
+        more.open = true;
+    }
     modal.classList.add('open');
     modal.removeAttribute('aria-hidden');
     const dialog = document.getElementById('taskModalDialog');
