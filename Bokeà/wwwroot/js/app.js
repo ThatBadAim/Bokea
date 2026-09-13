@@ -4973,41 +4973,138 @@ document.addEventListener('DOMContentLoaded', () => {
     // and there is no reason for the difference to reach the database.
     const AVATAR_SIZE = 256;
 
-    function resizeToAvatar(file) {
+    function loadImageFromFile(file) {
         return new Promise((resolve, reject) => {
             const reader = new FileReader();
             reader.onerror = () => reject(new Error('That file could not be read.'));
             reader.onload = () => {
                 const img = new Image();
                 img.onerror = () => reject(new Error('That file is not an image Bokeà can read.'));
-                img.onload = () => {
-                    const canvas = document.createElement('canvas');
-                    canvas.width = AVATAR_SIZE;
-                    canvas.height = AVATAR_SIZE;
-                    const ctx = canvas.getContext('2d');
-
-                    // White underneath, because a transparent PNG saved as JPEG
-                    // would otherwise come back with a black background.
-                    ctx.fillStyle = '#ffffff';
-                    ctx.fillRect(0, 0, AVATAR_SIZE, AVATAR_SIZE);
-
-                    // Centre crop: take the largest square the picture contains
-                    // rather than squashing it into one.
-                    const side = Math.min(img.width, img.height);
-                    const sx = (img.width - side) / 2;
-                    const sy = (img.height - side) / 2;
-                    ctx.drawImage(img, sx, sy, side, side, 0, 0, AVATAR_SIZE, AVATAR_SIZE);
-
-                    try {
-                        resolve(canvas.toDataURL('image/jpeg', 0.85));
-                    } catch (e) {
-                        reject(new Error('That picture could not be saved.'));
-                    }
-                };
+                img.onload = () => resolve(img);
                 img.src = reader.result;
             };
             reader.readAsDataURL(file);
         });
+    }
+
+    // The crop-and-position dialog. A centre crop guesses; this lets the
+    // person say which part of the photo they actually meant. Resolves with
+    // a finished data URL, or null if they cancelled.
+    let avatarCropState = null;
+    let avatarCropResolve = null;
+    let releaseAvatarCropFocus = null;
+
+    function avatarCropEls() {
+        return {
+            overlay: document.getElementById('avatarCropModal'),
+            dialog: document.getElementById('avatarCropDialog'),
+            viewport: document.getElementById('avatarCropViewport'),
+            img: document.getElementById('avatarCropImg'),
+            zoom: document.getElementById('avatarCropZoom'),
+        };
+    }
+
+    function applyAvatarCropTransform() {
+        const s = avatarCropState;
+        if (!s) return;
+        s.imgEl.style.width = s.naturalW + 'px';
+        s.imgEl.style.height = s.naturalH + 'px';
+        s.imgEl.style.transform = `translate(${s.offsetX}px, ${s.offsetY}px) scale(${s.scale})`;
+    }
+
+    // The image may never show empty viewport at its edges: offsets are
+    // clamped so the frame always sits over picture, whatever the scale.
+    function clampAvatarCropOffset() {
+        const s = avatarCropState;
+        if (!s) return;
+        const w = s.naturalW * s.scale;
+        const h = s.naturalH * s.scale;
+        const minX = Math.min(0, s.viewportSize - w);
+        const minY = Math.min(0, s.viewportSize - h);
+        s.offsetX = Math.min(0, Math.max(minX, s.offsetX));
+        s.offsetY = Math.min(0, Math.max(minY, s.offsetY));
+    }
+
+    function openAvatarCropper(file) {
+        return loadImageFromFile(file).then(img => new Promise((resolve) => {
+            const { overlay, dialog, viewport, img: imgEl, zoom } = avatarCropEls();
+            if (!overlay || !dialog || !viewport || !imgEl || !zoom) {
+                resolve(null);
+                return;
+            }
+
+            const viewportSize = viewport.clientWidth || 260;
+            // The smallest scale that still covers the round frame with no
+            // gap, whichever dimension of the photo is the tighter fit.
+            const minScale = Math.max(viewportSize / img.naturalWidth, viewportSize / img.naturalHeight);
+
+            avatarCropState = {
+                img, imgEl, viewportSize,
+                naturalW: img.naturalWidth,
+                naturalH: img.naturalHeight,
+                minScale,
+                scale: minScale,
+                offsetX: (viewportSize - img.naturalWidth * minScale) / 2,
+                offsetY: (viewportSize - img.naturalHeight * minScale) / 2,
+            };
+
+            imgEl.src = img.src;
+            zoom.value = 100;
+            applyAvatarCropTransform();
+
+            avatarCropResolve = resolve;
+            overlay.classList.add('open');
+            overlay.removeAttribute('aria-hidden');
+            if (window.BokeaA11y) {
+                releaseAvatarCropFocus = window.BokeaA11y.trapFocus(dialog, { initialFocus: '#avatarCropZoom' });
+            }
+            if (typeof announce === 'function') {
+                announce('Adjust picture dialog opened. Drag to reposition, or use the zoom slider. Press Escape to cancel.');
+            }
+        }));
+    }
+
+    function closeAvatarCropper(result) {
+        const { overlay } = avatarCropEls();
+        if (overlay) {
+            overlay.classList.remove('open');
+            overlay.setAttribute('aria-hidden', 'true');
+        }
+        if (releaseAvatarCropFocus) {
+            releaseAvatarCropFocus(true);
+            releaseAvatarCropFocus = null;
+        }
+        avatarCropState = null;
+        const resolve = avatarCropResolve;
+        avatarCropResolve = null;
+        if (resolve) resolve(result);
+    }
+
+    // Renders exactly what sits inside the round frame, at the size the
+    // avatar is actually stored at - not the frame's on-screen pixel size.
+    function renderAvatarCrop() {
+        const s = avatarCropState;
+        if (!s) return null;
+        const canvas = document.createElement('canvas');
+        canvas.width = AVATAR_SIZE;
+        canvas.height = AVATAR_SIZE;
+        const ctx = canvas.getContext('2d');
+
+        // White underneath, because a transparent PNG saved as JPEG would
+        // otherwise come back with a black background.
+        ctx.fillStyle = '#ffffff';
+        ctx.fillRect(0, 0, AVATAR_SIZE, AVATAR_SIZE);
+
+        const sx = -s.offsetX / s.scale;
+        const sy = -s.offsetY / s.scale;
+        const sSide = s.viewportSize / s.scale;
+        ctx.drawImage(s.img, sx, sy, sSide, sSide, 0, 0, AVATAR_SIZE, AVATAR_SIZE);
+
+        try {
+            return canvas.toDataURL('image/jpeg', 0.85);
+        } catch (e) {
+            throw new Error('That picture could not be saved.');
+        }
     }
 
     // The picture belongs everywhere the person is shown, not only on the
@@ -5459,7 +5556,8 @@ document.addEventListener('DOMContentLoaded', () => {
                 }
 
                 try {
-                    const dataUrl = await resizeToAvatar(file);
+                    const dataUrl = await openAvatarCropper(file);
+                    if (dataUrl == null) return; // cancelled from the crop dialog
                     form.dataset.avatar = dataUrl;
                     renderProfileCard(collectProfile());
                     const ok = await persistProfile();
@@ -5477,6 +5575,113 @@ document.addEventListener('DOMContentLoaded', () => {
                 }
             });
         }
+
+        // ---- the crop dialog's own controls ----
+        (function wireAvatarCropper() {
+            const { overlay, viewport, img: imgEl, zoom } = avatarCropEls();
+            const cancelBtn = document.getElementById('avatarCropCancelBtn');
+            const closeBtn = document.getElementById('avatarCropCloseBtn');
+            const saveBtn = document.getElementById('avatarCropSaveBtn');
+            if (!overlay || !viewport || !imgEl || !zoom || !cancelBtn || !closeBtn || !saveBtn) return;
+
+            let dragging = false;
+            let startX = 0, startY = 0, startOffsetX = 0, startOffsetY = 0;
+
+            function pointerDown(e) {
+                if (!avatarCropState) return;
+                dragging = true;
+                viewport.classList.add('dragging');
+                startX = e.clientX;
+                startY = e.clientY;
+                startOffsetX = avatarCropState.offsetX;
+                startOffsetY = avatarCropState.offsetY;
+                viewport.setPointerCapture(e.pointerId);
+            }
+
+            function pointerMove(e) {
+                if (!dragging || !avatarCropState) return;
+                avatarCropState.offsetX = startOffsetX + (e.clientX - startX);
+                avatarCropState.offsetY = startOffsetY + (e.clientY - startY);
+                clampAvatarCropOffset();
+                applyAvatarCropTransform();
+            }
+
+            function pointerUp(e) {
+                dragging = false;
+                viewport.classList.remove('dragging');
+                try { viewport.releasePointerCapture(e.pointerId); } catch (err) { /* already released */ }
+            }
+
+            viewport.addEventListener('pointerdown', pointerDown);
+            viewport.addEventListener('pointermove', pointerMove);
+            viewport.addEventListener('pointerup', pointerUp);
+            viewport.addEventListener('pointercancel', pointerUp);
+
+            // Dragging has no keyboard equivalent otherwise, so the arrow keys
+            // pan the same offset a pointer would.
+            const ARROW_STEP = 12;
+            viewport.addEventListener('keydown', (e) => {
+                if (!avatarCropState) return;
+                const moves = {
+                    ArrowLeft: [-ARROW_STEP, 0], ArrowRight: [ARROW_STEP, 0],
+                    ArrowUp: [0, -ARROW_STEP], ArrowDown: [0, ARROW_STEP],
+                };
+                const delta = moves[e.key];
+                if (!delta) return;
+                e.preventDefault();
+                avatarCropState.offsetX += delta[0];
+                avatarCropState.offsetY += delta[1];
+                clampAvatarCropOffset();
+                applyAvatarCropTransform();
+            });
+
+            zoom.addEventListener('input', () => {
+                const s = avatarCropState;
+                if (!s) return;
+                // The slider runs 100-300 as "percent over the minimum", which
+                // keeps the covering scale reachable at 0 regardless of photo size.
+                const factor = Number(zoom.value) / 100;
+                const nextScale = s.minScale * factor;
+
+                // Zoom stays centred on the middle of the frame rather than the
+                // top-left corner, so the subject does not drift while zooming.
+                const cx = s.viewportSize / 2;
+                const cy = s.viewportSize / 2;
+                const imgX = (cx - s.offsetX) / s.scale;
+                const imgY = (cy - s.offsetY) / s.scale;
+                s.scale = nextScale;
+                s.offsetX = cx - imgX * s.scale;
+                s.offsetY = cy - imgY * s.scale;
+                clampAvatarCropOffset();
+                applyAvatarCropTransform();
+            });
+
+            function cancel() {
+                closeAvatarCropper(null);
+                if (typeof announce === 'function') announce('Picture discarded.');
+            }
+            cancelBtn.addEventListener('click', cancel);
+            closeBtn.addEventListener('click', cancel);
+
+            saveBtn.addEventListener('click', () => {
+                try {
+                    const dataUrl = renderAvatarCrop();
+                    closeAvatarCropper(dataUrl);
+                } catch (err) {
+                    closeAvatarCropper(null);
+                    showToast(err.message || 'That picture could not be saved.', 'error');
+                }
+            });
+
+            // Escape cancels rather than falling through to whatever else on
+            // the page listens for it, but only while this dialog is open.
+            overlay.addEventListener('keydown', (e) => {
+                if (e.key === 'Escape' && overlay.classList.contains('open')) {
+                    e.stopPropagation();
+                    cancel();
+                }
+            });
+        })();
 
         const removeBtn = profEl('profAvatarRemoveBtn');
         if (removeBtn) {

@@ -6254,6 +6254,62 @@ body.dark-theme .profile-avatar-box.has-photo {
     font-size: 0.82rem;
 }
 
+/* ---------- avatar crop dialog ---------- */
+.avatar-crop-content {
+    max-width: 360px;
+}
+
+.avatar-crop-body {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 14px;
+    padding: 4px 0 8px;
+}
+
+.avatar-crop-hint {
+    margin: 0;
+    font-size: 0.85rem;
+    color: var(--text-secondary);
+    text-align: center;
+}
+
+/* Round because the avatar itself is round: what you see while dragging
+   is exactly the shape that will be saved. */
+.avatar-crop-viewport {
+    position: relative;
+    width: 260px;
+    height: 260px;
+    max-width: 100%;
+    border-radius: 50%;
+    overflow: hidden;
+    background: var(--bg-body);
+    border: 1px solid var(--border-color);
+    touch-action: none;
+    cursor: grab;
+}
+
+.avatar-crop-viewport.dragging {
+    cursor: grabbing;
+}
+
+.avatar-crop-img {
+    position: absolute;
+    top: 0;
+    left: 0;
+    max-width: none;
+    max-height: none;
+    transform-origin: 0 0;
+    user-select: none;
+    -webkit-user-drag: none;
+    pointer-events: none;
+}
+
+.avatar-crop-zoom {
+    width: 100%;
+    accent-color: var(--accent, var(--text-main));
+}
+
 /* The label is a button by sight, so it needs a button's focus ring when the
    input behind it takes focus. */
 .prof-file:focus-visible + .prof-remove,

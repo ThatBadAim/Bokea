@@ -1648,6 +1648,37 @@
     </div>
 
     <!-- ============================================================
+         AVATAR CROP — a picked photo rarely has its subject centred in
+         a square. This lets the person drag and zoom to pick the part
+         that becomes the avatar, instead of Bokeà guessing with a
+         centre crop.
+         ============================================================ -->
+    <div id="avatarCropModal" class="modal-overlay" aria-hidden="true">
+        <div class="modal-content avatar-crop-content" role="dialog" aria-modal="true"
+             aria-labelledby="avatarCropTitle" id="avatarCropDialog" tabindex="-1">
+            <div class="modal-header">
+                <h3 id="avatarCropTitle" tabindex="-1">Adjust picture</h3>
+                <button type="button" class="close-btn" id="avatarCropCloseBtn" aria-label="Cancel, discard this picture">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="avatar-crop-body">
+                <p class="avatar-crop-hint">Drag to reposition. Use the slider to zoom.</p>
+                <div class="avatar-crop-viewport" id="avatarCropViewport" tabindex="0"
+                     aria-label="Crop preview. Drag with the pointer, or use the arrow keys, to reposition.">
+                    <img id="avatarCropImg" class="avatar-crop-img" alt="" draggable="false">
+                </div>
+                <input type="range" id="avatarCropZoom" class="avatar-crop-zoom"
+                       min="100" max="300" value="100" step="1" aria-label="Zoom">
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" id="avatarCropCancelBtn">Cancel</button>
+                <button type="button" class="btn btn-primary" id="avatarCropSaveBtn">Save picture</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- ============================================================
          FOCUS — one task, its own duration counting down, and nothing
          else. The box at the bottom catches the thought that arrives
          thirty seconds in, so writing it down does not end the task.
