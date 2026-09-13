@@ -66,10 +66,10 @@
     "semantic_hash": "c52f435e4bcaf2bd106befb5823b841e"
   },
   "Boke\u00e0/wwwroot/js/app.js": {
-    "mtime": 1789301105.5147872,
-    "seen": 1789301137.3967457,
-    "ast_hash": "d6c7ddb0a1d1404e38f07e9ca4e6ef45",
-    "semantic_hash": "d6c7ddb0a1d1404e38f07e9ca4e6ef45"
+    "mtime": 1789305757.502152,
+    "seen": 1789306794.499642,
+    "ast_hash": "f65408cc119bf6a031ada6d0096fcfa7",
+    "semantic_hash": ""
   },
   "Boke\u00e0/wwwroot/manifest.json": {
     "mtime": 1788973935.0335922,
@@ -78,10 +78,10 @@
     "semantic_hash": "e38e6347cfd75ae30017fa0ee340711d"
   },
   "Boke\u00e0/wwwroot/sw.js": {
-    "mtime": 1789289643.7824156,
-    "seen": 1789299195.6316388,
-    "ast_hash": "0358719b2ae9b81e0b5d07ebcc380657",
-    "semantic_hash": "0358719b2ae9b81e0b5d07ebcc380657"
+    "mtime": 1789305784.7561507,
+    "seen": 1789306794.4996939,
+    "ast_hash": "1e7e46f8bf9b0d915b443161bc2de7b4",
+    "semantic_hash": ""
   },
   "Boke\u00e0/Endpoints/PushEndpoints.cs": {
     "mtime": 1788888987.3830833,
@@ -102,9 +102,9 @@
     "semantic_hash": ""
   },
   "Boke\u00e0/wwwroot/index.html": {
-    "mtime": 1789263003.9227505,
-    "seen": 1789289685.1113112,
-    "ast_hash": "1e99bcf51aa3d990a515cc302ef36fca",
+    "mtime": 1789305764.0911875,
+    "seen": 1789306794.499741,
+    "ast_hash": "1cf2ea3a7aeb8c8f43c781016605eed1",
     "semantic_hash": ""
   },
   "Boke\u00e0/wwwroot/assets/icon.svg": {
@@ -147,6 +147,36 @@
     "mtime": 1789291512.6651201,
     "seen": 1789291519.6823735,
     "ast_hash": "396b3dd00ed34074a86ca85c5a128a1e",
+    "semantic_hash": ""
+  },
+  "design/new-task-modal/canvas.json": {
+    "mtime": 1789305055.7802513,
+    "seen": 1789306794.4996953,
+    "ast_hash": "8fe07827cef324fa7bf60571dca91591",
+    "semantic_hash": ""
+  },
+  "design/new-task-modal/Main.dc.html": {
+    "mtime": 1789304279.6029794,
+    "seen": 1789306794.4997554,
+    "ast_hash": "9b81e81b39948093f36accde877d4057",
+    "semantic_hash": ""
+  },
+  "design/new-task-modal/PropertyList.dc.html": {
+    "mtime": 1789304363.8004086,
+    "seen": 1789306794.4997563,
+    "ast_hash": "e4d4946300660096fd39be1b5ed8c2d2",
+    "semantic_hash": ""
+  },
+  "design/new-task-modal/SentenceBuilder.dc.html": {
+    "mtime": 1789304316.5351677,
+    "seen": 1789306794.4997573,
+    "ast_hash": "a4046536253cbb791243b359be049115",
+    "semantic_hash": ""
+  },
+  "design/new-task-modal/bokea-new-task-modal.html": {
+    "mtime": 1789305077.5573769,
+    "seen": 1789306794.4997578,
+    "ast_hash": "f80f09ea3685e2c15730adafb3d45c2c",
     "semantic_hash": ""
   }
 }

@@ -3089,18 +3089,45 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     });
 
-    // Step 4 Notification Buttons
-    document.querySelectorAll('.wizard-step[data-step="4"] .wizard-option-btn').forEach(btn => {
-        btn.addEventListener('click', () => {
-            if (commitmentSwitchOn() && btn.getAttribute('data-value') === 'silent') {
+    // Reminder switch. On is the morning digest, off is silent - and a task
+    // that really matters is not allowed to be silent.
+    const notifySw = document.getElementById('taskNotifySw');
+    if (notifySw) {
+        notifySw.addEventListener('click', () => {
+            const on = notifySw.getAttribute('aria-checked') === 'true';
+            if (on && commitmentSwitchOn()) {
                 showToast("Notifications are required when 'This one really matters' is turned on.", "info");
                 return;
             }
-            document.querySelectorAll('.wizard-step[data-step="4"] .wizard-option-btn').forEach(b => b.classList.remove('active'));
-            btn.classList.add('active');
-            document.getElementById('taskNotify').value = btn.getAttribute('data-value');
+            setNotifySwitch(on ? 'silent' : 'digest');
         });
-    });
+    }
+
+    // The note costs one line until there is something to write in it.
+    const noteToggle = document.getElementById('taskNoteToggle');
+    if (noteToggle) noteToggle.addEventListener('click', () => setNoteOpen(true, true));
+
+    // How long: fives up to half an hour, quarters after that.
+    const durationEl = document.getElementById('taskDurationInput');
+    const stepDuration = (dir) => {
+        if (!durationEl) return;
+        const cur = parseInt(durationEl.value, 10) || 15;
+        let next;
+        if (dir > 0) next = cur < 30 ? Math.floor(cur / 5) * 5 + 5 : Math.floor(cur / 15) * 15 + 15;
+        else next = cur <= 30 ? Math.ceil(cur / 5) * 5 - 5 : Math.ceil(cur / 15) * 15 - 15;
+        durationEl.value = Math.min(480, Math.max(5, next));
+        document.getElementById('taskDuration').value = durationEl.value;
+    };
+    const durationDown = document.getElementById('durationDown');
+    const durationUp = document.getElementById('durationUp');
+    if (durationDown) durationDown.addEventListener('click', () => stepDuration(-1));
+    if (durationUp) durationUp.addEventListener('click', () => stepDuration(1));
+
+    // The footer reads the task back, so it follows every change on the form.
+    // Buttons handle their own clicks first, so the state is current by the
+    // time the click reaches the form.
+    taskForm.addEventListener('input', syncTaskSummary);
+    taskForm.addEventListener('click', syncTaskSummary);
 
     // Time Slot Routine Block Buttons
     document.querySelectorAll('#timeSlotGrid button').forEach(btn => {
@@ -3207,7 +3234,11 @@ document.addEventListener('DOMContentLoaded', () => {
     if (taskFormEl) {
         taskFormEl.addEventListener('keydown', (e) => {
             if (e.key === 'Enter') {
-                if (e.target.tagName.toLowerCase() === 'textarea') return;
+                // Enter in a textarea is a new line, and Enter on a button
+                // presses that button - a switch, a day, the note toggle.
+                // Only Enter in a field means save.
+                const tag = e.target.tagName.toLowerCase();
+                if (tag === 'textarea' || tag === 'button') return;
                 e.preventDefault();
                 // One screen, so Enter means save. If there is no name yet it
                 // puts the cursor where the answer goes instead of scolding.
@@ -3256,21 +3287,10 @@ function setCommitmentSwitch(on) {
     if (word) word.textContent = on ? 'On' : 'Off';
 
     // Force notifications if this task really matters
-    const silentBtn = document.querySelector('.wizard-step[data-step="4"] .wizard-option-btn[data-value="silent"]');
-    const digestBtn = document.querySelector('.wizard-step[data-step="4"] .wizard-option-btn[data-value="digest"]');
-    const notifyInput = document.getElementById('taskNotify');
+    if (on) setNotifySwitch('digest');
+    syncNotifyLock();
 
     if (on) {
-        if (digestBtn) {
-            document.querySelectorAll('.wizard-step[data-step="4"] .wizard-option-btn').forEach(b => b.classList.remove('active'));
-            digestBtn.classList.add('active');
-        }
-        if (notifyInput) notifyInput.value = 'digest';
-        if (silentBtn) {
-            silentBtn.classList.add('disabled-option');
-            silentBtn.setAttribute('aria-disabled', 'true');
-            silentBtn.title = "Critical commitments cannot be silenced.";
-        }
         // Ask for browser notification permission if not yet decided so device can alert when missed
         if (typeof Notification !== 'undefined' && Notification.permission === 'default') {
             Notification.requestPermission().then(perm => {
@@ -3279,18 +3299,102 @@ function setCommitmentSwitch(on) {
                 }
             }).catch(() => {});
         }
-    } else {
-        if (silentBtn) {
-            silentBtn.classList.remove('disabled-option');
-            silentBtn.removeAttribute('aria-disabled');
-            silentBtn.removeAttribute('title');
-        }
     }
 }
 
 function commitmentSwitchOn() {
     const sw = document.getElementById('taskCommitmentSw');
     return !!(sw && sw.getAttribute('aria-checked') === 'true');
+}
+
+// Reminders are one switch: anything but 'silent' is on.
+function setNotifySwitch(pref) {
+    const on = pref !== 'silent';
+    const input = document.getElementById('taskNotify');
+    if (input) input.value = on ? (pref || 'digest') : 'silent';
+    const sw = document.getElementById('taskNotifySw');
+    if (sw) {
+        sw.setAttribute('aria-checked', on ? 'true' : 'false');
+        sw.classList.toggle('on', on);
+    }
+    syncNotifyLock();
+}
+
+// While the task really matters the reminder is held on, and the line under
+// it says so rather than leaving a switch that silently refuses to move.
+function syncNotifyLock() {
+    const sw = document.getElementById('taskNotifySw');
+    if (!sw) return;
+    const locked = commitmentSwitchOn();
+    sw.classList.toggle('locked', locked);
+    if (locked) sw.setAttribute('aria-disabled', 'true');
+    else sw.removeAttribute('aria-disabled');
+    const help = document.getElementById('taskNotifyHelp');
+    if (help) {
+        help.textContent = locked
+            ? 'Always on for tasks that really matter'
+            : 'It shows up in your morning digest';
+    }
+}
+
+function setNoteOpen(open, focus) {
+    const group = document.getElementById('taskDescGroup');
+    const toggle = document.getElementById('taskNoteToggle');
+    if (group) group.classList.toggle('hidden', !open);
+    if (toggle) {
+        toggle.classList.toggle('hidden', open);
+        toggle.setAttribute('aria-expanded', open ? 'true' : 'false');
+    }
+    if (open && focus) {
+        const area = document.getElementById('taskDescription');
+        if (area) area.focus();
+    }
+}
+
+// One line in the footer that reads the task back - "Sundays · evening ·
+// 15 min" - so what Save is about to do is never a guess.
+function syncTaskSummary() {
+    const out = document.getElementById('taskSummary');
+    if (!out) return;
+    const parts = [];
+
+    const freqBtn = document.querySelector('.wizard-step[data-step="3"] .wizard-option-btn.active');
+    const freqType = freqBtn ? freqBtn.getAttribute('data-freq-type') : 'interval';
+    const freqVal = freqBtn ? freqBtn.getAttribute('data-freq-val') : '1';
+    const due = document.getElementById('taskDueDate').value;
+    if (freqType === 'fixed') {
+        parts.push(due
+            ? calParse(due).toLocaleDateString(undefined, { weekday: 'short', day: 'numeric', month: 'short' })
+            : 'Once');
+    } else if (freqType === 'workdays') {
+        parts.push('Workdays');
+    } else if (freqType === 'custom') {
+        const n = parseInt(document.getElementById('taskInterval').value, 10);
+        parts.push(n > 1 ? `Every ${n} days` : 'Every day');
+    } else if (freqVal === '7') {
+        const day = document.querySelector('#weeklyDayPicker .weekday-btn.active');
+        const names = ['Sundays', 'Mondays', 'Tuesdays', 'Wednesdays', 'Thursdays', 'Fridays', 'Saturdays'];
+        parts.push(day ? names[parseInt(day.getAttribute('data-day'), 10)] : 'Weekly');
+    } else if (freqVal === '30') {
+        parts.push('Monthly');
+    } else {
+        parts.push('Every day');
+    }
+
+    const timeEl = document.getElementById('taskDueTime');
+    const exact = timeEl ? parseTimeFieldValue(timeEl.value) : null;
+    const slot = document.getElementById('taskTimeSlot').value;
+    if (exact !== null) parts.push(`at ${fmtHM(exact)}`);
+    else if (slot && slot !== 'anytime' && SLOT_META[slot]) parts.push(SLOT_META[slot].label.toLowerCase());
+
+    const mins = parseInt(document.getElementById('taskDurationInput').value, 10);
+    if (mins > 0) {
+        const h = Math.floor(mins / 60);
+        const m = mins % 60;
+        parts.push(h ? (m ? `${h} h ${m} min` : `${h} h`) : `${m} min`);
+    }
+
+    out.textContent = parts.join(' \u00b7 ');
 }
 
 // Helper to clear error highlights
@@ -3437,20 +3541,9 @@ function openCreateTaskModal(category, presetDate) {
         document.querySelectorAll('#weeklyDayPicker .weekday-btn').forEach(btn => btn.classList.remove('active'));
     }
     
-    // Sync Notify Step 4 button active state (Default is digest)
-    document.querySelectorAll('.wizard-step[data-step="4"] .wizard-option-btn').forEach(btn => {
-        if (btn.getAttribute('data-value') === 'digest') {
-            btn.classList.add('active');
-        } else {
-            btn.classList.remove('active');
-        }
-    });
-    
     setCommitmentSwitch(false);
-
-    // "More" starts closed on mobile, but opens on desktop for the 2-column view
-    const more = document.getElementById('taskMore');
-    if (more) more.open = (window.innerWidth >= 768);
+    setNotifySwitch('digest');
+    setNoteOpen(false);
 
     showStep(1);
     openModal('New task');
@@ -3585,22 +3678,9 @@ function openEditTaskModal(id) {
     }
     
     const notifyPref = task.notifyPref || task.notifyPreference || 'digest';
-    document.getElementById('taskNotify').value = notifyPref;
-    
-    document.querySelectorAll('.wizard-step[data-step="4"] .wizard-option-btn').forEach(btn => {
-        if (btn.getAttribute('data-value') === notifyPref) {
-            btn.classList.add('active');
-        } else {
-            btn.classList.remove('active');
-        }
-    });
-    
     setCommitmentSwitch(!!task.isCommitment);
-
-    // Editing an existing task opens "More" - by definition the person came
-    // here to change something, and half of what there is to change is inside.
-    const more = document.getElementById('taskMore');
-    if (more) more.open = true;
+    setNotifySwitch(task.isCommitment ? 'digest' : notifyPref);
+    setNoteOpen(!!(task.description && task.description.trim()));
 
     showStep(1);
     document.getElementById('modalTitle').textContent = 'Edit task';
@@ -3615,10 +3695,7 @@ function openModal(announceAs) {
     // The presets read the day shape and the clock format, both of which can
     // have changed in Settings since the form was last built.
     syncTimePresets();
-    const more = document.getElementById('taskMore');
-    if (more && window.innerWidth >= 768) {
-        more.open = true;
-    }
+    syncTaskSummary();
     modal.classList.add('open');
     modal.removeAttribute('aria-hidden');
     const dialog = document.getElementById('taskModalDialog');

@@ -1425,7 +1425,7 @@
             <div class="modal-header">
                 <h3 id="modalTitle" tabindex="-1">New task</h3>
                 <button type="button" class="close-btn" id="closeModalBtn" aria-label="Close, discarding this task">
-                    <span aria-hidden="true">&times;</span>
+                    <svg class="lucide" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>
                 </button>
             </div>
             <form id="taskForm">
@@ -1438,26 +1438,24 @@
                 <input type="hidden" id="taskTimeSlot" value="anytime">
 
                 <!-- ============================================================
-                     ONE SCREEN.
-                     This was four gated steps: category (pre-answered), then
-                     the name, then cadence, then a two-option notify radio
-                     (also pre-answered) - and no Save button until the fourth.
-                     So the minimum cost of recording "gym on Tuesdays" was
-                     four screens, two of which were already answered, and the
-                     thought that prompted the click had to survive all of it.
+                     ONE COLUMN.
+                     The name comes first and is the only thing that has to be
+                     filled in. Every other question sits in a rail on the left
+                     so the eye runs down one edge, and each is answered with a
+                     segmented control or a pill rather than a boxed card with a
+                     radio dot. The two yes/no settings are switches, and the
+                     footer reads the whole task back in one line.
 
-                     Now: the name is first and focused, cadence is under it,
-                     and everything that already had a sensible default is
-                     folded away behind "More". The wizard-step wrappers stay
-                     because they carry the grouping the rest of the app reads;
-                     they are simply all on screen at once.
+                     The .wizard-step wrappers stay: the option buttons are
+                     still found by them. They must carry no other class,
+                     because showStep() rewrites their className.
                      ============================================================ -->
                 <div class="task-form-stack">
-                    <div class="task-form-col task-form-col-main">
-                        <!-- The thought, first, before anything is asked about it -->
+                    <!-- The thought, first, before anything is asked about it -->
+                    <div class="tf-name">
                         <div class="wizard-step" data-step="2">
                             <div class="form-group" id="taskNameInputGroup">
-                                <label for="taskName">What is it?</label>
+                                <label for="taskName" class="sr-only">What is it?</label>
                                 <input type="text" id="taskName" required autocomplete="off"
                                        placeholder="Gym, pay rent, call Mum&hellip;"
                                        aria-describedby="taskNameError">
@@ -1467,192 +1465,189 @@
                             </div>
                         </div>
 
-                        <!-- How often. The only other thing that genuinely has to be asked. -->
-                        <div class="wizard-step" data-step="3">
-                            <span class="when-block-label" id="cadenceLabel">How often?</span>
-                            <div class="wizard-button-grid freq-grid" role="group" aria-labelledby="cadenceLabel">
-                                <button type="button" class="wizard-option-btn active" data-freq-type="interval" data-freq-val="1">
-                                    <i data-lucide="refresh-cw" aria-hidden="true"></i>
-                                    <span>Every day</span>
-                                </button>
-                                <button type="button" class="wizard-option-btn" id="btnWorkDays" data-freq-type="workdays">
-                                    <i data-lucide="briefcase" aria-hidden="true"></i>
-                                    <span>Workdays</span>
-                                </button>
-                                <button type="button" class="wizard-option-btn" data-freq-type="interval" data-freq-val="7">
-                                    <i data-lucide="calendar-days" aria-hidden="true"></i>
-                                    <span>Every week</span>
-                                </button>
-                                <button type="button" class="wizard-option-btn" data-freq-type="interval" data-freq-val="30">
-                                    <i data-lucide="calendar-range" aria-hidden="true"></i>
-                                    <span>Every month</span>
-                                </button>
-                                <button type="button" class="wizard-option-btn" id="btnCustomDays" data-freq-type="custom">
-                                    <i data-lucide="settings-2" aria-hidden="true"></i>
-                                    <span>Every few days</span>
-                                </button>
-                                <button type="button" class="wizard-option-btn" id="btnFixedDate" data-freq-type="fixed">
-                                    <i data-lucide="calendar" aria-hidden="true"></i>
-                                    <span>One date</span>
-                                </button>
-                            </div>
-
-                            <div class="form-hint hidden" id="workdaysHint">
-                                <i data-lucide="calendar" aria-hidden="true"></i>
-                                <span>Active on your work days: <strong id="workdaysHintText">Monday&ndash;Friday</strong></span>
-                            </div>
-
-                            <div class="form-group hidden" id="intervalGroup" style="margin-top: 12px;">
-                                <label for="taskInterval">Every how many days?</label>
-                                <input type="number" id="taskInterval" min="1" value="1">
-                            </div>
-                            <div class="form-group hidden" id="dueDateGroup" style="margin-top: 12px;">
-                                <label for="taskDueDate">Which day?</label>
-                                <input type="date" id="taskDueDate" aria-describedby="taskDueDateError">
-                                <p class="field-error" id="taskDueDateError" role="alert" hidden></p>
-                            </div>
-                            <div class="form-group hidden" id="weeklyDayGroup" style="margin-top: 12px;">
-                                <label id="weeklyDayLabel">Which day of the week?</label>
-                                <div class="weekday-picker" role="group" aria-labelledby="weeklyDayLabel" id="weeklyDayPicker">
-                                    <button type="button" class="weekday-btn" data-day="1">Mon</button>
-                                    <button type="button" class="weekday-btn" data-day="2">Tue</button>
-                                    <button type="button" class="weekday-btn" data-day="3">Wed</button>
-                                    <button type="button" class="weekday-btn" data-day="4">Thu</button>
-                                    <button type="button" class="weekday-btn" data-day="5">Fri</button>
-                                    <button type="button" class="weekday-btn" data-day="6">Sat</button>
-                                    <button type="button" class="weekday-btn" data-day="0">Sun</button>
-                                </div>
-                            </div>
-                        </div>
-
-                        <!-- Notes -->
-                        <div class="form-group" id="taskDescGroup">
-                            <label for="taskDescription">Notes <span class="label-optional">optional</span></label>
+                        <!-- A note is rare, so it costs one line until it is wanted. -->
+                        <button type="button" class="tf-note-toggle" id="taskNoteToggle"
+                                aria-expanded="false" aria-controls="taskDescGroup">
+                            <i data-lucide="pencil" aria-hidden="true"></i>
+                            <span>Add a note</span>
+                        </button>
+                        <div class="form-group hidden" id="taskDescGroup">
+                            <label for="taskDescription" class="sr-only">Notes</label>
                             <textarea id="taskDescription" rows="2" placeholder="Anything you want to remember about it"></textarea>
                         </div>
                     </div>
 
-                    <div class="task-form-col task-form-col-details">
-                        <!-- Everything that already had a good default. Nothing in
-                             here has to be opened for the task to be correct. -->
-                        <details class="task-more" id="taskMore">
-                            <summary class="task-more-summary">
-                                <i data-lucide="chevron-right" class="task-more-chevron" aria-hidden="true"></i>
-                                <span>More &mdash; when in the day, how long, which area</span>
-                            </summary>
+                    <div class="tf-fields">
+                        <!-- How often -->
+                        <div class="tf-row">
+                            <span class="tf-label" id="cadenceLabel">Repeats</span>
+                            <div class="wizard-step" data-step="3">
+                                <div class="tf-control">
+                                    <div class="tf-seg freq-grid" role="group" aria-labelledby="cadenceLabel">
+                                        <button type="button" class="wizard-option-btn" id="btnFixedDate" data-freq-type="fixed">Once</button>
+                                        <button type="button" class="wizard-option-btn active" data-freq-type="interval" data-freq-val="1">Daily</button>
+                                        <button type="button" class="wizard-option-btn" id="btnWorkDays" data-freq-type="workdays">Workdays</button>
+                                        <button type="button" class="wizard-option-btn" data-freq-type="interval" data-freq-val="7">Weekly</button>
+                                        <button type="button" class="wizard-option-btn" data-freq-type="interval" data-freq-val="30">Monthly</button>
+                                        <button type="button" class="wizard-option-btn" id="btnCustomDays" data-freq-type="custom">Custom</button>
+                                    </div>
 
-                            <div class="task-more-body">
+                                    <p class="tf-sub hidden" id="workdaysHint">
+                                        <i data-lucide="briefcase" aria-hidden="true"></i>
+                                        <span id="workdaysHintText">Active on your work days</span>
+                                    </p>
 
-                                <!-- WHEN IN THE DAY
-                                     A date on its own never made anything happen. The
-                                     block comes first because it is the answer most
-                                     people actually have; the clock time is there for
-                                     the ones that genuinely have one. Each block shows
-                                     the hours it means for this person, read from their
-                                     own wake, work and bed times, so "Morning" is never
-                                     a word you have to guess the boundaries of. -->
-                                <div class="form-group when-block">
-                                    <span class="when-block-label" id="whenBlockLabel">When in the day?</span>
-                                    <div class="time-slot-grid" id="timeSlotGrid" role="group" aria-labelledby="whenBlockLabel">
-                                        <button type="button" class="wizard-option-btn slot-btn" data-slot="morning">
-                                            <span class="slot-btn-name">Morning</span>
-                                            <span class="slot-btn-range" data-slot-range="morning">&nbsp;</span>
-                                        </button>
-                                        <button type="button" class="wizard-option-btn slot-btn" data-slot="afternoon">
-                                            <span class="slot-btn-name">Daytime</span>
-                                            <span class="slot-btn-range" data-slot-range="afternoon">&nbsp;</span>
-                                        </button>
-                                        <button type="button" class="wizard-option-btn slot-btn" data-slot="evening">
-                                            <span class="slot-btn-name">Evening</span>
-                                            <span class="slot-btn-range" data-slot-range="evening">&nbsp;</span>
-                                        </button>
-                                        <button type="button" class="wizard-option-btn slot-btn active" data-slot="anytime">
-                                            <span class="slot-btn-name">Any time</span>
-                                            <span class="slot-btn-range">No set hour</span>
-                                        </button>
+                                    <div class="form-group tf-inline hidden" id="intervalGroup">
+                                        <label for="taskInterval">Every</label>
+                                        <input type="number" id="taskInterval" min="1" value="1">
+                                        <span class="tf-unit">days</span>
+                                    </div>
+                                    <div class="form-group tf-inline hidden" id="dueDateGroup">
+                                        <label for="taskDueDate">On</label>
+                                        <input type="date" id="taskDueDate" aria-describedby="taskDueDateError">
+                                        <p class="field-error" id="taskDueDateError" role="alert" hidden></p>
+                                    </div>
+                                    <div class="form-group hidden" id="weeklyDayGroup">
+                                        <span class="sr-only" id="weeklyDayLabel">Which day of the week?</span>
+                                        <div class="weekday-picker" role="group" aria-labelledby="weeklyDayLabel" id="weeklyDayPicker">
+                                            <button type="button" class="weekday-btn" data-day="1">Mon</button>
+                                            <button type="button" class="weekday-btn" data-day="2">Tue</button>
+                                            <button type="button" class="weekday-btn" data-day="3">Wed</button>
+                                            <button type="button" class="weekday-btn" data-day="4">Thu</button>
+                                            <button type="button" class="weekday-btn" data-day="5">Fri</button>
+                                            <button type="button" class="weekday-btn" data-day="6">Sat</button>
+                                            <button type="button" class="weekday-btn" data-day="0">Sun</button>
+                                        </div>
                                     </div>
                                 </div>
+                            </div>
+                        </div>
 
-                                <div class="task-more-pair">
-                                    <div class="form-group" id="dueTimeGroup">
-                                        <label for="taskDueTime">Exact time <span class="label-optional">optional</span></label>
+                        <!-- WHEN IN THE DAY
+                             Each block shows the hours it means for this person,
+                             read from their own wake, work and bed times, so
+                             "Morning" is never a word you have to guess the
+                             boundaries of. -->
+                        <div class="tf-row">
+                            <span class="tf-label" id="whenBlockLabel">When</span>
+                            <div class="tf-control">
+                                <div class="tf-seg time-slot-grid" id="timeSlotGrid" role="group" aria-labelledby="whenBlockLabel">
+                                    <button type="button" class="slot-btn" data-slot="morning">
+                                        <span class="slot-btn-name">Morning</span>
+                                        <span class="slot-btn-range" data-slot-range="morning">&nbsp;</span>
+                                    </button>
+                                    <button type="button" class="slot-btn" data-slot="afternoon">
+                                        <span class="slot-btn-name">Daytime</span>
+                                        <span class="slot-btn-range" data-slot-range="afternoon">&nbsp;</span>
+                                    </button>
+                                    <button type="button" class="slot-btn" data-slot="evening">
+                                        <span class="slot-btn-name">Evening</span>
+                                        <span class="slot-btn-range" data-slot-range="evening">&nbsp;</span>
+                                    </button>
+                                    <button type="button" class="slot-btn active" data-slot="anytime">
+                                        <span class="slot-btn-name">Any time</span>
+                                        <span class="slot-btn-range">No set hour</span>
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Exact time and how long, on one line -->
+                        <div class="tf-row">
+                            <label class="tf-label" for="taskDueTime">Time</label>
+                            <div class="tf-control" id="dueTimeGroup">
+                                <div class="tf-time-line">
+                                    <div class="tf-field-icon">
+                                        <i data-lucide="clock" aria-hidden="true"></i>
                                         <!-- inputmode="numeric" because a phone was
                                              offering a full QWERTY keyboard to type
                                              a number into. -->
                                         <input type="text" id="taskDueTime" aria-describedby="taskDueTimeHint"
-                                               autocomplete="off" inputmode="numeric" placeholder="--:--">
-                                        <!-- Recalling a format and typing it correctly is the
-                                             expensive part. These are this person's own hours,
-                                             filled in by syncTimePresets(), so the common
-                                             answers cost one tap and no memory. -->
-                                        <div class="time-presets" id="timePresets" role="group" aria-label="Common times"></div>
-                                        <p class="field-hint" id="taskDueTimeHint"></p>
+                                               autocomplete="off" inputmode="numeric" placeholder="Exact time">
                                     </div>
-                                    <div class="form-group" id="durationInputGroup">
-                                        <label for="taskDurationInput">How long <span class="label-optional">minutes</span></label>
-                                        <input type="number" id="taskDurationInput" min="1" max="480" value="15">
-                                    </div>
-                                </div>
-
-                                <!-- Which area of life. Pre-answered, and moved out of
-                                     the way: it is a filing question, and filing is not
-                                     what somebody opened this form to do. -->
-                                <div class="wizard-step" data-step="1">
-                                    <span class="when-block-label" id="areaLabel">Which part of life?</span>
-                                    <div class="wizard-button-grid" role="group" aria-labelledby="areaLabel">
-                                        <button type="button" class="wizard-option-btn active" data-value="Health &amp; Vitality">
-                                            <i data-lucide="heart" class="icon-health" aria-hidden="true"></i>
-                                            <span>Health</span>
+                                    <span class="tf-for" aria-hidden="true">for</span>
+                                    <div class="tf-stepper" id="durationInputGroup" role="group" aria-label="How long">
+                                        <button type="button" class="tf-step" id="durationDown" aria-label="Shorter">
+                                            <svg class="lucide" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14"/></svg>
                                         </button>
-                                        <button type="button" class="wizard-option-btn" data-value="Career &amp; Finance">
-                                            <i data-lucide="briefcase" class="icon-career" aria-hidden="true"></i>
-                                            <span>Money</span>
-                                        </button>
-                                        <button type="button" class="wizard-option-btn" data-value="Relationships &amp; Social">
-                                            <i data-lucide="users" class="icon-social" aria-hidden="true"></i>
-                                            <span>People</span>
-                                        </button>
-                                        <button type="button" class="wizard-option-btn" data-value="Mind &amp; Environment">
-                                            <i data-lucide="sparkles" class="icon-mind" aria-hidden="true"></i>
-                                            <span>Mind</span>
+                                        <label class="tf-stepper-value">
+                                            <span class="sr-only">How long, in minutes</span>
+                                            <input type="number" id="taskDurationInput" min="1" max="480" value="15">
+                                            <span class="tf-unit" aria-hidden="true">min</span>
+                                        </label>
+                                        <button type="button" class="tf-step" id="durationUp" aria-label="Longer">
+                                            <svg class="lucide" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14"/><path d="M12 5v14"/></svg>
                                         </button>
                                     </div>
                                 </div>
-
-                                <!-- Whether missing this is allowed to go red. Off by
-                                     default: soft habits age to amber and stop there. -->
-                                <button type="button" class="sw" id="taskCommitmentSw" role="switch" aria-checked="false">
-                                    <span class="sw-text">
-                                        <span class="sw-label">This one really matters</span>
-                                    </span>
-                                    <span class="sw-side"><span class="sw-word">Off</span><span class="sw-track"><span class="sw-knob"></span></span></span>
-                                </button>
-
-                                <!-- Notifications. Two options, said plainly. -->
-                                <div class="wizard-step" data-step="4">
-                                    <span class="when-block-label" id="notifyLabel">Reminders</span>
-                                    <div class="wizard-button-grid" role="group" aria-labelledby="notifyLabel">
-                                        <button type="button" class="wizard-option-btn active" data-value="digest">
-                                            <i data-lucide="bell" aria-hidden="true"></i>
-                                            <span>Tell me in the morning</span>
-                                        </button>
-                                        <button type="button" class="wizard-option-btn" data-value="silent">
-                                            <i data-lucide="bell-off" aria-hidden="true"></i>
-                                            <span>Don&rsquo;t tell me</span>
-                                        </button>
-                                    </div>
-                                </div>
-
+                                <!-- This person's own hours, filled in by
+                                     syncTimePresets(), so the common answers
+                                     cost one tap and no memory. -->
+                                <div class="time-presets" id="timePresets" role="group" aria-label="Common times"></div>
+                                <p class="field-hint" id="taskDueTimeHint"></p>
                             </div>
-                        </details>
+                        </div>
+
+                        <!-- Which area of life. Pre-answered: it is a filing question. -->
+                        <div class="tf-row">
+                            <span class="tf-label" id="areaLabel">Area</span>
+                            <div class="wizard-step" data-step="1">
+                                <div class="tf-pills" role="group" aria-labelledby="areaLabel">
+                                    <button type="button" class="wizard-option-btn tf-pill active" data-value="Health &amp; Vitality">
+                                        <i data-lucide="heart" class="icon-health" aria-hidden="true"></i>
+                                        <span>Health</span>
+                                    </button>
+                                    <button type="button" class="wizard-option-btn tf-pill" data-value="Career &amp; Finance">
+                                        <i data-lucide="briefcase" class="icon-career" aria-hidden="true"></i>
+                                        <span>Money</span>
+                                    </button>
+                                    <button type="button" class="wizard-option-btn tf-pill" data-value="Relationships &amp; Social">
+                                        <i data-lucide="users" class="icon-social" aria-hidden="true"></i>
+                                        <span>People</span>
+                                    </button>
+                                    <button type="button" class="wizard-option-btn tf-pill" data-value="Mind &amp; Environment">
+                                        <i data-lucide="sparkles" class="icon-mind" aria-hidden="true"></i>
+                                        <span>Mind</span>
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="tf-switches">
+                            <!-- Reminders. On is the morning digest, off is silent. -->
+                            <button type="button" class="sw tf-sw on" id="taskNotifySw" role="switch"
+                                    aria-checked="true" aria-describedby="taskNotifyHelp">
+                                <span class="tf-sw-icon"><i data-lucide="bell" aria-hidden="true"></i></span>
+                                <span class="sw-text">
+                                    <span class="sw-label">Tell me in the morning</span>
+                                    <span class="sw-help" id="taskNotifyHelp">It shows up in your morning digest</span>
+                                </span>
+                                <span class="sw-side"><span class="sw-track"><span class="sw-knob"></span></span></span>
+                            </button>
+
+                            <!-- Whether missing this is allowed to go red. Off by
+                                 default: soft habits age to amber and stop there. -->
+                            <button type="button" class="sw tf-sw" id="taskCommitmentSw" role="switch"
+                                    aria-checked="false" aria-describedby="taskCommitmentHelp">
+                                <span class="tf-sw-icon"><i data-lucide="flag" aria-hidden="true"></i></span>
+                                <span class="sw-text">
+                                    <span class="sw-label">This one really matters</span>
+                                    <span class="sw-help" id="taskCommitmentHelp">If you miss it, it turns red instead of fading to amber</span>
+                                </span>
+                                <span class="sw-side"><span class="sw-track"><span class="sw-knob"></span></span></span>
+                            </button>
+                        </div>
                     </div>
                 </div>
 
                 <!-- Save exists from the moment there is a name. A task with
                      only a name is a valid task. -->
-                <div class="modal-footer" style="margin-top: 22px;">
-                    <button type="button" class="btn btn-secondary" id="cancelTaskBtn">Cancel</button>
-                    <button type="submit" class="btn btn-primary" id="saveTaskBtn">Save</button>
+                <div class="modal-footer">
+                    <p class="tf-summary" id="taskSummary"></p>
+                    <div class="tf-actions">
+                        <button type="button" class="btn btn-secondary" id="cancelTaskBtn">Cancel</button>
+                        <button type="submit" class="btn btn-primary" id="saveTaskBtn">Save</button>
+                    </div>
                 </div>
             </form>
         </div>
