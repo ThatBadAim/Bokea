@@ -4,49 +4,48 @@
 - cluster-only mode — file stats not available
 
 ## Summary
-- 545 nodes · 1121 edges · 40 communities (35 shown, 4 thin omitted)
+- 546 nodes · 1128 edges · 39 communities (34 shown, 4 thin omitted)
 - Extraction: 98% EXTRACTED · 2% INFERRED · 0% AMBIGUOUS · INFERRED: 24 edges (avg confidence: 0.85)
 - Token cost: 0 input · 0 output
 
 ## Graph Freshness
-- Built from commit: `be2d608b`
+- Built from commit: `fd42a96f`
 - Run `git rev-parse HEAD` and compare to check if the graph is stale.
 - Run `graphify update .` after code changes (no API cost).
 
 ## Community Hubs (Navigation)
-- loadDashboardData
+- calDateStr
 - app.js
 - ProfileAboutRequest
-- apiRequest
+- openEditTaskModal
+- loadDashboardData
 - loadProfileIntoForm
 - User
 - TaskItem
 - onboarding.js
-- openEditTaskModal
 - PushSubscription
 - a11y.js
 - .MapTaskEndpoints
-- initSetupPageListeners
 - DueDateType
 - TaskWatchdogService
 - AppDbContext
 - prepareIncomingView
-- .GetMorningDigestAsync
+- checkAuthToken
 - applyRemotePreferences
+- Bokea.Database
 - http
 - Bokea.csproj
-- Sector
+- .GetMorningDigestAsync
 - manifest.json
+- IntervalType
 - openAvatarCropper
-- Bokea.Services
 - PushEndpoints.cs
 - DigestTaskDto
 - Next steps — sync fixes (13 Sep 2026)
-- Bokea.Database
+- MorningDigestModel
 - vercel.json
+- Sector
 - promptSignUpFromLocal
-- IntervalType
-- routeApiRequest
 - toggleRowMenu
 - openSnoozeMenu
 - sw.js
@@ -63,8 +62,8 @@
 6. `taskWhen()` - 19 edges
 7. `AppDbContext` - 18 edges
 8. `apiRequest()` - 18 edges
-9. `loadProfileIntoForm()` - 18 edges
-10. `renderCalendarDay()` - 17 edges
+9. `showToast()` - 18 edges
+10. `loadProfileIntoForm()` - 18 edges
 
 ## Surprising Connections (you probably didn't know these)
 - `AppDbContext` --references--> `PushSubscription`  [EXTRACTED]
@@ -81,43 +80,43 @@
 ## Import Cycles
 - None detected.
 
-## Communities (40 total, 4 thin omitted)
+## Communities (39 total, 4 thin omitted)
 
-### Community 0 - "loadDashboardData"
+### Community 0 - "calDateStr"
 Cohesion: 0.08
-Nodes (68): areaMeta(), autoSegment(), cadenceText(), calculateTaskState(), calDatedTasksForDate(), calDateStr(), calIsDaily(), calNowLine() (+60 more)
+Nodes (63): areaMeta(), autoSegment(), cadenceText(), calCloseDay(), calDateStr(), calGridKeydown(), calNowLine(), calOpenDayFocus() (+55 more)
 
 ### Community 1 - "app.js"
 Cohesion: 0.05
-Nodes (24): CAL_DAYS, CAL_MONTHS, CAL_RANK, calFocusStr, calViewDate, dismissedNotificationsKey(), dueDateGroup, getActiveMobileTab() (+16 more)
+Nodes (24): CAL_DAYS, CAL_MONTHS, CAL_RANK, calFocusStr, calViewDate, dismissFirstRun(), dueDateGroup, firstRunDismissed() (+16 more)
 
 ### Community 2 - "ProfileAboutRequest"
 Cohesion: 0.06
 Nodes (29): AuthEndpoints, LoginRequest, Email, Password, ProfileAboutRequest, AvatarDataUrl, Bio, City (+21 more)
 
-### Community 3 - "apiRequest"
-Cohesion: 0.14
-Nodes (25): addSampleTasks(), apiRequest(), closeFocus(), closeRowConfirm(), completeTask(), deleteTask(), disablePushNotifications(), dismissFirstRun() (+17 more)
+### Community 3 - "openEditTaskModal"
+Cohesion: 0.10
+Nodes (33): calculateTaskState(), calDatedTasksForDate(), calIsDaily(), callTaskRpc(), calParse(), checkMissedCommitmentAlerts(), clearFieldError(), clearValidationErrors() (+25 more)
 
-### Community 4 - "loadProfileIntoForm"
+### Community 4 - "loadDashboardData"
+Cohesion: 0.17
+Nodes (26): addSampleTasks(), apiRequest(), closeFocus(), closeRowConfirm(), completeTask(), deleteTask(), disablePushNotifications(), enablePushNotifications() (+18 more)
+
+### Community 5 - "loadProfileIntoForm"
 Cohesion: 0.20
 Nodes (24): ageFromDob(), applyAvatarEverywhere(), collectProfile(), deviceTimeZone(), fillCountryList(), fillTimeZoneSelect(), flashSaved(), keepUnlistedOption() (+16 more)
 
-### Community 5 - "User"
+### Community 6 - "User"
 Cohesion: 0.09
 Nodes (23): User, AvatarDataUrl, BedTime, Bio, City, Country, CreatedAt, DateOfBirth (+15 more)
 
-### Community 6 - "TaskItem"
+### Community 7 - "TaskItem"
 Cohesion: 0.09
 Nodes (22): TaskItem, CompletionLogs, CreatedAt, Description, DisplayOrder, DueDate, DueDateValue, DueTime (+14 more)
 
-### Community 7 - "onboarding.js"
+### Community 8 - "onboarding.js"
 Cohesion: 0.23
 Nodes (21): buildChrome(), clearHighlights(), currentTarget(), end(), esc(), go(), handleAction(), hasContentToShow() (+13 more)
-
-### Community 8 - "openEditTaskModal"
-Cohesion: 0.19
-Nodes (19): calCloseDay(), calGridKeydown(), calParse(), calShiftMonth(), captureTime(), clearFieldError(), clearValidationErrors(), commitCapture() (+11 more)
 
 ### Community 9 - "PushSubscription"
 Cohesion: 0.12
@@ -131,33 +130,33 @@ Nodes (15): announce(), apply(), ensureRegions(), focusableWithin(), load(), pre
 Cohesion: 0.16
 Nodes (12): CompleteTaskRequest, CreateTaskRequest, ReorderTaskRequest, SnoozeTaskRequest, TaskEndpoints, UpdateTaskRequest, WhenInTheDay, DateTime (+4 more)
 
-### Community 12 - "initSetupPageListeners"
-Cohesion: 0.18
-Nodes (17): applyLocalModeChrome(), applyProfileRow(), checkAuthToken(), clearStaleLocalSession(), currentStorageScope(), handleLocalStorageFallback(), initLocalStorage(), initSetupPageListeners() (+9 more)
-
-### Community 13 - "DueDateType"
+### Community 12 - "DueDateType"
 Cohesion: 0.17
 Nodes (10): DueDateType, HasValue, Value, DueDateTypeJsonConverter, IEquatable, JsonConverter, JsonSerializerOptions, Type (+2 more)
 
-### Community 14 - "TaskWatchdogService"
+### Community 13 - "TaskWatchdogService"
 Cohesion: 0.17
 Nodes (11): AppDbContext, BackgroundService, TaskWatchdogService, DateTime, TaskState, CancellationToken, ILogger, IServiceScopeFactory (+3 more)
 
-### Community 15 - "AppDbContext"
+### Community 14 - "AppDbContext"
 Cohesion: 0.18
 Nodes (10): AppDbContext, PushSubscriptions, TaskCompletionLogs, Tasks, Users, DbInitializer, User, DbContext (+2 more)
 
-### Community 16 - "prepareIncomingView"
+### Community 15 - "prepareIncomingView"
 Cohesion: 0.18
 Nodes (14): calculateSleepDuration(), cleanupIncomingView(), hideChartTooltip(), loadSettingsIntoForm(), onTouchEnd(), onTouchMove(), prepareIncomingView(), renderAnalyticsDataTable() (+6 more)
 
-### Community 17 - ".GetMorningDigestAsync"
-Cohesion: 0.21
-Nodes (9): DigestService, MorningDigestModel, RecommendedActions, TasksBySector, TotalWarningTasks, DateTime, List, Sector (+1 more)
+### Community 16 - "checkAuthToken"
+Cohesion: 0.20
+Nodes (12): applyLocalModeChrome(), applyProfileRow(), checkAuthToken(), clearStaleLocalSession(), currentStorageScope(), invalidateDayShapeCache(), isLocalMode(), maybeStartTutorial() (+4 more)
 
-### Community 18 - "applyRemotePreferences"
+### Community 17 - "applyRemotePreferences"
 Cohesion: 0.27
 Nodes (11): applyRemotePreferences(), applyUiPrefs(), collectPreferences(), loadUiPrefs(), markPreferencesChanged(), prefsDeviceKey(), pushPreferences(), saveUiPrefs() (+3 more)
+
+### Community 18 - "Bokea.Database"
+Cohesion: 0.24
+Nodes (6): PushNotificationService, ILogger, Bokea.Database, Bokea.Services, Bokea.Endpoints, VapidDetails
 
 ### Community 19 - "http"
 Cohesion: 0.20
@@ -167,21 +166,21 @@ Nodes (9): ASPNETCORE_ENVIRONMENT, applicationUrl, commandName, dotnetRunMessage
 Cohesion: 0.22
 Nodes (8): net10.0, BCrypt.Net-Next (4.2.0), Microsoft.AspNetCore.Authentication.JwtBearer (10.0.9), Microsoft.EntityFrameworkCore.Sqlite (10.0.8), SQLitePCLRaw.bundle_e_sqlite3 (2.1.13), SQLitePCLRaw.lib.e_sqlite3 (2.1.13), WebPush (1.0.13), Microsoft.NET.Sdk.Web
 
-### Community 21 - "Sector"
-Cohesion: 0.19
-Nodes (9): Sector, CareerAndFinance, HealthAndVitality, MindAndEnvironment, RelationshipsAndSocial, TaskState, Amber, Green (+1 more)
+### Community 21 - ".GetMorningDigestAsync"
+Cohesion: 0.28
+Nodes (5): DigestEndpoints, IEndpointRouteBuilder, DigestService, DateTime, Sector
 
 ### Community 22 - "manifest.json"
 Cohesion: 0.22
 Nodes (8): background_color, description, display, icons, name, short_name, start_url, theme_color
 
-### Community 23 - "openAvatarCropper"
+### Community 23 - "IntervalType"
+Cohesion: 0.21
+Nodes (8): IntervalType, FixedDate, IntervalBased, Workdays, TaskState, Amber, Green, Red
+
+### Community 24 - "openAvatarCropper"
 Cohesion: 0.25
 Nodes (8): applyAvatarCropTransform(), avatarCropEls(), cancel(), clampAvatarCropOffset(), closeAvatarCropper(), loadImageFromFile(), openAvatarCropper(), pointerMove()
-
-### Community 24 - "Bokea.Services"
-Cohesion: 0.33
-Nodes (4): DigestEndpoints, IEndpointRouteBuilder, Bokea.Services, Bokea.Endpoints
 
 ### Community 25 - "PushEndpoints.cs"
 Cohesion: 0.33
@@ -195,31 +194,27 @@ Nodes (7): DigestTaskDto, Description, DueDate, Id, Sector, State, Title
 Cohesion: 0.29
 Nodes (6): 1. Run the database migration (Supabase), 2. Commit and deploy, 3. Check it on two devices, 4. Push notifications (needs building), 5. Known limits and choices made, Next steps — sync fixes (13 Sep 2026)
 
-### Community 28 - "Bokea.Database"
+### Community 28 - "MorningDigestModel"
 Cohesion: 0.33
-Nodes (4): PushNotificationService, ILogger, Bokea.Database, VapidDetails
+Nodes (6): MorningDigestModel, RecommendedActions, TasksBySector, TotalWarningTasks, List, Dictionary
 
 ### Community 29 - "vercel.json"
 Cohesion: 0.33
 Nodes (5): cleanUrls, outputDirectory, routes, trailingSlash, version
 
-### Community 30 - "promptSignUpFromLocal"
+### Community 30 - "Sector"
+Cohesion: 0.40
+Nodes (5): Sector, CareerAndFinance, HealthAndVitality, MindAndEnvironment, RelationshipsAndSocial
+
+### Community 31 - "promptSignUpFromLocal"
 Cohesion: 0.40
 Nodes (5): authBackendReady(), promptSignUpFromLocal(), setLocalMode(), showAuthError(), showAuthForm()
 
-### Community 31 - "IntervalType"
-Cohesion: 0.50
-Nodes (4): IntervalType, FixedDate, IntervalBased, Workdays
-
-### Community 32 - "routeApiRequest"
-Cohesion: 0.67
-Nodes (4): callTaskRpc(), mapBackendTask(), parseTaskId(), routeApiRequest()
-
-### Community 33 - "toggleRowMenu"
+### Community 32 - "toggleRowMenu"
 Cohesion: 0.67
 Nodes (4): closeRowMenus(), closeRowMenusAndReturn(), closeRowMenusOnOutside(), toggleRowMenu()
 
-### Community 34 - "openSnoozeMenu"
+### Community 33 - "openSnoozeMenu"
 Cohesion: 0.83
 Nodes (4): closeSnoozeMenu(), closeSnoozeMenuOnEscape(), closeSnoozeMenuOnOutside(), openSnoozeMenu()
 
@@ -233,14 +228,14 @@ _Questions this graph is uniquely positioned to answer:_
 
 - **Why does `Bokea.Database` connect `Bokea.Database` to `PushEndpoints.cs`, `ProfileAboutRequest`, `DueDateType`, `AppDbContext`?**
   _High betweenness centrality (0.041) - this node is a cross-community bridge._
-- **Why does `TaskItem` connect `TaskItem` to `User`, `PushSubscription`, `DueDateType`, `AppDbContext`, `.GetMorningDigestAsync`, `Sector`, `IntervalType`?**
-  _High betweenness centrality (0.041) - this node is a cross-community bridge._
+- **Why does `TaskItem` connect `TaskItem` to `User`, `PushSubscription`, `DueDateType`, `AppDbContext`, `.GetMorningDigestAsync`, `IntervalType`?**
+  _High betweenness centrality (0.040) - this node is a cross-community bridge._
 - **Why does `User` connect `User` to `ProfileAboutRequest`, `TaskItem`, `PushSubscription`, `DueDateType`, `AppDbContext`?**
   _High betweenness centrality (0.037) - this node is a cross-community bridge._
 - **What connects `ReorderTaskRequest`, `UnsubscribeRequest`, `CAL_DAYS` to the rest of the system?**
   _155 weakly-connected nodes found - possible documentation gaps or missing edges._
-- **Should `loadDashboardData` be split into smaller, more focused modules?**
-  _Cohesion score 0.07682177348551361 - nodes in this community are weakly interconnected._
+- **Should `calDateStr` be split into smaller, more focused modules?**
+  _Cohesion score 0.08397337429595494 - nodes in this community are weakly interconnected._
 - **Should `app.js` be split into smaller, more focused modules?**
   _Cohesion score 0.0524390243902439 - nodes in this community are weakly interconnected._
 - **Should `ProfileAboutRequest` be split into smaller, more focused modules?**

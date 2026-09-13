@@ -4,24 +4,23 @@
       "bokeà_wwwroot_js_app_areameta",
       "bokeà_wwwroot_js_app_autosegment",
       "bokeà_wwwroot_js_app_cadencetext",
-      "bokeà_wwwroot_js_app_calculatetaskstate",
-      "bokeà_wwwroot_js_app_caldatedtasksfordate",
+      "bokeà_wwwroot_js_app_calcloseday",
       "bokeà_wwwroot_js_app_caldatestr",
-      "bokeà_wwwroot_js_app_calisdaily",
+      "bokeà_wwwroot_js_app_calgridkeydown",
       "bokeà_wwwroot_js_app_calnowline",
       "bokeà_wwwroot_js_app_calopendayfocus",
+      "bokeà_wwwroot_js_app_calshiftmonth",
       "bokeà_wwwroot_js_app_calstatecls",
+      "bokeà_wwwroot_js_app_capturetime",
       "bokeà_wwwroot_js_app_cleartimefieldcomplaint",
+      "bokeà_wwwroot_js_app_commitcapture",
       "bokeà_wwwroot_js_app_computenextweekdaydate",
       "bokeà_wwwroot_js_app_dayshape",
       "bokeà_wwwroot_js_app_esc",
       "bokeà_wwwroot_js_app_fmthm",
       "bokeà_wwwroot_js_app_formatapptime",
-      "bokeà_wwwroot_js_app_gettasksfordate",
-      "bokeà_wwwroot_js_app_isdateworkday",
-      "bokeà_wwwroot_js_app_loaddashboarddata",
+      "bokeà_wwwroot_js_app_initcalendar",
       "bokeà_wwwroot_js_app_nextwindowlabel",
-      "bokeà_wwwroot_js_app_notificationsignature",
       "bokeà_wwwroot_js_app_nowminutes",
       "bokeà_wwwroot_js_app_parsehm",
       "bokeà_wwwroot_js_app_parsetimefieldvalue",
@@ -29,8 +28,8 @@
       "bokeà_wwwroot_js_app_refreshicons",
       "bokeà_wwwroot_js_app_renderafterthat",
       "bokeà_wwwroot_js_app_renderalltasksgrid",
-      "bokeà_wwwroot_js_app_renderanalyticsfinding",
       "bokeà_wwwroot_js_app_rendercaldayprogress",
+      "bokeà_wwwroot_js_app_rendercalendar",
       "bokeà_wwwroot_js_app_rendercalendarday",
       "bokeà_wwwroot_js_app_rendercalendarmonth",
       "bokeà_wwwroot_js_app_renderdailyscheduletimeline",
@@ -38,14 +37,12 @@
       "bokeà_wwwroot_js_app_rendermomentum",
       "bokeà_wwwroot_js_app_rendernavcount",
       "bokeà_wwwroot_js_app_rendernextuptask",
-      "bokeà_wwwroot_js_app_rendernotifications",
       "bokeà_wwwroot_js_app_rendernowblock",
       "bokeà_wwwroot_js_app_renderparked",
       "bokeà_wwwroot_js_app_renderrightnow",
       "bokeà_wwwroot_js_app_renderstats",
       "bokeà_wwwroot_js_app_rendertimelinenow",
       "bokeà_wwwroot_js_app_renderwaiting",
-      "bokeà_wwwroot_js_app_scheduleparked",
       "bokeà_wwwroot_js_app_segmentof",
       "bokeà_wwwroot_js_app_showsettingsgroup",
       "bokeà_wwwroot_js_app_slotforminutes",
@@ -56,8 +53,6 @@
       "bokeà_wwwroot_js_app_synctimepresets",
       "bokeà_wwwroot_js_app_syncwhenui",
       "bokeà_wwwroot_js_app_taskdoneon",
-      "bokeà_wwwroot_js_app_taskgraceratio",
-      "bokeà_wwwroot_js_app_taskiscommitment",
       "bokeà_wwwroot_js_app_taskminutes",
       "bokeà_wwwroot_js_app_taskrowdate",
       "bokeà_wwwroot_js_app_taskrowmarkup",
@@ -82,8 +77,9 @@
       "bokeà_wwwroot_js_app_closeresetconfirm",
       "bokeà_wwwroot_js_app_commitmentswitchon",
       "bokeà_wwwroot_js_app_debounce",
-      "bokeà_wwwroot_js_app_dismissednotificationskey",
+      "bokeà_wwwroot_js_app_dismissfirstrun",
       "bokeà_wwwroot_js_app_duedategroup",
+      "bokeà_wwwroot_js_app_firstrundismissed",
       "bokeà_wwwroot_js_app_formattimeinputontype",
       "bokeà_wwwroot_js_app_getactivemobiletab",
       "bokeà_wwwroot_js_app_historydata",
@@ -99,8 +95,8 @@
       "bokeà_wwwroot_js_app_pointerdown",
       "bokeà_wwwroot_js_app_pointerup",
       "bokeà_wwwroot_js_app_profile_blank",
-      "bokeà_wwwroot_js_app_readdismissednotifications",
       "bokeà_wwwroot_js_app_renderavatarcrop",
+      "bokeà_wwwroot_js_app_renderfirstrun",
       "bokeà_wwwroot_js_app_sample_tasks",
       "bokeà_wwwroot_js_app_showfielderror",
       "bokeà_wwwroot_js_app_snooze_choices",
@@ -110,8 +106,7 @@
       "bokeà_wwwroot_js_app_taskactionsinflight",
       "bokeà_wwwroot_js_app_taskform",
       "bokeà_wwwroot_js_app_tasks",
-      "bokeà_wwwroot_js_app_weeklydaygroup",
-      "bokeà_wwwroot_js_app_writedismissednotifications"
+      "bokeà_wwwroot_js_app_weeklydaygroup"
     ],
     "2": [
       "bokeà_endpoints_authendpoints",
@@ -151,6 +146,41 @@
       "bokeà_endpoints_authendpoints_cs_user"
     ],
     "3": [
+      "bokeà_wwwroot_js_app_calculatetaskstate",
+      "bokeà_wwwroot_js_app_caldatedtasksfordate",
+      "bokeà_wwwroot_js_app_calisdaily",
+      "bokeà_wwwroot_js_app_calltaskrpc",
+      "bokeà_wwwroot_js_app_calparse",
+      "bokeà_wwwroot_js_app_checkmissedcommitmentalerts",
+      "bokeà_wwwroot_js_app_clearfielderror",
+      "bokeà_wwwroot_js_app_clearvalidationerrors",
+      "bokeà_wwwroot_js_app_dismissednotificationskey",
+      "bokeà_wwwroot_js_app_formatworkdayssummary",
+      "bokeà_wwwroot_js_app_gettasksfordate",
+      "bokeà_wwwroot_js_app_getuserworkdays",
+      "bokeà_wwwroot_js_app_handlelocalstoragefallback",
+      "bokeà_wwwroot_js_app_initlocalstorage",
+      "bokeà_wwwroot_js_app_isdateworkday",
+      "bokeà_wwwroot_js_app_mapbackendtask",
+      "bokeà_wwwroot_js_app_notificationsignature",
+      "bokeà_wwwroot_js_app_opencreatetaskmodal",
+      "bokeà_wwwroot_js_app_openedittaskmodal",
+      "bokeà_wwwroot_js_app_openmodal",
+      "bokeà_wwwroot_js_app_parsetaskid",
+      "bokeà_wwwroot_js_app_readdismissednotifications",
+      "bokeà_wwwroot_js_app_readstore",
+      "bokeà_wwwroot_js_app_rendernotifications",
+      "bokeà_wwwroot_js_app_routeapirequest",
+      "bokeà_wwwroot_js_app_setcommitmentswitch",
+      "bokeà_wwwroot_js_app_showstep",
+      "bokeà_wwwroot_js_app_syncsaveenabled",
+      "bokeà_wwwroot_js_app_synctasknameui",
+      "bokeà_wwwroot_js_app_taskgraceratio",
+      "bokeà_wwwroot_js_app_taskiscommitment",
+      "bokeà_wwwroot_js_app_updatelocalhistory",
+      "bokeà_wwwroot_js_app_writedismissednotifications"
+    ],
+    "4": [
       "bokeà_wwwroot_js_app_addsampletasks",
       "bokeà_wwwroot_js_app_apirequest",
       "bokeà_wwwroot_js_app_closefocus",
@@ -158,16 +188,17 @@
       "bokeà_wwwroot_js_app_completetask",
       "bokeà_wwwroot_js_app_deletetask",
       "bokeà_wwwroot_js_app_disablepushnotifications",
-      "bokeà_wwwroot_js_app_dismissfirstrun",
       "bokeà_wwwroot_js_app_enablepushnotifications",
       "bokeà_wwwroot_js_app_finishfocus",
-      "bokeà_wwwroot_js_app_firstrundismissed",
       "bokeà_wwwroot_js_app_getexistingpushsubscription",
       "bokeà_wwwroot_js_app_initpushnotificationsettings",
+      "bokeà_wwwroot_js_app_initsetuppagelisteners",
+      "bokeà_wwwroot_js_app_loaddashboarddata",
       "bokeà_wwwroot_js_app_parkfocusthought",
       "bokeà_wwwroot_js_app_parkwholefocustask",
       "bokeà_wwwroot_js_app_reallydeletetask",
-      "bokeà_wwwroot_js_app_renderfirstrun",
+      "bokeà_wwwroot_js_app_renderanalyticsfinding",
+      "bokeà_wwwroot_js_app_scheduleparked",
       "bokeà_wwwroot_js_app_showtoast",
       "bokeà_wwwroot_js_app_snoozetask",
       "bokeà_wwwroot_js_app_snoozewordfor",
@@ -177,7 +208,7 @@
       "bokeà_wwwroot_js_app_urlbase64touint8array",
       "bokeà_wwwroot_js_app_wirefocus"
     ],
-    "4": [
+    "5": [
       "bokeà_wwwroot_js_app_agefromdob",
       "bokeà_wwwroot_js_app_applyavatareverywhere",
       "bokeà_wwwroot_js_app_collectprofile",
@@ -203,7 +234,7 @@
       "bokeà_wwwroot_js_app_updategreetings",
       "bokeà_wwwroot_js_app_validatedob"
     ],
-    "5": [
+    "6": [
       "bokeà_database_models_bokea_database_user",
       "bokeà_database_models_bokea_database_user_avatardataurl",
       "bokeà_database_models_bokea_database_user_bedtime",
@@ -228,7 +259,7 @@
       "bokeà_database_models_bokea_database_user_workendtime",
       "bokeà_database_models_bokea_database_user_workstarttime"
     ],
-    "6": [
+    "7": [
       "bokeà_database_models_bokea_database_taskitem",
       "bokeà_database_models_bokea_database_taskitem_completionlogs",
       "bokeà_database_models_bokea_database_taskitem_createdat",
@@ -252,7 +283,7 @@
       "bokeà_database_models_bokea_database_taskitem_userid",
       "icollection"
     ],
-    "7": [
+    "8": [
       "bokeà_wwwroot_js_onboarding",
       "bokeà_wwwroot_js_onboarding_buildchrome",
       "bokeà_wwwroot_js_onboarding_clearhighlights",
@@ -275,27 +306,6 @@
       "bokeà_wwwroot_js_onboarding_start",
       "bokeà_wwwroot_js_onboarding_switchtab",
       "bokeà_wwwroot_js_onboarding_teardownchrome"
-    ],
-    "8": [
-      "bokeà_wwwroot_js_app_calcloseday",
-      "bokeà_wwwroot_js_app_calgridkeydown",
-      "bokeà_wwwroot_js_app_calparse",
-      "bokeà_wwwroot_js_app_calshiftmonth",
-      "bokeà_wwwroot_js_app_capturetime",
-      "bokeà_wwwroot_js_app_clearfielderror",
-      "bokeà_wwwroot_js_app_clearvalidationerrors",
-      "bokeà_wwwroot_js_app_commitcapture",
-      "bokeà_wwwroot_js_app_formatworkdayssummary",
-      "bokeà_wwwroot_js_app_getuserworkdays",
-      "bokeà_wwwroot_js_app_initcalendar",
-      "bokeà_wwwroot_js_app_opencreatetaskmodal",
-      "bokeà_wwwroot_js_app_openedittaskmodal",
-      "bokeà_wwwroot_js_app_openmodal",
-      "bokeà_wwwroot_js_app_rendercalendar",
-      "bokeà_wwwroot_js_app_setcommitmentswitch",
-      "bokeà_wwwroot_js_app_showstep",
-      "bokeà_wwwroot_js_app_syncsaveenabled",
-      "bokeà_wwwroot_js_app_synctasknameui"
     ],
     "9": [
       "bokeà_database_appdbcontext_bokea_database_appdbcontext_onmodelcreating",
@@ -357,25 +367,6 @@
       "sector"
     ],
     "12": [
-      "bokeà_wwwroot_js_app_applylocalmodechrome",
-      "bokeà_wwwroot_js_app_applyprofilerow",
-      "bokeà_wwwroot_js_app_checkauthtoken",
-      "bokeà_wwwroot_js_app_clearstalelocalsession",
-      "bokeà_wwwroot_js_app_currentstoragescope",
-      "bokeà_wwwroot_js_app_handlelocalstoragefallback",
-      "bokeà_wwwroot_js_app_initlocalstorage",
-      "bokeà_wwwroot_js_app_initsetuppagelisteners",
-      "bokeà_wwwroot_js_app_invalidatedayshapecache",
-      "bokeà_wwwroot_js_app_islocalmode",
-      "bokeà_wwwroot_js_app_maybestarttutorial",
-      "bokeà_wwwroot_js_app_migratelegacystorage",
-      "bokeà_wwwroot_js_app_readstore",
-      "bokeà_wwwroot_js_app_refreshdashboardinbackground",
-      "bokeà_wwwroot_js_app_refreshstoragescope",
-      "bokeà_wwwroot_js_app_setstoragescope",
-      "bokeà_wwwroot_js_app_updatelocalhistory"
-    ],
-    "13": [
       "bokeà_database_models",
       "bokeà_database_models_bokea_database_duedatetype",
       "bokeà_database_models_bokea_database_duedatetype_equals",
@@ -393,7 +384,7 @@
       "utf8jsonreader",
       "utf8jsonwriter"
     ],
-    "14": [
+    "13": [
       "appdbcontext",
       "backgroundservice",
       "bokeà_services_taskwatchdogservice",
@@ -410,7 +401,7 @@
       "task",
       "taskitem"
     ],
-    "15": [
+    "14": [
       "bokeà_database_appdbcontext",
       "bokeà_database_appdbcontext_bokea_database_appdbcontext",
       "bokeà_database_appdbcontext_bokea_database_appdbcontext_onconfiguring",
@@ -427,7 +418,7 @@
       "dbcontextoptionsbuilder",
       "dbset"
     ],
-    "16": [
+    "15": [
       "bokeà_wwwroot_js_app_calculatesleepduration",
       "bokeà_wwwroot_js_app_cleanupincomingview",
       "bokeà_wwwroot_js_app_hidecharttooltip",
@@ -443,21 +434,21 @@
       "bokeà_wwwroot_js_app_updatesleephealthmeter",
       "bokeà_wwwroot_js_app_updatethemecardselection"
     ],
-    "17": [
-      "bokeà_services_digestservice_bokea_services_digestservice",
-      "bokeà_services_digestservice_bokea_services_digestservice_generaterecommendation",
-      "bokeà_services_digestservice_bokea_services_digestservice_getmorningdigestasync",
-      "bokeà_services_digestservice_bokea_services_digestservice_getsectordisplayname",
-      "bokeà_services_digestservice_bokea_services_morningdigestmodel",
-      "bokeà_services_digestservice_bokea_services_morningdigestmodel_recommendedactions",
-      "bokeà_services_digestservice_bokea_services_morningdigestmodel_tasksbysector",
-      "bokeà_services_digestservice_bokea_services_morningdigestmodel_totalwarningtasks",
-      "bokeà_services_digestservice_cs_datetime",
-      "bokeà_services_digestservice_cs_list",
-      "bokeà_services_digestservice_cs_sector",
-      "dictionary"
+    "16": [
+      "bokeà_wwwroot_js_app_applylocalmodechrome",
+      "bokeà_wwwroot_js_app_applyprofilerow",
+      "bokeà_wwwroot_js_app_checkauthtoken",
+      "bokeà_wwwroot_js_app_clearstalelocalsession",
+      "bokeà_wwwroot_js_app_currentstoragescope",
+      "bokeà_wwwroot_js_app_invalidatedayshapecache",
+      "bokeà_wwwroot_js_app_islocalmode",
+      "bokeà_wwwroot_js_app_maybestarttutorial",
+      "bokeà_wwwroot_js_app_migratelegacystorage",
+      "bokeà_wwwroot_js_app_refreshdashboardinbackground",
+      "bokeà_wwwroot_js_app_refreshstoragescope",
+      "bokeà_wwwroot_js_app_setstoragescope"
     ],
-    "18": [
+    "17": [
       "bokeà_wwwroot_js_app_applyremotepreferences",
       "bokeà_wwwroot_js_app_applyuiprefs",
       "bokeà_wwwroot_js_app_collectpreferences",
@@ -469,6 +460,18 @@
       "bokeà_wwwroot_js_app_schedulepreferencespush",
       "bokeà_wwwroot_js_app_synctimeinputsclockformat",
       "bokeà_wwwroot_js_app_wireaccessibilitybehaviour"
+    ],
+    "18": [
+      "bokeà_endpoints_digestendpoints",
+      "bokeà_program",
+      "bokeà_services_digestservice",
+      "bokeà_services_pushnotificationservice",
+      "bokeà_services_pushnotificationservice_bokea_services_pushnotificationservice",
+      "bokeà_services_pushnotificationservice_cs_ilogger",
+      "csharp_namespace:5940c7f73bfb367b",
+      "csharp_namespace:ae1102e99c943fd5",
+      "csharp_namespace:d87b358914907239",
+      "vapiddetails"
     ],
     "19": [
       "bokeà_properties_launchsettings",
@@ -494,15 +497,15 @@
       "sdk_microsoft_net_sdk_web"
     ],
     "21": [
-      "bokeà_database_models_bokea_database_sector",
-      "bokeà_database_models_bokea_database_sector_careerandfinance",
-      "bokeà_database_models_bokea_database_sector_healthandvitality",
-      "bokeà_database_models_bokea_database_sector_mindandenvironment",
-      "bokeà_database_models_bokea_database_sector_relationshipsandsocial",
-      "bokeà_database_models_bokea_database_taskstate",
-      "bokeà_database_models_bokea_database_taskstate_amber",
-      "bokeà_database_models_bokea_database_taskstate_green",
-      "bokeà_database_models_bokea_database_taskstate_red"
+      "bokeà_endpoints_digestendpoints_bokea_endpoints_digestendpoints",
+      "bokeà_endpoints_digestendpoints_bokea_endpoints_digestendpoints_mapdigestendpoints",
+      "bokeà_endpoints_digestendpoints_cs_iendpointroutebuilder",
+      "bokeà_services_digestservice_bokea_services_digestservice",
+      "bokeà_services_digestservice_bokea_services_digestservice_generaterecommendation",
+      "bokeà_services_digestservice_bokea_services_digestservice_getmorningdigestasync",
+      "bokeà_services_digestservice_bokea_services_digestservice_getsectordisplayname",
+      "bokeà_services_digestservice_cs_datetime",
+      "bokeà_services_digestservice_cs_sector"
     ],
     "22": [
       "bokeà_wwwroot_manifest",
@@ -516,6 +519,16 @@
       "bokeà_wwwroot_manifest_theme_color"
     ],
     "23": [
+      "bokeà_database_models_bokea_database_intervaltype",
+      "bokeà_database_models_bokea_database_intervaltype_fixeddate",
+      "bokeà_database_models_bokea_database_intervaltype_intervalbased",
+      "bokeà_database_models_bokea_database_intervaltype_workdays",
+      "bokeà_database_models_bokea_database_taskstate",
+      "bokeà_database_models_bokea_database_taskstate_amber",
+      "bokeà_database_models_bokea_database_taskstate_green",
+      "bokeà_database_models_bokea_database_taskstate_red"
+    ],
+    "24": [
       "bokeà_wwwroot_js_app_applyavatarcroptransform",
       "bokeà_wwwroot_js_app_avatarcropels",
       "bokeà_wwwroot_js_app_cancel",
@@ -524,15 +537,6 @@
       "bokeà_wwwroot_js_app_loadimagefromfile",
       "bokeà_wwwroot_js_app_openavatarcropper",
       "bokeà_wwwroot_js_app_pointermove"
-    ],
-    "24": [
-      "bokeà_endpoints_digestendpoints",
-      "bokeà_endpoints_digestendpoints_bokea_endpoints_digestendpoints",
-      "bokeà_endpoints_digestendpoints_bokea_endpoints_digestendpoints_mapdigestendpoints",
-      "bokeà_endpoints_digestendpoints_cs_iendpointroutebuilder",
-      "bokeà_program",
-      "csharp_namespace:ae1102e99c943fd5",
-      "csharp_namespace:d87b358914907239"
     ],
     "25": [
       "bokeà_endpoints_pushendpoints",
@@ -562,12 +566,12 @@
       "next_steps_next_steps_sync_fixes_13_sep_2026"
     ],
     "28": [
-      "bokeà_services_digestservice",
-      "bokeà_services_pushnotificationservice",
-      "bokeà_services_pushnotificationservice_bokea_services_pushnotificationservice",
-      "bokeà_services_pushnotificationservice_cs_ilogger",
-      "csharp_namespace:5940c7f73bfb367b",
-      "vapiddetails"
+      "bokeà_services_digestservice_bokea_services_morningdigestmodel",
+      "bokeà_services_digestservice_bokea_services_morningdigestmodel_recommendedactions",
+      "bokeà_services_digestservice_bokea_services_morningdigestmodel_tasksbysector",
+      "bokeà_services_digestservice_bokea_services_morningdigestmodel_totalwarningtasks",
+      "bokeà_services_digestservice_cs_list",
+      "dictionary"
     ],
     "29": [
       "vercel",
@@ -578,95 +582,89 @@
       "vercel_version"
     ],
     "30": [
+      "bokeà_database_models_bokea_database_sector",
+      "bokeà_database_models_bokea_database_sector_careerandfinance",
+      "bokeà_database_models_bokea_database_sector_healthandvitality",
+      "bokeà_database_models_bokea_database_sector_mindandenvironment",
+      "bokeà_database_models_bokea_database_sector_relationshipsandsocial"
+    ],
+    "31": [
       "bokeà_wwwroot_js_app_authbackendready",
       "bokeà_wwwroot_js_app_promptsignupfromlocal",
       "bokeà_wwwroot_js_app_setlocalmode",
       "bokeà_wwwroot_js_app_showautherror",
       "bokeà_wwwroot_js_app_showauthform"
     ],
-    "31": [
-      "bokeà_database_models_bokea_database_intervaltype",
-      "bokeà_database_models_bokea_database_intervaltype_fixeddate",
-      "bokeà_database_models_bokea_database_intervaltype_intervalbased",
-      "bokeà_database_models_bokea_database_intervaltype_workdays"
-    ],
     "32": [
-      "bokeà_wwwroot_js_app_calltaskrpc",
-      "bokeà_wwwroot_js_app_mapbackendtask",
-      "bokeà_wwwroot_js_app_parsetaskid",
-      "bokeà_wwwroot_js_app_routeapirequest"
-    ],
-    "33": [
       "bokeà_wwwroot_js_app_closerowmenus",
       "bokeà_wwwroot_js_app_closerowmenusandreturn",
       "bokeà_wwwroot_js_app_closerowmenusonoutside",
       "bokeà_wwwroot_js_app_togglerowmenu"
     ],
-    "34": [
+    "33": [
       "bokeà_wwwroot_js_app_closesnoozemenu",
       "bokeà_wwwroot_js_app_closesnoozemenuonescape",
       "bokeà_wwwroot_js_app_closesnoozemenuonoutside",
       "bokeà_wwwroot_js_app_opensnoozemenu"
     ],
-    "35": [
+    "34": [
       "bokeà_wwwroot_sw",
       "bokeà_wwwroot_sw_assets_to_cache",
       "bokeà_wwwroot_sw_cdn_hosts"
     ],
-    "36": [
+    "35": [
       "AGENTS.md"
     ],
-    "37": [
+    "36": [
       "bokeà_endpoints_taskendpoints_cs_iendpointroutebuilder"
     ],
-    "38": [
+    "37": [
       "bokeà_services_taskwatchdogservice_cs_ilogger"
     ],
-    "39": [
+    "38": [
       "bokeà_wwwroot_js_config"
     ]
   },
   "cohesion": {
-    "0": 0.07682177348551361,
+    "0": 0.08397337429595494,
     "1": 0.0524390243902439,
     "2": 0.06386554621848739,
-    "3": 0.14333333333333334,
-    "4": 0.1956521739130435,
-    "5": 0.08695652173913043,
-    "6": 0.09090909090909091,
-    "7": 0.22510822510822512,
-    "8": 0.19298245614035087,
+    "3": 0.10037878787878787,
+    "4": 0.1723076923076923,
+    "5": 0.1956521739130435,
+    "6": 0.08695652173913043,
+    "7": 0.09090909090909091,
+    "8": 0.22510822510822512,
     "9": 0.12418300653594772,
     "10": 0.17647058823529413,
     "11": 0.16176470588235295,
-    "12": 0.17647058823529413,
-    "13": 0.175,
-    "14": 0.17142857142857143,
-    "15": 0.18095238095238095,
-    "16": 0.17582417582417584,
-    "17": 0.21212121212121213,
-    "18": 0.2727272727272727,
+    "12": 0.175,
+    "13": 0.17142857142857143,
+    "14": 0.18095238095238095,
+    "15": 0.17582417582417584,
+    "16": 0.19696969696969696,
+    "17": 0.2727272727272727,
+    "18": 0.24444444444444444,
     "19": 0.2,
     "20": 0.2222222222222222,
-    "21": 0.19444444444444445,
+    "21": 0.2777777777777778,
     "22": 0.2222222222222222,
-    "23": 0.25,
-    "24": 0.3333333333333333,
+    "23": 0.21428571428571427,
+    "24": 0.25,
     "25": 0.3333333333333333,
     "26": 0.2857142857142857,
     "27": 0.2857142857142857,
     "28": 0.3333333333333333,
     "29": 0.3333333333333333,
     "30": 0.4,
-    "31": 0.5,
+    "31": 0.4,
     "32": 0.6666666666666666,
-    "33": 0.6666666666666666,
-    "34": 0.8333333333333334,
-    "35": 0.6666666666666666,
+    "33": 0.8333333333333334,
+    "34": 0.6666666666666666,
+    "35": 1.0,
     "36": 1.0,
     "37": 1.0,
-    "38": 1.0,
-    "39": 1.0
+    "38": 1.0
   },
   "gods": [
     {
@@ -710,14 +708,14 @@
       "degree": 18
     },
     {
-      "id": "bokeà_wwwroot_js_app_loadprofileintoform",
-      "label": "loadProfileIntoForm()",
+      "id": "bokeà_wwwroot_js_app_showtoast",
+      "label": "showToast()",
       "degree": 18
     },
     {
-      "id": "bokeà_wwwroot_js_app_rendercalendarday",
-      "label": "renderCalendarDay()",
-      "degree": 17
+      "id": "bokeà_wwwroot_js_app_loadprofileintoform",
+      "label": "loadProfileIntoForm()",
+      "degree": 18
     }
   ],
   "surprises": [
@@ -785,8 +783,8 @@
     },
     {
       "type": "bridge_node",
-      "question": "Why does `TaskItem` connect `TaskItem` to `User`, `PushSubscription`, `DueDateType`, `AppDbContext`, `.GetMorningDigestAsync`, `Sector`, `IntervalType`?",
-      "why": "High betweenness centrality (0.041) - this node is a cross-community bridge."
+      "question": "Why does `TaskItem` connect `TaskItem` to `User`, `PushSubscription`, `DueDateType`, `AppDbContext`, `.GetMorningDigestAsync`, `IntervalType`?",
+      "why": "High betweenness centrality (0.040) - this node is a cross-community bridge."
     },
     {
       "type": "bridge_node",
@@ -800,8 +798,8 @@
     },
     {
       "type": "low_cohesion",
-      "question": "Should `loadDashboardData` be split into smaller, more focused modules?",
-      "why": "Cohesion score 0.07682177348551361 - nodes in this community are weakly interconnected."
+      "question": "Should `calDateStr` be split into smaller, more focused modules?",
+      "why": "Cohesion score 0.08397337429595494 - nodes in this community are weakly interconnected."
     },
     {
       "type": "low_cohesion",

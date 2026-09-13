@@ -1369,6 +1369,38 @@ function writeDismissedNotifications(map) {
     try { localStorage.setItem(dismissedNotificationsKey(), JSON.stringify(map)); } catch (e) { /* storage blocked */ }
 }
 
+function checkMissedCommitmentAlerts(warningTasks) {
+    if (!Array.isArray(warningTasks)) return;
+    warningTasks.forEach(({ task, state }) => {
+        if (state === 'Red' && taskIsCommitment(task)) {
+            const sigKey = `bokea_notified_missed_${task.id}_${task.lastCompleted || task.dueDate || ''}`;
+            if (sessionStorage.getItem(sigKey)) return;
+            sessionStorage.setItem(sigKey, '1');
+
+            // System/browser notification if permission is granted
+            if (typeof Notification !== 'undefined' && Notification.permission === 'granted') {
+                try {
+                    const notif = new Notification(`⚠️ Overdue: ${task.name}`, {
+                        body: 'This task was marked as really important and has been missed.',
+                        icon: '/assets/icon.svg',
+                        tag: `bokea-missed-${task.id}`,
+                        requireInteraction: true
+                    });
+                    notif.onclick = () => {
+                        window.focus();
+                        openEditTaskModal(task.id);
+                    };
+                } catch (e) {
+                    console.warn("Browser notification could not be shown:", e);
+                }
+            }
+
+            // High-visibility in-app toast
+            showToast(`⚠️ "${task.name}" is overdue! This one really matters.`, 'error');
+        }
+    });
+}
+
 function renderNotifications() {
     const listContainer = document.getElementById('notificationList');
     const badge = document.getElementById('notificationBadge');
@@ -1393,6 +1425,9 @@ function renderNotifications() {
         writeDismissedNotifications(stillDismissed);
     }
 
+    // Force active alerts for commitments that are missed
+    checkMissedCommitmentAlerts(warningTasks);
+
     const count = warningTasks.length;
     if (count > 0) {
         badge.textContent = count;
@@ -1400,14 +1435,15 @@ function renderNotifications() {
         listContainer.innerHTML = '';
         warningTasks.forEach(({ task, state }) => {
             const stateLower = state.toLowerCase();
+            const isRedCommitment = (state === 'Red' && taskIsCommitment(task));
             const noteItem = document.createElement('a');
             noteItem.href = '#';
-            noteItem.className = 'notification-item';
+            noteItem.className = 'notification-item' + (isRedCommitment ? ' notification-item-critical' : '');
             noteItem.innerHTML = `
                 <span class="dot dot-${stateLower}" style="margin-top: 4px; flex-shrink: 0;"></span>
                 <div class="notification-item-text">
                     <span class="notification-item-title" style="font-weight: 600;">${esc(task.name)}</span>
-                    <span class="notification-item-desc">Overdue: Action required (${state} status)</span>
+                    <span class="notification-item-desc"${isRedCommitment ? ' style="color: var(--color-danger); font-weight: 600;"' : ''}>${isRedCommitment ? 'Overdue: This one really matters (Action required)' : `Overdue: Action required (${state} status)`}</span>
                 </div>
             `;
             noteItem.addEventListener('click', (e) => {
@@ -2959,43 +2995,6 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     });
 
-    // Task Name Select dropdown change listener
-    const taskNameSelect = document.getElementById('taskNameSelect');
-    if (taskNameSelect) {
-        taskNameSelect.addEventListener('change', () => {
-            const selectedOpt = taskNameSelect.options[taskNameSelect.selectedIndex];
-            if (!selectedOpt || !selectedOpt.value) {
-                document.getElementById('taskName').value = "";
-                syncSaveEnabled();
-                return;
-            }
-
-            const name = selectedOpt.getAttribute('data-name');
-            const desc = selectedOpt.getAttribute('data-desc');
-            const dur = selectedOpt.getAttribute('data-duration');
-            const slot = selectedOpt.getAttribute('data-slot');
-            
-            document.getElementById('taskName').value = name;
-            document.getElementById('taskDescription').value = desc;
-            
-            const durHidden = document.getElementById('taskDuration');
-            if (durHidden) durHidden.value = dur;
-            const durInput = document.getElementById('taskDurationInput');
-            if (durInput) durInput.value = dur;
-
-            if (slot) {
-                const slotInput = document.getElementById('taskTimeSlot');
-                if (slotInput) slotInput.value = slot;
-                document.querySelectorAll('#timeSlotGrid button').forEach(b => {
-                    b.classList.toggle('active', b.getAttribute('data-slot') === slot);
-                });
-            }
-            
-            document.getElementById('taskName').classList.remove('input-error');
-            syncSaveEnabled();
-        });
-    }
-
     // Step 3 Frequency Buttons
     document.querySelectorAll('.wizard-step[data-step="3"] .wizard-option-btn').forEach(btn => {
         btn.addEventListener('click', () => {
@@ -3093,6 +3092,10 @@ document.addEventListener('DOMContentLoaded', () => {
     // Step 4 Notification Buttons
     document.querySelectorAll('.wizard-step[data-step="4"] .wizard-option-btn').forEach(btn => {
         btn.addEventListener('click', () => {
+            if (commitmentSwitchOn() && btn.getAttribute('data-value') === 'silent') {
+                showToast("Notifications are required when 'This one really matters' is turned on.", "info");
+                return;
+            }
             document.querySelectorAll('.wizard-step[data-step="4"] .wizard-option-btn').forEach(b => b.classList.remove('active'));
             btn.classList.add('active');
             document.getElementById('taskNotify').value = btn.getAttribute('data-value');
@@ -3194,44 +3197,6 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
-    // Template select auto-fill
-    const selectTemplateEl = document.getElementById('taskNameSelect');
-    if (selectTemplateEl) {
-        selectTemplateEl.addEventListener('change', () => {
-            const opt = selectTemplateEl.options[selectTemplateEl.selectedIndex];
-            if (opt && opt.value) {
-                const name = opt.getAttribute('data-name');
-                const desc = opt.getAttribute('data-desc');
-                const dur = opt.getAttribute('data-duration');
-                const slot = opt.getAttribute('data-slot');
-                if (name) {
-                    const nameInput = document.getElementById('taskName');
-                    if (nameInput) {
-                        nameInput.value = name;
-                        nameInput.classList.remove('input-error');
-                    }
-                }
-                if (desc) {
-                    const descInput = document.getElementById('taskDescription');
-                    if (descInput && !descInput.value.trim()) descInput.value = desc;
-                }
-                if (dur) {
-                    const durInput = document.getElementById('taskDurationInput');
-                    if (durInput) durInput.value = dur;
-                    const durHidden = document.getElementById('taskDuration');
-                    if (durHidden) durHidden.value = dur;
-                }
-                if (slot) {
-                    const slotHidden = document.getElementById('taskTimeSlot');
-                    if (slotHidden) slotHidden.value = slot;
-                    document.querySelectorAll('#timeSlotGrid button').forEach(b => {
-                        b.classList.toggle('active', b.getAttribute('data-slot') === slot);
-                    });
-                }
-            }
-        });
-    }
-
     // Input event listeners to clear error outlines
     document.getElementById('taskName').addEventListener('input', (e) => e.target.classList.remove('input-error'));
     document.getElementById('taskDueDate').addEventListener('input', (e) => e.target.classList.remove('input-error'));
@@ -3289,6 +3254,38 @@ function setCommitmentSwitch(on) {
     sw.classList.toggle('on', on);
     const word = sw.querySelector('.sw-word');
     if (word) word.textContent = on ? 'On' : 'Off';
+
+    // Force notifications if this task really matters
+    const silentBtn = document.querySelector('.wizard-step[data-step="4"] .wizard-option-btn[data-value="silent"]');
+    const digestBtn = document.querySelector('.wizard-step[data-step="4"] .wizard-option-btn[data-value="digest"]');
+    const notifyInput = document.getElementById('taskNotify');
+
+    if (on) {
+        if (digestBtn) {
+            document.querySelectorAll('.wizard-step[data-step="4"] .wizard-option-btn').forEach(b => b.classList.remove('active'));
+            digestBtn.classList.add('active');
+        }
+        if (notifyInput) notifyInput.value = 'digest';
+        if (silentBtn) {
+            silentBtn.classList.add('disabled-option');
+            silentBtn.setAttribute('aria-disabled', 'true');
+            silentBtn.title = "Critical commitments cannot be silenced.";
+        }
+        // Ask for browser notification permission if not yet decided so device can alert when missed
+        if (typeof Notification !== 'undefined' && Notification.permission === 'default') {
+            Notification.requestPermission().then(perm => {
+                if (perm === 'granted') {
+                    showToast("Device notifications active for missed commitments.");
+                }
+            }).catch(() => {});
+        }
+    } else {
+        if (silentBtn) {
+            silentBtn.classList.remove('disabled-option');
+            silentBtn.removeAttribute('aria-disabled');
+            silentBtn.removeAttribute('title');
+        }
+    }
 }
 
 function commitmentSwitchOn() {
@@ -3308,22 +3305,11 @@ function clearValidationErrors() {
     clearFieldError('taskDueDate', 'taskDueDateError');
 }
 
-// The "start from a common one" list used to appear only while the area was
-// Health, and vanish the moment somebody pressed Money or People. A control
-// that comes and goes in response to an unrelated button a moment earlier is
-// read as the app breaking, and it puts the one thing that helps a blank
-// form get started behind a guess about filing. It is always here now, in
-// the folded-away "More" section where it costs nothing to leave visible.
 function syncTaskNameUI() {
     const inputGroup = document.getElementById('taskNameInputGroup');
-    const selectGroup = document.getElementById('taskNameSelectGroup');
-    const selectEl = document.getElementById('taskNameSelect');
     const inputEl = document.getElementById('taskName');
-
     if (inputGroup) inputGroup.style.display = 'block';
     if (inputEl) inputEl.required = true;
-    if (selectGroup) selectGroup.style.display = 'block';
-    if (selectEl) selectEl.required = false;
 }
 
 // Open create modal
@@ -3695,7 +3681,9 @@ taskForm.addEventListener('submit', async (e) => {
     const dueTime = dueTimeMins !== null ? minutesToCanonicalHM(dueTimeMins) : null;
     const timeSlot = document.getElementById('taskTimeSlot') ? document.getElementById('taskTimeSlot').value : 'anytime';
     const durationMinutes = document.getElementById('taskDurationInput') ? (parseInt(document.getElementById('taskDurationInput').value) || 15) : 15;
-    const notifyPref = document.getElementById('taskNotify') ? document.getElementById('taskNotify').value : 'digest';
+    const isCommitment = commitmentSwitchOn();
+    const rawNotifyPref = document.getElementById('taskNotify') ? document.getElementById('taskNotify').value : 'digest';
+    const notifyPref = isCommitment ? 'digest' : (rawNotifyPref || 'digest');
     
     clearFieldError('taskName', 'taskNameError');
     clearFieldError('taskDueDate', 'taskDueDateError');
@@ -3717,8 +3705,8 @@ taskForm.addEventListener('submit', async (e) => {
         dueTime: dueTime || null,
         timeSlot: timeSlot || 'anytime',
         durationMinutes: durationMinutes || 15,
-        isCommitment: commitmentSwitchOn(),
-        notifyPref: notifyPref || 'digest'
+        isCommitment: isCommitment,
+        notifyPref: notifyPref
     };
 
     const askedSlot = timeSlot;
