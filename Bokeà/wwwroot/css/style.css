@@ -5494,6 +5494,13 @@ body.motion-off *::after {
     overflow-x: auto;
 }
 
+/* overflow-x: auto above makes this box clip vertically too, so the "now"
+   bubble (which sits above the bar) needs room reserved inside the box
+   itself rather than floating outside it. */
+.timeline-container {
+    padding-top: 22px;
+}
+
 /* --- Phone-width layout ---------------------------------------------------
    Below this width the topbar and the schedule legend were being clipped
    rather than reflowed, which cost content at 320-400px and at the larger
@@ -6615,24 +6622,29 @@ span.settings-label {
 
 .timeline-now {
     position: absolute;
-    top: 0;
+    /* Matches .timeline-container's padding-top, which exists to give the
+       label below room to sit above the bar without being clipped. */
+    top: 22px;
     height: 24px;
     pointer-events: none;
 }
 
 .timeline-now-line {
     position: absolute;
-    top: -3px;
+    top: 0;
     left: -1px;
     width: 2px;
-    height: 30px;
+    height: 27px;
     border-radius: 1px;
     background: var(--text-main);
 }
 
+/* Sits above the bar, not below it — the axis tick labels (12 AM, 6 AM, ...)
+   live in that row, and a time like 6:00am puts the two right on top of
+   each other. */
 .timeline-now-label {
     position: absolute;
-    top: 32px;
+    bottom: calc(100% + 6px);
     left: 0;
     padding: 1px 6px;
     border-radius: var(--border-radius-sm);
@@ -8743,6 +8755,10 @@ body.motion-off .focus-ring-fill { transition: none; }
         -webkit-overflow-scrolling: touch;
         scrollbar-width: none;
         margin-bottom: 10px;
+        /* "Parked" and "All" sit off the edge of the screen with no
+           scrollbar to say so - this fade is the only hint they're there. */
+        mask-image: linear-gradient(to right, black calc(100% - 32px), transparent 100%);
+        -webkit-mask-image: linear-gradient(to right, black calc(100% - 32px), transparent 100%);
     }
 
     .tasks-seg-wrapper::-webkit-scrollbar {
