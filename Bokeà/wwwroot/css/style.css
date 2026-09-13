@@ -9206,24 +9206,37 @@ body.motion-off .focus-ring-fill { transition: none; }
     gap: 6px;
     height: var(--tap);
     padding: 0 14px;
-    background: var(--primary-color, #2563eb);
-    color: #fff;
-    border: none;
+    background: var(--bg-card);
+    color: var(--text-main);
+    border: 1px solid var(--border-color);
     border-radius: var(--border-radius-md);
     font-size: 0.85rem;
     font-weight: 600;
     cursor: pointer;
-    transition: opacity 0.15s ease, transform 0.15s ease;
+    transition: all var(--transition-speed) ease;
 }
 
 .btn-cal-add-full:hover {
-    opacity: 0.92;
-    transform: translateY(-1px);
+    border-color: var(--border-color-dark);
+    background: var(--bg-hover);
+    color: var(--text-main);
 }
 
 .btn-cal-add-full i, .btn-cal-add-full svg {
     width: 14px;
     height: 14px;
+    color: var(--text-main);
+}
+
+body.dark-theme .btn-cal-add-full {
+    background: #1c1c1e;
+    border-color: #27272a;
+    color: #ffffff;
+}
+
+body.dark-theme .btn-cal-add-full:hover {
+    background: #27272a;
+    border-color: #a1a1aa;
 }
 
 /* ---------- Calendar Capture Submit Button ---------- */
@@ -9240,18 +9253,30 @@ body.motion-off .focus-ring-fill { transition: none; }
     align-items: center;
     justify-content: center;
     cursor: pointer;
-    transition: all 0.15s ease;
+    transition: all var(--transition-speed) ease;
 }
 
 .cal-capture-submit-btn:hover {
-    background: var(--primary-color, #2563eb);
-    color: #fff;
-    border-color: transparent;
+    border-color: var(--border-color-dark);
+    background: var(--bg-hover);
+    color: var(--text-main);
 }
 
 .cal-capture-submit-btn i, .cal-capture-submit-btn svg {
     width: 16px;
     height: 16px;
+}
+
+body.dark-theme .cal-capture-submit-btn {
+    background: #141416;
+    border-color: #27272a;
+    color: #a1a1aa;
+}
+
+body.dark-theme .cal-capture-submit-btn:hover {
+    background: #1c1c1e;
+    border-color: #ffffff;
+    color: #ffffff;
 }
 
 .cal-day-capture .capture-hint {
@@ -9280,7 +9305,7 @@ body.motion-off .focus-ring-fill { transition: none; }
     font-size: 0.82rem;
     font-weight: 600;
     cursor: pointer;
-    transition: all 0.15s ease;
+    transition: all var(--transition-speed) ease;
     text-align: center;
 }
 
@@ -9290,9 +9315,29 @@ body.motion-off .focus-ring-fill { transition: none; }
 }
 
 .weekday-btn.active {
-    background: var(--primary-color, #2563eb);
-    border-color: var(--primary-color, #2563eb);
-    color: #fff;
+    background: var(--bg-dark-gray);
+    border-color: var(--text-main);
+    color: var(--text-main) !important;
     font-weight: 700;
-    box-shadow: 0 2px 6px rgba(37, 99, 235, 0.25);
+    box-shadow: 0 0 0 1px var(--text-main);
+}
+
+body.dark-theme .weekday-btn {
+    background: #141416;
+    border-color: #27272a;
+    color: #a1a1aa;
+}
+
+body.dark-theme .weekday-btn:hover {
+    background: #1c1c1e;
+    border-color: #a1a1aa;
+    color: #ffffff;
+}
+
+body.dark-theme .weekday-btn.active {
+    background: #1c1c1e;
+    border-color: #ffffff;
+    color: #ffffff !important;
+    font-weight: 700;
+    box-shadow: 0 0 0 1px #ffffff, 0 4px 12px rgba(255, 255, 255, 0.08);
 }
