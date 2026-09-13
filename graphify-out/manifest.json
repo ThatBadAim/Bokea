@@ -30,16 +30,16 @@
     "semantic_hash": "1a0024ef9acca982aac132caf5bf742b"
   },
   "Boke\u00e0/Endpoints/TaskEndpoints.cs": {
-    "mtime": 1789211586.3639317,
-    "seen": 1789211999.5112674,
-    "ast_hash": "4c0de416d676315faae8ab74b8601b3c",
-    "semantic_hash": "4c0de416d676315faae8ab74b8601b3c"
+    "mtime": 1789298961.9565043,
+    "seen": 1789299195.6310186,
+    "ast_hash": "135943693b094396b4076ba67c83b95c",
+    "semantic_hash": "135943693b094396b4076ba67c83b95c"
   },
   "Boke\u00e0/Program.cs": {
     "mtime": 1789263039.7704215,
-    "seen": 1789289685.1111305,
+    "seen": 1789299195.631023,
     "ast_hash": "247c00e2037feec5e4b2495690c3e7a8",
-    "semantic_hash": ""
+    "semantic_hash": "247c00e2037feec5e4b2495690c3e7a8"
   },
   "Boke\u00e0/Properties/launchSettings.json": {
     "mtime": 1781034663.0,
@@ -54,10 +54,10 @@
     "semantic_hash": "b82ee05fed13d41b1888ab63a3580d46"
   },
   "Boke\u00e0/Services/TaskWatchdogService.cs": {
-    "mtime": 1789211600.936971,
-    "seen": 1789211999.5116353,
-    "ast_hash": "79500cc26d6941bf1db214db9d8e07ca",
-    "semantic_hash": "79500cc26d6941bf1db214db9d8e07ca"
+    "mtime": 1789298969.247544,
+    "seen": 1789299195.6312888,
+    "ast_hash": "eb1870790fab3228545335bc4ce4df84",
+    "semantic_hash": "eb1870790fab3228545335bc4ce4df84"
   },
   "Boke\u00e0/appsettings.json": {
     "mtime": 1788906652.6102924,
@@ -66,10 +66,10 @@
     "semantic_hash": "c52f435e4bcaf2bd106befb5823b841e"
   },
   "Boke\u00e0/wwwroot/js/app.js": {
-    "mtime": 1789291335.5676172,
-    "seen": 1789291519.6822584,
-    "ast_hash": "4237f6ab20b5f3c95cc97e6c5249827b",
-    "semantic_hash": ""
+    "mtime": 1789299149.6805284,
+    "seen": 1789299195.6314642,
+    "ast_hash": "47991f262fb54f5c1cb68a6a7e3b4efb",
+    "semantic_hash": "47991f262fb54f5c1cb68a6a7e3b4efb"
   },
   "Boke\u00e0/wwwroot/manifest.json": {
     "mtime": 1788973935.0335922,
@@ -79,9 +79,9 @@
   },
   "Boke\u00e0/wwwroot/sw.js": {
     "mtime": 1789289643.7824156,
-    "seen": 1789289685.1112921,
+    "seen": 1789299195.6316388,
     "ast_hash": "0358719b2ae9b81e0b5d07ebcc380657",
-    "semantic_hash": ""
+    "semantic_hash": "0358719b2ae9b81e0b5d07ebcc380657"
   },
   "Boke\u00e0/Endpoints/PushEndpoints.cs": {
     "mtime": 1788888987.3830833,
@@ -133,9 +133,9 @@
   },
   "Boke\u00e0/wwwroot/js/onboarding.js": {
     "mtime": 1789291335.5703287,
-    "seen": 1789291519.6822784,
+    "seen": 1789299195.6315556,
     "ast_hash": "1debb6807a836468ac84305a3e2d1662",
-    "semantic_hash": ""
+    "semantic_hash": "1debb6807a836468ac84305a3e2d1662"
   },
   "Boke\u00e0/wwwroot/404.html": {
     "mtime": 1789228096.764929,

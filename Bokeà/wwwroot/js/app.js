@@ -406,7 +406,16 @@ function calculateTaskState(task) {
         // also gone by - and then only for things the user has said are hard
         // commitments. Everything else ages to amber and waits there.
         const interval = parseInt(task.intervalDays) || 1;
-        const baseDate = task.lastCompleted ? new Date(task.lastCompleted) : new Date(task.createdAt || now);
+        let baseDate;
+        if (task.lastCompleted) {
+            baseDate = new Date(task.lastCompleted);
+        } else if (task.dueDate) {
+            const d = new Date(task.dueDate);
+            d.setDate(d.getDate() - interval);
+            baseDate = d;
+        } else {
+            baseDate = new Date(task.createdAt || now);
+        }
 
         const diffMs = now - baseDate;
         const ratio = (diffMs / (1000 * 60 * 60 * 24)) / interval;
@@ -573,6 +582,8 @@ async function routeApiRequest(endpoint, method = 'GET', body = null) {
             let dueDate = isWorkdays ? null : (body.dueDate || null);
             if (!isWorkdays && intervalType === 'IntervalBased' && intervalDays && !dueDate) {
                 dueDate = new Date(Date.now() + intervalDays * 86400000).toISOString();
+            } else if (dueDate && typeof dueDate === 'string' && !dueDate.includes('T')) {
+                dueDate = new Date(dueDate + 'T00:00:00Z').toISOString();
             }
 
             const newTaskRow = {
@@ -642,7 +653,13 @@ async function routeApiRequest(endpoint, method = 'GET', body = null) {
                 interval_type: isWorkdays ? 'Workdays' : ((body.type === 'interval' || body.intervalType === 'IntervalBased') ? 'IntervalBased' : 'FixedDate'),
                 interval_days: isWorkdays ? null : (body.intervalDays ? parseInt(body.intervalDays) : null)
             };
-            if (body.dueDate !== undefined) updatePayload.due_date = isWorkdays ? null : body.dueDate;
+            if (body.dueDate !== undefined) {
+                let due = isWorkdays ? null : body.dueDate;
+                if (due && typeof due === 'string' && !due.includes('T')) {
+                    due = new Date(due + 'T00:00:00Z').toISOString();
+                }
+                updatePayload.due_date = due;
+            }
             if (body.dueTime !== undefined) updatePayload.due_time = body.dueTime;
             if (body.timeSlot !== undefined) updatePayload.time_slot = body.timeSlot;
             if (body.durationMinutes !== undefined) updatePayload.duration_minutes = body.durationMinutes;
@@ -1164,7 +1181,7 @@ function handleLocalStorageFallback(endpoint, method, body) {
             type: isWorkdays ? 'workdays' : body.type,
             intervalType: isWorkdays ? 'Workdays' : (body.type === 'fixed' ? 'FixedDate' : 'IntervalBased'),
             intervalDays: body.type === 'interval' ? parseInt(body.intervalDays) || 1 : null,
-            dueDate: body.type === 'fixed' ? (body.dueDate || null) : null,
+            dueDate: isWorkdays ? null : (body.dueDate || null),
             dueTime: body.dueTime || null,
             timeSlot: body.timeSlot || 'anytime',
             durationMinutes: body.durationMinutes || 15,
@@ -1212,7 +1229,7 @@ function handleLocalStorageFallback(endpoint, method, body) {
             localTasks[idx].type = isWorkdays ? 'workdays' : body.type;
             localTasks[idx].intervalType = isWorkdays ? 'Workdays' : (body.type === 'fixed' ? 'FixedDate' : 'IntervalBased');
             localTasks[idx].intervalDays = body.type === 'interval' ? parseInt(body.intervalDays) || 1 : null;
-            localTasks[idx].dueDate = body.type === 'fixed' ? body.dueDate : null;
+            localTasks[idx].dueDate = isWorkdays ? null : (body.dueDate || null);
             if (body.dueTime !== undefined) localTasks[idx].dueTime = body.dueTime;
             if (body.timeSlot !== undefined) localTasks[idx].timeSlot = body.timeSlot;
             if (body.durationMinutes !== undefined) localTasks[idx].durationMinutes = body.durationMinutes;
@@ -1601,10 +1618,18 @@ function renderNextUpTask() {
             d.setHours(0, 0, 0, 0);
             return d.getTime();
         }
-        const d = t.type === 'fixed'
-            ? new Date(t.dueDate || 0)
-            : new Date(t.lastCompleted || t.createdAt || Date.now());
-        if (t.type !== 'fixed') d.setDate(d.getDate() + (parseInt(t.intervalDays) || 1));
+        let d;
+        if (t.type === 'fixed') {
+            d = new Date(t.dueDate || 0);
+        } else if (t.lastCompleted) {
+            d = new Date(t.lastCompleted);
+            d.setDate(d.getDate() + (parseInt(t.intervalDays) || 1));
+        } else if (t.dueDate) {
+            d = new Date(t.dueDate);
+        } else {
+            d = new Date(t.createdAt || Date.now());
+            d.setDate(d.getDate() + (parseInt(t.intervalDays) || 1));
+        }
         d.setHours(0, 0, 0, 0);
         return d.getTime();
     };
@@ -2843,6 +2868,15 @@ const modal = document.getElementById('taskModal');
 const taskForm = document.getElementById('taskForm');
 const intervalGroup = document.getElementById('intervalGroup');
 const dueDateGroup = document.getElementById('dueDateGroup');
+const weeklyDayGroup = document.getElementById('weeklyDayGroup');
+
+function computeNextWeekdayDate(targetDay, baseDate = new Date()) {
+    const currentDay = baseDate.getDay();
+    let diff = targetDay - currentDay;
+    if (diff < 0) diff += 7;
+    const target = new Date(baseDate.getFullYear(), baseDate.getMonth(), baseDate.getDate() + diff);
+    return calDateStr(target);
+}
 
 let currentStep = 1;
 
@@ -2978,6 +3012,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 document.getElementById('taskDueDate').value = "";
                 intervalGroup.classList.add('hidden');
                 dueDateGroup.classList.add('hidden');
+                if (weeklyDayGroup) weeklyDayGroup.classList.add('hidden');
                 if (workdaysHint) {
                     if (workdaysHintText) {
                         workdaysHintText.textContent = `Active on your work days: ${formatWorkDaysSummary(getUserWorkDays())}`;
@@ -3002,6 +3037,7 @@ document.addEventListener('DOMContentLoaded', () => {
             if (freqType === 'custom') {
                 intervalGroup.classList.remove('hidden');
                 dueDateGroup.classList.add('hidden');
+                if (weeklyDayGroup) weeklyDayGroup.classList.add('hidden');
                 setTimeout(() => {
                     const input = document.getElementById('taskInterval');
                     if (input) input.focus({ preventScroll: true });
@@ -3009,18 +3045,48 @@ document.addEventListener('DOMContentLoaded', () => {
             } else if (freqType === 'fixed') {
                 intervalGroup.classList.add('hidden');
                 dueDateGroup.classList.remove('hidden');
+                if (weeklyDayGroup) weeklyDayGroup.classList.add('hidden');
                 setTimeout(() => {
                     const input = document.getElementById('taskDueDate');
                     if (input) input.focus({ preventScroll: true });
                 }, 50);
+            } else if (freqVal === '7') {
+                intervalGroup.classList.add('hidden');
+                dueDateGroup.classList.add('hidden');
+                if (weeklyDayGroup) {
+                    weeklyDayGroup.classList.remove('hidden');
+                    let activeBtn = weeklyDayGroup.querySelector('.weekday-btn.active');
+                    if (!activeBtn) {
+                        const curDue = document.getElementById('taskDueDate').value;
+                        const defaultDay = curDue ? calParse(curDue).getDay() : new Date().getDay();
+                        activeBtn = weeklyDayGroup.querySelector(`.weekday-btn[data-day="${defaultDay}"]`);
+                        if (activeBtn) activeBtn.classList.add('active');
+                        document.getElementById('taskDueDate').value = computeNextWeekdayDate(defaultDay);
+                    }
+                }
             } else {
                 intervalGroup.classList.add('hidden');
                 dueDateGroup.classList.add('hidden');
-                // Auto advance since it's a fixed standard interval (daily, weekly, monthly)
+                if (weeklyDayGroup) weeklyDayGroup.classList.add('hidden');
+                document.getElementById('taskDueDate').value = "";
+                // Auto advance since it's a fixed standard interval (daily, monthly)
                 setTimeout(() => {
                     if (currentStep === 3) showStep(4);
                 }, 250);
             }
+        });
+    });
+
+    // Step 3 Weekday Picker Buttons (for "Every week")
+    document.querySelectorAll('#weeklyDayPicker .weekday-btn').forEach(btn => {
+        btn.addEventListener('click', () => {
+            document.querySelectorAll('#weeklyDayPicker .weekday-btn').forEach(b => b.classList.remove('active'));
+            btn.classList.add('active');
+            const day = parseInt(btn.getAttribute('data-day'), 10);
+            document.getElementById('taskDueDate').value = computeNextWeekdayDate(day);
+            setTimeout(() => {
+                if (currentStep === 3) showStep(4);
+            }, 250);
         });
     });
 
@@ -3360,6 +3426,13 @@ function openCreateTaskModal(category, presetDate) {
         if (fixedBtn) fixedBtn.classList.add('active');
         intervalGroup.classList.add('hidden');
         dueDateGroup.classList.remove('hidden');
+        if (weeklyDayGroup) weeklyDayGroup.classList.add('hidden');
+
+        // Pre-highlight the matching weekday button in weeklyDayGroup
+        const pDay = calParse(presetDate).getDay();
+        document.querySelectorAll('#weeklyDayPicker .weekday-btn').forEach(btn => {
+            btn.classList.toggle('active', parseInt(btn.getAttribute('data-day'), 10) === pDay);
+        });
     } else {
         document.getElementById('taskType').value = 'interval';
         document.getElementById('taskInterval').value = "1";
@@ -3374,6 +3447,8 @@ function openCreateTaskModal(category, presetDate) {
         });
         intervalGroup.classList.add('hidden');
         dueDateGroup.classList.add('hidden');
+        if (weeklyDayGroup) weeklyDayGroup.classList.add('hidden');
+        document.querySelectorAll('#weeklyDayPicker .weekday-btn').forEach(btn => btn.classList.remove('active'));
     }
     
     // Sync Notify Step 4 button active state (Default is digest)
@@ -3460,6 +3535,7 @@ function openEditTaskModal(id) {
         if (btn) btn.classList.add('active');
         intervalGroup.classList.add('hidden');
         dueDateGroup.classList.add('hidden');
+        if (weeklyDayGroup) weeklyDayGroup.classList.add('hidden');
         if (workdaysHint) {
             if (workdaysHintText) {
                 workdaysHintText.textContent = `Active on your work days: ${formatWorkDaysSummary(getUserWorkDays())}`;
@@ -3477,21 +3553,36 @@ function openEditTaskModal(id) {
             if (btn) btn.classList.add('active');
             intervalGroup.classList.add('hidden');
             dueDateGroup.classList.add('hidden');
+            if (weeklyDayGroup) weeklyDayGroup.classList.add('hidden');
         } else if (interval === 7) {
             const btn = document.querySelector('.wizard-step[data-step="3"] .wizard-option-btn[data-freq-val="7"]');
             if (btn) btn.classList.add('active');
             intervalGroup.classList.add('hidden');
             dueDateGroup.classList.add('hidden');
+            if (weeklyDayGroup) {
+                weeklyDayGroup.classList.remove('hidden');
+                const rawDue = task.dueDate ? (typeof task.dueDate === 'string' ? task.dueDate.split('T')[0] : (task.dueDate.value ? String(task.dueDate.value).split('T')[0] : '')) : '';
+                const anchorDateStr = rawDue || (task.createdAt ? (typeof task.createdAt === 'string' ? task.createdAt.split('T')[0] : '') : '');
+                if (anchorDateStr) {
+                    document.getElementById('taskDueDate').value = anchorDateStr;
+                    const dueDay = calParse(anchorDateStr).getDay();
+                    document.querySelectorAll('#weeklyDayPicker .weekday-btn').forEach(b => {
+                        b.classList.toggle('active', parseInt(b.getAttribute('data-day'), 10) === dueDay);
+                    });
+                }
+            }
         } else if (interval === 30) {
             const btn = document.querySelector('.wizard-step[data-step="3"] .wizard-option-btn[data-freq-val="30"]');
             if (btn) btn.classList.add('active');
             intervalGroup.classList.add('hidden');
             dueDateGroup.classList.add('hidden');
+            if (weeklyDayGroup) weeklyDayGroup.classList.add('hidden');
         } else {
             const btn = document.getElementById('btnCustomDays');
             if (btn) btn.classList.add('active');
             intervalGroup.classList.remove('hidden');
             dueDateGroup.classList.add('hidden');
+            if (weeklyDayGroup) weeklyDayGroup.classList.add('hidden');
         }
     } else {
         if (workdaysHint) workdaysHint.classList.add('hidden');
@@ -3505,6 +3596,7 @@ function openEditTaskModal(id) {
         if (btn) btn.classList.add('active');
         intervalGroup.classList.add('hidden');
         dueDateGroup.classList.remove('hidden');
+        if (weeklyDayGroup) weeklyDayGroup.classList.add('hidden');
     }
     
     const notifyPref = task.notifyPref || task.notifyPreference || 'digest';
@@ -3621,7 +3713,7 @@ taskForm.addEventListener('submit', async (e) => {
         type: isWorkdays ? 'workdays' : type,
         intervalType: isWorkdays ? 'Workdays' : (type === 'fixed' ? 'FixedDate' : 'IntervalBased'),
         intervalDays: type === 'interval' ? parseInt(intervalDays) || 1 : null,
-        dueDate: (type === 'fixed' && dueDate) ? dueDate : null,
+        dueDate: (!isWorkdays && dueDate) ? dueDate : null,
         dueTime: dueTime || null,
         timeSlot: timeSlot || 'anytime',
         durationMinutes: durationMinutes || 15,
@@ -7460,6 +7552,22 @@ function initCalendar() {
 
         if (close) close.addEventListener('click', calCloseDay);
 
+        const addFullBtn = document.getElementById('calDayAddFullBtn');
+        if (addFullBtn) {
+            addFullBtn.addEventListener('click', () => {
+                const targetDate = calOpenStr;
+                calCloseDay();
+                openCreateTaskModal(null, targetDate);
+            });
+        }
+
+        const captureBtn = document.getElementById('calDayCaptureBtn');
+        if (captureBtn) {
+            captureBtn.addEventListener('click', () => {
+                if (capture && calOpenStr) commitCapture(capture, calOpenStr);
+            });
+        }
+
         // The dim is a way out too: clicking beside the day closes it.
         const overlay = document.getElementById('calDayOverlay');
         if (overlay) {
@@ -7861,7 +7969,7 @@ function getTasksForDate(dateStr, includeDaily = false) {
             // Multi-day interval (e.g. every 2 days, weekly, monthly)
             const anchorDate = mapped.lastCompleted
                 ? new Date(mapped.lastCompleted)
-                : (mapped.createdAt ? new Date(mapped.createdAt) : (mapped.dueDate ? new Date(mapped.dueDate) : new Date()));
+                : (mapped.dueDate ? new Date(mapped.dueDate) : (mapped.createdAt ? new Date(mapped.createdAt) : new Date()));
             const anchorMidnight = new Date(anchorDate.getFullYear(), anchorDate.getMonth(), anchorDate.getDate());
             const diffDays = Math.round((cellDate.getTime() - anchorMidnight.getTime()) / 86400000);
             if (diffDays >= 0 && diffDays % interval === 0) {
@@ -8654,6 +8762,16 @@ async function commitCapture(input, dueDateStr) {
         } : undefined);
     } catch (err) {
         console.error('Error parking task:', err);
+        // Resilient fallback: If API / Supabase failed (e.g. auth expired or network dropped),
+        // save to local storage fallback so user's task is never lost.
+        try {
+            const fallbackCreated = handleLocalStorageFallback('/tasks', 'POST', payload);
+            await loadDashboardData();
+            showToast(dueDateStr ? 'Saved to this device.' : 'Parked on this device.', 'success');
+            return;
+        } catch (fallbackErr) {
+            console.error('Fallback save also failed:', fallbackErr);
+        }
         showToast('Could not save that', 'error');
         // What they typed, not what was parsed out of it: a failed save must
         // hand back exactly the sentence they wrote.

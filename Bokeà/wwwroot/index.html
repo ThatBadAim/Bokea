@@ -1381,9 +1381,15 @@
                     <h2 class="cal-day-title" id="calDayTitle" tabindex="-1">&nbsp;</h2>
                     <p class="cal-day-line" id="calDayLine">&nbsp;</p>
                 </div>
-                <button type="button" class="cal-day-close" id="calDayCloseBtn" title="Close" aria-label="Close the day">
-                    <i data-lucide="x"></i>
-                </button>
+                <div class="cal-day-actions">
+                    <button type="button" class="btn-cal-add-full" id="calDayAddFullBtn" title="Add full task" aria-label="Add full task on this day">
+                        <i data-lucide="plus" aria-hidden="true"></i>
+                        <span>Add task</span>
+                    </button>
+                    <button type="button" class="cal-day-close" id="calDayCloseBtn" title="Close" aria-label="Close the day">
+                        <i data-lucide="x"></i>
+                    </button>
+                </div>
             </div>
 
             <!-- How far through the day you are. Counts what is finished, not
@@ -1405,6 +1411,9 @@
                 <input type="text" id="calDayCapture" class="capture-input" placeholder="Add something to this day"
                        autocomplete="off" aria-describedby="calDayCaptureHint">
                 <span class="capture-hint" id="calDayCaptureHint">Enter to save</span>
+                <button type="button" class="cal-capture-submit-btn" id="calDayCaptureBtn" title="Save to this day" aria-label="Save to this day">
+                    <i data-lucide="corner-down-left" aria-hidden="true"></i>
+                </button>
             </div>
         </div>
     </div>
@@ -1501,6 +1510,18 @@
                             <label for="taskDueDate">Which day?</label>
                             <input type="date" id="taskDueDate" aria-describedby="taskDueDateError">
                             <p class="field-error" id="taskDueDateError" role="alert" hidden></p>
+                        </div>
+                        <div class="form-group hidden" id="weeklyDayGroup" style="margin-top: 12px;">
+                            <label id="weeklyDayLabel">Which day of the week?</label>
+                            <div class="weekday-picker" role="group" aria-labelledby="weeklyDayLabel" id="weeklyDayPicker">
+                                <button type="button" class="weekday-btn" data-day="1">Mon</button>
+                                <button type="button" class="weekday-btn" data-day="2">Tue</button>
+                                <button type="button" class="weekday-btn" data-day="3">Wed</button>
+                                <button type="button" class="weekday-btn" data-day="4">Thu</button>
+                                <button type="button" class="weekday-btn" data-day="5">Fri</button>
+                                <button type="button" class="weekday-btn" data-day="6">Sat</button>
+                                <button type="button" class="weekday-btn" data-day="0">Sun</button>
+                            </div>
                         </div>
                     </div>
 

@@ -185,13 +185,13 @@ public class TaskWatchdogService : BackgroundService
 
         if (task.IntervalType == IntervalType.IntervalBased)
         {
-            var anchorDate = task.LastCompletedAt ?? task.CreatedAt;
-            var elapsedTime = currentTime - anchorDate;
-            
             if (!task.IntervalDays.HasValue || task.IntervalDays.Value <= 0)
             {
                 return TaskState.Green;
             }
+
+            var anchorDate = task.LastCompletedAt ?? (task.DueDate.HasValue ? task.DueDate.Value.AddDays(-task.IntervalDays.Value) : task.CreatedAt);
+            var elapsedTime = currentTime - anchorDate;
 
             var ratio = elapsedTime.TotalDays / task.IntervalDays.Value;
 

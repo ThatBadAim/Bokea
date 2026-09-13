@@ -78,7 +78,9 @@ namespace Bokea.Endpoints
                     {
                         return Results.BadRequest("IntervalDays must be greater than 0 for interval-based tasks.");
                     }
-                    dueDate = DateTime.UtcNow.AddDays(request.IntervalDays.Value);
+                    dueDate = request.DueDate.HasValue
+                        ? new DueDateType(request.DueDate.Value)
+                        : DateTime.UtcNow.AddDays(request.IntervalDays.Value);
                 }
                 else if (intervalTypeEnum == IntervalType.Workdays)
                 {
