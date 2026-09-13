@@ -2118,7 +2118,7 @@ function toggleRowMenu(btn, id, done, kind) {
     const items = [];
     if (!done) items.push({ icon: 'play', label: 'Start now', run: () => startFocus(id) });
     items.push(kind === 'parked'
-        ? { icon: 'calendar', label: 'Pick a day', run: () => openEditTaskModal(id) }
+        ? { icon: 'calendar', label: 'Pick a day', run: () => openEditTaskModal(id, 'when') }
         : { icon: 'edit-2', label: 'Edit', run: () => openEditTaskModal(id) });
     items.push({ icon: 'trash-2', label: 'Delete', danger: true, run: () => deleteTask(id) });
 
@@ -2902,9 +2902,6 @@ async function reallyDeleteTask(id) {
 
 const modal = document.getElementById('taskModal');
 const taskForm = document.getElementById('taskForm');
-const intervalGroup = document.getElementById('intervalGroup');
-const dueDateGroup = document.getElementById('dueDateGroup');
-const weeklyDayGroup = document.getElementById('weeklyDayGroup');
 
 function computeNextWeekdayDate(targetDay, baseDate = new Date()) {
     const currentDay = baseDate.getDay();
@@ -2914,40 +2911,162 @@ function computeNextWeekdayDate(targetDay, baseDate = new Date()) {
     return calDateStr(target);
 }
 
-let currentStep = 1;
+// ---------- One question a screen ----------
+// Every setting on one screen was too much to take in at once, and a form
+// that looks like work is a form that gets closed. So the task is built one
+// question at a time: what, when, what time of day, how long, then a screen
+// that shows the whole thing. Tapping an answer moves on by itself. Save is
+// on every screen, because only the name is required and everything after
+// it already has a default - the line under the header says what that
+// default is before anyone commits to it.
+//
+// The hidden inputs in the form stay the single record of each answer, so
+// the submit handler reads them exactly as it always has.
+const TASK_STEPS = ['what', 'when', 'time', 'length', 'review'];
+const TASK_QUESTION_COUNT = 4;
+const TASK_REPEATS = ['daily', 'workdays', 'weekly', 'monthly', 'custom'];
+// Answers that are complete the moment they are tapped. "Pick a day",
+// "Weekly" and "Every few days" each need one more thing, so they wait.
+const TASK_WHEN_ADVANCES = ['today', 'tomorrow', 'someday', 'daily', 'workdays', 'monthly'];
+const TASK_DURATIONS = [5, 15, 30, 60, 120];
 
-// The form is one screen now, so there is nothing to step through. This stays
-// because openCreateTaskModal, openEditTaskModal and the keyboard handler all
-// still call it, and because the .wizard-step wrappers still carry the
-// grouping the option buttons are found by. All it does is make sure every
-// group is visible and Save is available.
-function showStep(stepNum) {
-    currentStep = stepNum || 1;
-    document.querySelectorAll('.wizard-step').forEach(step => {
-        step.className = 'wizard-step wizard-step-active';
-    });
-    const saveBtn = document.getElementById('saveTaskBtn');
-    if (saveBtn) saveBtn.classList.remove('hidden');
-    syncSaveEnabled();
+let taskStep = 'what';
+// Set when a question is opened from the check screen: answering it goes
+// straight back there, not on through the questions after it.
+let taskStepReturn = false;
+let taskAdvanceTimer = null;
+// A new task closed before it was saved. Closing by accident is common, and
+// losing what was typed is a good reason never to open the form again.
+let taskDraft = null;
+let taskOpenedFromDraft = false;
+let taskJustSaved = false;
+
+function isEditingTask() {
+    return !!document.getElementById('taskId').value;
 }
 
-// Save is always live. It used to disable itself whenever the name was empty
-// and explain why in a title attribute - which does not exist on a touch
-// screen, and is not read by anyone who has scrolled the open "More" section
-// between the field and the button. Tapping Save did nothing, silently, with
-// the reason stored somewhere the person tapping could not reach it.
-//
-// So the button always submits, and a submit that cannot go through says so
-// next to the field it is talking about, and puts the cursor there.
-function syncSaveEnabled() {
-    const nameEl = document.getElementById('taskName');
-    const saveBtn = document.getElementById('saveTaskBtn');
-    if (!nameEl || !saveBtn) return;
-    saveBtn.disabled = false;
-    saveBtn.removeAttribute('aria-disabled');
-    saveBtn.title = '';
-    // Typing into a field clears the complaint about that field.
-    if (nameEl.value.trim()) clearFieldError('taskName', 'taskNameError');
+function showTaskStep(step, opts) {
+    const o = opts || {};
+    const idx = TASK_STEPS.indexOf(step);
+    if (idx < 0) return;
+    const prevIdx = TASK_STEPS.indexOf(taskStep);
+    clearTimeout(taskAdvanceTimer);
+    taskStep = step;
+
+    document.querySelectorAll('#taskForm .tw-step').forEach(section => {
+        const on = section.getAttribute('data-step') === step;
+        section.hidden = !on;
+        section.classList.remove('tw-in-fwd', 'tw-in-back');
+        if (on && o.animate !== false && idx !== prevIdx) {
+            void section.offsetWidth; // restart the entrance
+            section.classList.add(idx > prevIdx ? 'tw-in-fwd' : 'tw-in-back');
+        }
+    });
+
+    document.querySelectorAll('#taskStepDots li').forEach((dot, i) => {
+        dot.classList.toggle('done', i < idx);
+        dot.classList.toggle('current', i === idx);
+    });
+
+    const isReview = step === 'review';
+    const editing = isEditingTask();
+    const back = document.getElementById('taskBackBtn');
+    const next = document.getElementById('taskNextBtn');
+    const save = document.getElementById('saveTaskBtn');
+    // An edit starts on the check screen, so there is nothing behind it.
+    if (back) back.hidden = idx === 0 && !taskStepReturn || (isReview && editing);
+    if (next) {
+        next.hidden = isReview;
+        next.textContent = taskStepReturn ? 'Done' : 'Next';
+    }
+    if (save) {
+        save.textContent = isReview || editing ? 'Save' : 'Save now';
+        save.classList.toggle('btn-primary', isReview);
+        save.classList.toggle('btn-secondary', !isReview);
+    }
+    const recap = document.getElementById('taskRecap');
+    if (recap) recap.hidden = step === 'what' || isReview;
+
+    const body = document.querySelector('#taskForm .tw-body');
+    if (body) body.scrollTop = 0;
+
+    syncTaskSummary();
+    if (o.focus !== false) focusTaskStep();
+    if (o.announce !== false) {
+        const q = document.querySelector(`#taskForm .tw-step[data-step="${step}"] .tw-q`);
+        announce(isReview ? 'Check and save' : `Question ${idx + 1} of ${TASK_QUESTION_COUNT}: ${q ? q.textContent : ''}`);
+    }
+}
+
+// The name field on the first screen, the question everywhere else - so Tab
+// from there lands on the first answer.
+function focusTaskStep() {
+    const target = taskStep === 'what'
+        ? document.getElementById('taskName')
+        : document.querySelector(`#taskForm .tw-step[data-step="${taskStep}"] .tw-q`);
+    if (target) target.focus({ preventScroll: true });
+}
+
+function nextTaskStep() {
+    if (!checkTaskStep(taskStep)) return;
+    if (taskStepReturn || taskStep === 'review') {
+        taskStepReturn = false;
+        showTaskStep('review');
+        return;
+    }
+    showTaskStep(TASK_STEPS[TASK_STEPS.indexOf(taskStep) + 1]);
+}
+
+function prevTaskStep() {
+    if (taskStepReturn) {
+        taskStepReturn = false;
+        showTaskStep('review');
+        return;
+    }
+    const idx = TASK_STEPS.indexOf(taskStep);
+    if (idx > 0) showTaskStep(TASK_STEPS[idx - 1]);
+}
+
+// Long enough to see which answer lit up, short enough not to wait for.
+function autoAdvanceTask() {
+    clearTimeout(taskAdvanceTimer);
+    const from = taskStep;
+    taskAdvanceTimer = setTimeout(() => {
+        if (taskStep === from && modal.classList.contains('open')) nextTaskStep();
+    }, 220);
+}
+
+// Whether the screen on show has what it needs to move on. Anything it
+// cannot accept is said beside the field, with the cursor put there.
+function checkTaskStep(step) {
+    if (step === 'what' && !document.getElementById('taskName').value.trim()) {
+        showFieldError('taskName', 'taskNameError', 'Give it a name first — anything you would recognise later.');
+        return false;
+    }
+    if (step === 'when') {
+        const kind = taskForm.dataset.when;
+        if (kind === 'pick' && !document.getElementById('taskDueDate').value) {
+            showFieldError('taskDueDate', 'taskDueDateError', 'Pick a day, or choose Someday if there isn’t one yet.');
+            return false;
+        }
+        if (kind === 'custom') {
+            const el = document.getElementById('taskInterval');
+            el.value = Math.min(365, Math.max(1, parseInt(el.value, 10) || 1));
+        }
+    }
+    if (step === 'time') {
+        const field = document.getElementById('taskDueTime');
+        if (field.value.trim() && parseTimeFieldValue(field.value) === null) {
+            const hint = document.getElementById('taskDueTimeHint');
+            if (hint) hint.textContent = `Couldn't read that as a time. Try something like ${formatAppTime(13 * 60 + 30)}.`;
+            field.focus();
+            return false;
+        }
+    }
+    if (step === 'length') {
+        setTaskDuration(document.getElementById('taskDurationInput').value, { other: !document.getElementById('durationInputGroup').classList.contains('hidden') });
+    }
+    return true;
 }
 
 // One place for "this field is why nothing happened": the message lands
@@ -2981,113 +3100,377 @@ function clearFieldError(fieldId, errorId) {
     }
 }
 
-// Wire wizard option click event listeners
+// ---- When ----
+function taskDateOffset(days) {
+    const now = new Date();
+    return calDateStr(new Date(now.getFullYear(), now.getMonth(), now.getDate() + days));
+}
+
+function whenKindForDate(dateStr) {
+    if (!dateStr) return 'someday';
+    if (dateStr === taskDateOffset(0)) return 'today';
+    if (dateStr === taskDateOffset(1)) return 'tomorrow';
+    return 'pick';
+}
+
+function shortTaskDate(d) {
+    return d.toLocaleDateString(undefined, { weekday: 'short', day: 'numeric', month: 'short' });
+}
+
+// `keep` leaves the date and interval as they are, for opening a saved task
+// or a draft; otherwise the answer sets them.
+function setTaskWhen(kind, opts) {
+    const o = opts || {};
+    const dateEl = document.getElementById('taskDueDate');
+    const intervalEl = document.getElementById('taskInterval');
+    const prev = taskForm.dataset.when;
+
+    document.getElementById('taskType').value = kind === 'workdays'
+        ? 'workdays'
+        : (TASK_REPEATS.includes(kind) ? 'interval' : 'fixed');
+    if (kind === 'daily') intervalEl.value = '1';
+    else if (kind === 'weekly') intervalEl.value = '7';
+    else if (kind === 'monthly') intervalEl.value = '30';
+
+    if (!o.keep) {
+        if (kind === 'today') dateEl.value = taskDateOffset(0);
+        else if (kind === 'tomorrow') dateEl.value = taskDateOffset(1);
+        else if (kind === 'pick') {
+            // Coming from Today or Tomorrow, the calendar opens on that day.
+            if (!['today', 'tomorrow', 'pick'].includes(prev)) dateEl.value = '';
+        } else if (kind === 'weekly') {
+            const day = prev === 'weekly' && dateEl.value ? calParse(dateEl.value).getDay() : new Date().getDay();
+            dateEl.value = computeNextWeekdayDate(day);
+        } else {
+            dateEl.value = '';
+            if (kind === 'custom') {
+                const n = parseInt(intervalEl.value, 10);
+                if (!(n > 1) || n === 7 || n === 30) intervalEl.value = '2';
+            }
+        }
+    }
+
+    taskForm.dataset.when = kind;
+    clearFieldError('taskDueDate', 'taskDueDateError');
+    markTaskWhen();
+    syncTaskSummary();
+
+    if (!o.fromUser) return;
+    if (TASK_WHEN_ADVANCES.includes(kind)) {
+        autoAdvanceTask();
+    } else if (kind === 'pick') {
+        dateEl.focus({ preventScroll: true });
+        // Straight to the calendar, while this still counts as the tap.
+        try { if (typeof dateEl.showPicker === 'function') dateEl.showPicker(); } catch (e) { /* not allowed here */ }
+    } else if (kind === 'custom') {
+        intervalEl.focus({ preventScroll: true });
+        intervalEl.select();
+    }
+}
+
+function markTaskWhen() {
+    const kind = taskForm.dataset.when || 'today';
+    const dateVal = document.getElementById('taskDueDate').value;
+
+    document.querySelectorAll('#taskForm [data-when]').forEach(b => {
+        const on = b.getAttribute('data-when') === kind;
+        b.classList.toggle('active', on);
+        b.setAttribute('aria-pressed', on ? 'true' : 'false');
+    });
+    document.getElementById('dueDateGroup').classList.toggle('hidden', kind !== 'pick');
+    document.getElementById('weeklyDayGroup').classList.toggle('hidden', kind !== 'weekly');
+    document.getElementById('intervalGroup').classList.toggle('hidden', kind !== 'custom');
+
+    const weekday = kind === 'weekly' && dateVal ? calParse(dateVal).getDay() : null;
+    document.querySelectorAll('#weeklyDayPicker .weekday-btn').forEach(b => {
+        const on = parseInt(b.getAttribute('data-day'), 10) === weekday;
+        b.classList.toggle('active', on);
+        b.setAttribute('aria-pressed', on ? 'true' : 'false');
+    });
+
+    const now = new Date();
+    const subs = {
+        today: shortTaskDate(now),
+        tomorrow: shortTaskDate(new Date(now.getFullYear(), now.getMonth(), now.getDate() + 1)),
+        pick: kind === 'pick' && dateVal ? shortTaskDate(calParse(dateVal)) : 'Choose a date'
+    };
+    document.querySelectorAll('[data-when-sub]').forEach(el => {
+        el.textContent = subs[el.getAttribute('data-when-sub')] || '';
+    });
+}
+
+function taskWhenText() {
+    const kind = taskForm.dataset.when || 'today';
+    const dateVal = document.getElementById('taskDueDate').value;
+    switch (kind) {
+        case 'today': return 'Today';
+        case 'tomorrow': return 'Tomorrow';
+        case 'pick': return dateVal ? shortTaskDate(calParse(dateVal)) : 'No date yet';
+        case 'someday': return 'Someday';
+        case 'daily': return 'Every day';
+        case 'workdays': return `Workdays (${formatWorkDaysSummary(getUserWorkDays())})`;
+        case 'weekly': {
+            const names = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
+            return dateVal ? `Every ${names[calParse(dateVal).getDay()]}` : 'Weekly';
+        }
+        case 'monthly': return 'Monthly';
+        case 'custom': {
+            const n = parseInt(document.getElementById('taskInterval').value, 10);
+            return n > 1 ? `Every ${n} days` : 'Every day';
+        }
+    }
+    return '';
+}
+
+// ---- Time of day ----
+function setExactTimeOpen(open, focus) {
+    const group = document.getElementById('dueTimeGroup');
+    if (group) group.classList.toggle('hidden', !open);
+    if (open && focus) {
+        const field = document.getElementById('taskDueTime');
+        if (field) field.focus({ preventScroll: true });
+    }
+}
+
+function exactTimeOpen() {
+    const group = document.getElementById('dueTimeGroup');
+    return !!group && !group.classList.contains('hidden');
+}
+
+// A part of the day and a clock time are two answers to the same question,
+// so giving one clears the other.
+function setTaskSlot(slot, opts) {
+    document.getElementById('taskTimeSlot').value = slot || 'anytime';
+    document.getElementById('taskDueTime').value = '';
+    setExactTimeOpen(false);
+    clearTimeFieldComplaint();
+    syncWhenUI();
+    syncTimePresets();
+    syncTaskSummary();
+    if (opts && opts.fromUser) autoAdvanceTask();
+}
+
+function setTaskExactTime(mins, opts) {
+    document.getElementById('taskDueTime').value = formatAppTime(mins);
+    setExactTimeOpen(false);
+    clearTimeFieldComplaint();
+    syncWhenUI();
+    syncTimePresets();
+    syncTaskSummary();
+    if (opts && opts.fromUser) autoAdvanceTask();
+}
+
+function taskTimeText(long) {
+    const timeEl = document.getElementById('taskDueTime');
+    const exact = timeEl ? parseTimeFieldValue(timeEl.value) : null;
+    if (exact !== null) return `At ${fmtHM(exact)}`;
+    const slot = document.getElementById('taskTimeSlot').value;
+    if (!slot || slot === 'anytime' || !SLOT_META[slot]) return 'Any time';
+    if (!long) return SLOT_META[slot].label;
+    const win = slotWindow(slot, dayShape());
+    return `${SLOT_META[slot].label}, ${fmtHM(win.from)}–${fmtHM(win.to)}`;
+}
+
+// ---- How long ----
+function setTaskDuration(mins, opts) {
+    const o = opts || {};
+    const n = Math.min(480, Math.max(1, parseInt(mins, 10) || 15));
+    document.getElementById('taskDurationInput').value = n;
+    document.getElementById('taskDuration').value = n;
+    markTaskDuration(o.other);
+    syncTaskSummary();
+    if (o.fromUser) autoAdvanceTask();
+}
+
+function markTaskDuration(forceOther) {
+    const n = parseInt(document.getElementById('taskDurationInput').value, 10);
+    const other = !!forceOther || !TASK_DURATIONS.includes(n);
+    document.querySelectorAll('#durationChoices [data-mins]').forEach(b => {
+        const v = b.getAttribute('data-mins');
+        const on = v === 'other' ? other : (!other && parseInt(v, 10) === n);
+        b.classList.toggle('active', on);
+        b.setAttribute('aria-pressed', on ? 'true' : 'false');
+    });
+    document.getElementById('durationInputGroup').classList.toggle('hidden', !other);
+}
+
+function taskLengthText() {
+    const mins = parseInt(document.getElementById('taskDurationInput').value, 10);
+    if (!(mins > 0)) return '';
+    const h = Math.floor(mins / 60);
+    const m = mins % 60;
+    return h ? (m ? `${h} h ${m} min` : `${h} h`) : `${m} min`;
+}
+
+// ---- Area ----
+function setTaskArea(category) {
+    document.getElementById('taskCategory').value = category;
+    document.querySelectorAll('#taskAreaPills .tf-pill').forEach(b => {
+        const on = b.getAttribute('data-value') === category;
+        b.classList.toggle('active', on);
+        b.setAttribute('aria-pressed', on ? 'true' : 'false');
+    });
+}
+
+// ---- The whole form as one value ----
+// Blank, a saved task and a draft all go through applyTaskFormState, so the
+// three ways of opening the form cannot drift apart.
+function blankTaskState(category, presetDate) {
+    return {
+        name: '',
+        description: '',
+        category: category || 'Health & Vitality',
+        // A quick "call Mum" is something for today, not a daily habit.
+        when: presetDate ? whenKindForDate(presetDate) : 'today',
+        dueDate: presetDate || taskDateOffset(0),
+        intervalDays: 1,
+        dueTime: null,
+        timeSlot: 'anytime',
+        duration: 15,
+        notify: 'digest',
+        commitment: false
+    };
+}
+
+function taskStateFromTask(task) {
+    const dateOnly = v => v
+        ? (typeof v === 'string' ? v.split('T')[0] : (v.value ? String(v.value).split('T')[0] : ''))
+        : '';
+    const intervalDays = task.intervalDays || 1;
+    let dueDate = dateOnly(task.dueDate);
+    let when;
+    if (task.type === 'workdays' || task.intervalType === 'Workdays' || task.interval_type === 'Workdays') {
+        when = 'workdays';
+        dueDate = '';
+    } else if (task.type === 'interval') {
+        when = { 1: 'daily', 7: 'weekly', 30: 'monthly' }[intervalDays] || 'custom';
+        dueDate = when === 'weekly' ? (dueDate || dateOnly(task.createdAt)) : '';
+    } else {
+        when = whenKindForDate(dueDate);
+    }
+    const savedMins = task.dueTime ? parseHM(task.dueTime, null) : null;
+    return {
+        name: task.name || '',
+        description: task.description || '',
+        category: task.category || 'Health & Vitality',
+        when,
+        dueDate,
+        intervalDays,
+        dueTime: savedMins,
+        timeSlot: task.timeSlot || 'anytime',
+        duration: task.durationMinutes || 15,
+        notify: task.notifyPref || task.notifyPreference || 'digest',
+        commitment: !!task.isCommitment
+    };
+}
+
+function readTaskFormState() {
+    return {
+        name: document.getElementById('taskName').value.trim(),
+        description: document.getElementById('taskDescription').value,
+        category: document.getElementById('taskCategory').value,
+        when: taskForm.dataset.when || 'today',
+        dueDate: document.getElementById('taskDueDate').value,
+        intervalDays: parseInt(document.getElementById('taskInterval').value, 10) || 1,
+        dueTime: parseTimeFieldValue(document.getElementById('taskDueTime').value),
+        timeSlot: document.getElementById('taskTimeSlot').value,
+        duration: parseInt(document.getElementById('taskDurationInput').value, 10) || 15,
+        notify: document.getElementById('taskNotify').value,
+        commitment: commitmentSwitchOn(),
+        step: taskStep
+    };
+}
+
+function applyTaskFormState(s) {
+    clearValidationErrors();
+    clearTimeout(taskAdvanceTimer);
+    taskStepReturn = false;
+
+    document.getElementById('taskName').value = s.name || '';
+    document.getElementById('taskDescription').value = s.description || '';
+    setTaskArea(s.category || 'Health & Vitality');
+
+    document.getElementById('taskDueDate').value = s.dueDate || '';
+    document.getElementById('taskInterval').value = s.intervalDays || 1;
+    // A draft's "today" means the day it is opened, not the day it was typed.
+    taskForm.dataset.when = s.when;
+    setTaskWhen(s.when || 'today', { keep: s.when !== 'today' && s.when !== 'tomorrow' });
+
+    document.getElementById('taskDueTime').value = s.dueTime !== null && s.dueTime !== undefined ? formatAppTime(s.dueTime) : '';
+    document.getElementById('taskTimeSlot').value = s.timeSlot || 'anytime';
+    const shape = dayShape();
+    const hasTime = s.dueTime !== null && s.dueTime !== undefined;
+    const isAnchor = hasTime && [shape.wake, shape.workStart, shape.workEnd, shape.bed].includes(s.dueTime);
+    setExactTimeOpen(hasTime && !isAnchor);
+    clearTimeFieldComplaint();
+    syncWhenUI();
+    syncTimePresets();
+
+    setTaskDuration(s.duration || 15);
+    setCommitmentSwitch(!!s.commitment);
+    setNotifySwitch(s.commitment ? 'digest' : (s.notify || 'digest'));
+    setNoteOpen(!!(s.description && s.description.trim()));
+    syncTaskSummary();
+}
+
+// Wire the form
 document.addEventListener('DOMContentLoaded', () => {
-    // Step 1 Category Buttons
-    document.querySelectorAll('.wizard-step[data-step="1"] .wizard-option-btn').forEach(btn => {
-        btn.addEventListener('click', () => {
-            document.querySelectorAll('.wizard-step[data-step="1"] .wizard-option-btn').forEach(b => b.classList.remove('active'));
-            btn.classList.add('active');
-            document.getElementById('taskCategory').value = btn.getAttribute('data-value');
-            // Picking an area changes nothing else on the form. It used to
-            // wait 250ms and then "advance" to a step already on screen, and
-            // to show or hide the templates list as a side effect.
-        });
+    document.querySelectorAll('#taskForm [data-when]').forEach(btn => {
+        btn.addEventListener('click', () => setTaskWhen(btn.getAttribute('data-when'), { fromUser: true }));
     });
 
-    // Step 3 Frequency Buttons
-    document.querySelectorAll('.wizard-step[data-step="3"] .wizard-option-btn').forEach(btn => {
-        btn.addEventListener('click', () => {
-            document.querySelectorAll('.wizard-step[data-step="3"] .wizard-option-btn').forEach(b => b.classList.remove('active'));
-            btn.classList.add('active');
-            
-            const freqType = btn.getAttribute('data-freq-type');
-            const workdaysHint = document.getElementById('workdaysHint');
-            const workdaysHintText = document.getElementById('workdaysHintText');
-
-            if (freqType === 'workdays') {
-                document.getElementById('taskType').value = 'workdays';
-                document.getElementById('taskInterval').value = "";
-                document.getElementById('taskDueDate').value = "";
-                intervalGroup.classList.add('hidden');
-                dueDateGroup.classList.add('hidden');
-                if (weeklyDayGroup) weeklyDayGroup.classList.add('hidden');
-                if (workdaysHint) {
-                    if (workdaysHintText) {
-                        workdaysHintText.textContent = `Active on your work days: ${formatWorkDaysSummary(getUserWorkDays())}`;
-                    }
-                    workdaysHint.classList.remove('hidden');
-                }
-                setTimeout(() => {
-                    if (currentStep === 3) showStep(4);
-                }, 250);
-                return;
-            }
-
-            if (workdaysHint) workdaysHint.classList.add('hidden');
-            document.getElementById('taskType').value = freqType === 'fixed' ? 'fixed' : 'interval';
-            
-            const freqVal = btn.getAttribute('data-freq-val');
-            if (freqVal) {
-                document.getElementById('taskInterval').value = freqVal;
-            }
-            
-            // Toggle input groups
-            if (freqType === 'custom') {
-                intervalGroup.classList.remove('hidden');
-                dueDateGroup.classList.add('hidden');
-                if (weeklyDayGroup) weeklyDayGroup.classList.add('hidden');
-                setTimeout(() => {
-                    const input = document.getElementById('taskInterval');
-                    if (input) input.focus({ preventScroll: true });
-                }, 50);
-            } else if (freqType === 'fixed') {
-                intervalGroup.classList.add('hidden');
-                dueDateGroup.classList.remove('hidden');
-                if (weeklyDayGroup) weeklyDayGroup.classList.add('hidden');
-                setTimeout(() => {
-                    const input = document.getElementById('taskDueDate');
-                    if (input) input.focus({ preventScroll: true });
-                }, 50);
-            } else if (freqVal === '7') {
-                intervalGroup.classList.add('hidden');
-                dueDateGroup.classList.add('hidden');
-                if (weeklyDayGroup) {
-                    weeklyDayGroup.classList.remove('hidden');
-                    let activeBtn = weeklyDayGroup.querySelector('.weekday-btn.active');
-                    if (!activeBtn) {
-                        const curDue = document.getElementById('taskDueDate').value;
-                        const defaultDay = curDue ? calParse(curDue).getDay() : new Date().getDay();
-                        activeBtn = weeklyDayGroup.querySelector(`.weekday-btn[data-day="${defaultDay}"]`);
-                        if (activeBtn) activeBtn.classList.add('active');
-                        document.getElementById('taskDueDate').value = computeNextWeekdayDate(defaultDay);
-                    }
-                }
-            } else {
-                intervalGroup.classList.add('hidden');
-                dueDateGroup.classList.add('hidden');
-                if (weeklyDayGroup) weeklyDayGroup.classList.add('hidden');
-                document.getElementById('taskDueDate').value = "";
-                // Auto advance since it's a fixed standard interval (daily, monthly)
-                setTimeout(() => {
-                    if (currentStep === 3) showStep(4);
-                }, 250);
-            }
-        });
-    });
-
-    // Step 3 Weekday Picker Buttons (for "Every week")
     document.querySelectorAll('#weeklyDayPicker .weekday-btn').forEach(btn => {
         btn.addEventListener('click', () => {
-            document.querySelectorAll('#weeklyDayPicker .weekday-btn').forEach(b => b.classList.remove('active'));
-            btn.classList.add('active');
-            const day = parseInt(btn.getAttribute('data-day'), 10);
-            document.getElementById('taskDueDate').value = computeNextWeekdayDate(day);
-            setTimeout(() => {
-                if (currentStep === 3) showStep(4);
-            }, 250);
+            document.getElementById('taskDueDate').value = computeNextWeekdayDate(parseInt(btn.getAttribute('data-day'), 10));
+            markTaskWhen();
+            syncTaskSummary();
+            autoAdvanceTask();
         });
     });
+
+    const dueDateEl = document.getElementById('taskDueDate');
+    dueDateEl.addEventListener('input', () => {
+        clearFieldError('taskDueDate', 'taskDueDateError');
+        markTaskWhen();
+    });
+    dueDateEl.addEventListener('change', markTaskWhen);
+
+    document.querySelectorAll('#timeSlotGrid button').forEach(btn => {
+        btn.addEventListener('click', () => setTaskSlot(btn.getAttribute('data-slot'), { fromUser: true }));
+    });
+
+    document.querySelectorAll('#durationChoices [data-mins]').forEach(btn => {
+        btn.addEventListener('click', () => {
+            const v = btn.getAttribute('data-mins');
+            if (v !== 'other') {
+                setTaskDuration(v, { fromUser: true });
+                return;
+            }
+            markTaskDuration(true);
+            const input = document.getElementById('taskDurationInput');
+            input.focus({ preventScroll: true });
+            input.select();
+        });
+    });
+    document.getElementById('taskDurationInput').addEventListener('input', (e) => {
+        const n = parseInt(e.target.value, 10);
+        if (n > 0) document.getElementById('taskDuration').value = Math.min(480, n);
+    });
+
+    document.querySelectorAll('#taskAreaPills .tf-pill').forEach(btn => {
+        btn.addEventListener('click', () => setTaskArea(btn.getAttribute('data-value')));
+    });
+
+    // Each line on the check screen opens its own question.
+    document.querySelectorAll('#taskForm [data-goto]').forEach(btn => {
+        btn.addEventListener('click', () => {
+            taskStepReturn = true;
+            showTaskStep(btn.getAttribute('data-goto'));
+        });
+    });
+
+    document.getElementById('taskBackBtn').addEventListener('click', prevTaskStep);
+    document.getElementById('taskNextBtn').addEventListener('click', nextTaskStep);
 
     // Reminder switch. On is the morning digest, off is silent - and a task
     // that really matters is not allowed to be silent.
@@ -3103,39 +3486,22 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
+    // "This one really matters" - the only thing allowed to turn a task red.
+    const commitSw = document.getElementById('taskCommitmentSw');
+    if (commitSw) {
+        commitSw.addEventListener('click', () => {
+            setCommitmentSwitch(commitSw.getAttribute('aria-checked') !== 'true');
+        });
+    }
+
     // The note costs one line until there is something to write in it.
     const noteToggle = document.getElementById('taskNoteToggle');
     if (noteToggle) noteToggle.addEventListener('click', () => setNoteOpen(true, true));
 
-    // How long: fives up to half an hour, quarters after that.
-    const durationEl = document.getElementById('taskDurationInput');
-    const stepDuration = (dir) => {
-        if (!durationEl) return;
-        const cur = parseInt(durationEl.value, 10) || 15;
-        let next;
-        if (dir > 0) next = cur < 30 ? Math.floor(cur / 5) * 5 + 5 : Math.floor(cur / 15) * 15 + 15;
-        else next = cur <= 30 ? Math.ceil(cur / 5) * 5 - 5 : Math.ceil(cur / 15) * 15 - 15;
-        durationEl.value = Math.min(480, Math.max(5, next));
-        document.getElementById('taskDuration').value = durationEl.value;
-    };
-    const durationDown = document.getElementById('durationDown');
-    const durationUp = document.getElementById('durationUp');
-    if (durationDown) durationDown.addEventListener('click', () => stepDuration(-1));
-    if (durationUp) durationUp.addEventListener('click', () => stepDuration(1));
-
-    // The footer reads the task back, so it follows every change on the form.
-    // Buttons handle their own clicks first, so the state is current by the
-    // time the click reaches the form.
+    // The recap follows every change. Buttons handle their own clicks first,
+    // so the state is current by the time the click reaches the form.
     taskForm.addEventListener('input', syncTaskSummary);
     taskForm.addEventListener('click', syncTaskSummary);
-
-    // Time Slot Routine Block Buttons
-    document.querySelectorAll('#timeSlotGrid button').forEach(btn => {
-        btn.addEventListener('click', () => {
-            document.getElementById('taskTimeSlot').value = btn.getAttribute('data-slot') || 'anytime';
-            syncWhenUI();
-        });
-    });
 
     function formatTimeInputOnType(e) {
         const input = e.target;
@@ -3221,61 +3587,36 @@ document.addEventListener('DOMContentLoaded', () => {
             }
             syncWhenUI();
             syncTimePresets();
+            syncTaskSummary();
         });
     }
 
-    // Input event listeners to clear error outlines
-    document.getElementById('taskName').addEventListener('input', (e) => e.target.classList.remove('input-error'));
-    document.getElementById('taskDueDate').addEventListener('input', (e) => e.target.classList.remove('input-error'));
-    document.getElementById('taskInterval').addEventListener('input', (e) => e.target.classList.remove('input-error'));
+    // Enter answers the question on screen and moves on; on the check screen
+    // it saves. Ctrl or Cmd with Enter saves from anywhere, the note included.
+    taskForm.addEventListener('keydown', (e) => {
+        if (e.key !== 'Enter' || e.isComposing) return;
+        const saveBtn = document.getElementById('saveTaskBtn');
+        if (e.ctrlKey || e.metaKey) {
+            e.preventDefault();
+            if (saveBtn) saveBtn.click();
+            return;
+        }
+        // Enter in a textarea is a new line, and Enter on a button presses it.
+        const tag = e.target.tagName.toLowerCase();
+        if (tag === 'textarea' || tag === 'button') return;
+        e.preventDefault();
+        if (taskStep === 'review') {
+            if (saveBtn) saveBtn.click();
+        } else {
+            nextTaskStep();
+        }
+    });
 
-    // Prevent premature form submission on Enter key press
-    const taskFormEl = document.getElementById('taskForm');
-    if (taskFormEl) {
-        taskFormEl.addEventListener('keydown', (e) => {
-            if (e.key === 'Enter') {
-                // Enter in a textarea is a new line, and Enter on a button
-                // presses that button - a switch, a day, the note toggle.
-                // Only Enter in a field means save.
-                const tag = e.target.tagName.toLowerCase();
-                if (tag === 'textarea' || tag === 'button') return;
-                e.preventDefault();
-                // One screen, so Enter means save. If there is no name yet it
-                // puts the cursor where the answer goes instead of scolding.
-                const nameEl = document.getElementById('taskName');
-                if (nameEl && !nameEl.value.trim()) {
-                    nameEl.classList.add('input-error');
-                    nameEl.focus();
-                    return;
-                }
-                const saveBtn = document.getElementById('saveTaskBtn');
-                if (saveBtn) saveBtn.click();
-            }
-        });
-    }
-
-    // The four-step navigation is gone with the four steps. What is left is
-    // the one thing it was really for: keeping Save honest about whether the
-    // form can be saved yet.
     const nameField = document.getElementById('taskName');
-    if (nameField) {
-        nameField.addEventListener('input', () => {
-            nameField.classList.remove('input-error');
-            syncSaveEnabled();
-        });
-    }
-
-    const cancelBtn = document.getElementById('cancelTaskBtn');
-    if (cancelBtn) cancelBtn.addEventListener('click', () => closeModal());
-
-    // "This one really matters" - the only thing allowed to turn a task red.
-    const commitSw = document.getElementById('taskCommitmentSw');
-    if (commitSw) {
-        commitSw.addEventListener('click', () => {
-            const on = commitSw.getAttribute('aria-checked') !== 'true';
-            setCommitmentSwitch(on);
-        });
-    }
+    nameField.addEventListener('input', () => {
+        if (nameField.value.trim()) clearFieldError('taskName', 'taskNameError');
+    });
+    document.getElementById('taskInterval').addEventListener('input', (e) => e.target.classList.remove('input-error'));
 });
 
 function setCommitmentSwitch(on) {
@@ -3351,50 +3692,32 @@ function setNoteOpen(open, focus) {
     }
 }
 
-// One line in the footer that reads the task back - "Sundays · evening ·
-// 15 min" - so what Save is about to do is never a guess.
+// The task read back - "Tomorrow · Evening · 15 min" - under the header while
+// the questions are being answered, and line by line on the check screen, so
+// what Save is about to do is never a guess.
 function syncTaskSummary() {
-    const out = document.getElementById('taskSummary');
-    if (!out) return;
-    const parts = [];
+    if (!taskForm || !taskForm.dataset.when) return;
+    const name = document.getElementById('taskName').value.trim();
+    const description = document.getElementById('taskDescription').value.trim();
+    const when = taskWhenText();
+    const length = taskLengthText();
 
-    const freqBtn = document.querySelector('.wizard-step[data-step="3"] .wizard-option-btn.active');
-    const freqType = freqBtn ? freqBtn.getAttribute('data-freq-type') : 'interval';
-    const freqVal = freqBtn ? freqBtn.getAttribute('data-freq-val') : '1';
-    const due = document.getElementById('taskDueDate').value;
-    if (freqType === 'fixed') {
-        parts.push(due
-            ? calParse(due).toLocaleDateString(undefined, { weekday: 'short', day: 'numeric', month: 'short' })
-            : 'Once');
-    } else if (freqType === 'workdays') {
-        parts.push('Workdays');
-    } else if (freqType === 'custom') {
-        const n = parseInt(document.getElementById('taskInterval').value, 10);
-        parts.push(n > 1 ? `Every ${n} days` : 'Every day');
-    } else if (freqVal === '7') {
-        const day = document.querySelector('#weeklyDayPicker .weekday-btn.active');
-        const names = ['Sundays', 'Mondays', 'Tuesdays', 'Wednesdays', 'Thursdays', 'Fridays', 'Saturdays'];
-        parts.push(day ? names[parseInt(day.getAttribute('data-day'), 10)] : 'Weekly');
-    } else if (freqVal === '30') {
-        parts.push('Monthly');
-    } else {
-        parts.push('Every day');
+    const set = (id, text) => {
+        const el = document.getElementById(id);
+        if (el) el.textContent = text;
+    };
+    set('taskRecapName', name);
+    set('taskSummary', [when, taskTimeText(false), length].filter(Boolean).join(' · '));
+    set('reviewName', name || 'No name yet');
+    set('reviewWhen', when);
+    set('reviewTime', taskTimeText(true));
+    set('reviewLength', length);
+
+    const note = document.getElementById('reviewNote');
+    if (note) {
+        note.textContent = description;
+        note.hidden = !description;
     }
-
-    const timeEl = document.getElementById('taskDueTime');
-    const exact = timeEl ? parseTimeFieldValue(timeEl.value) : null;
-    const slot = document.getElementById('taskTimeSlot').value;
-    if (exact !== null) parts.push(`at ${fmtHM(exact)}`);
-    else if (slot && slot !== 'anytime' && SLOT_META[slot]) parts.push(SLOT_META[slot].label.toLowerCase());
-
-    const mins = parseInt(document.getElementById('taskDurationInput').value, 10);
-    if (mins > 0) {
-        const h = Math.floor(mins / 60);
-        const m = mins % 60;
-        parts.push(h ? (m ? `${h} h ${m} min` : `${h} h`) : `${m} min`);
-    }
-
-    out.textContent = parts.join(' \u00b7 ');
 }
 
 // Helper to clear error highlights
@@ -3409,24 +3732,14 @@ function clearValidationErrors() {
     clearFieldError('taskDueDate', 'taskDueDateError');
 }
 
-function syncTaskNameUI() {
-    const inputGroup = document.getElementById('taskNameInputGroup');
-    const inputEl = document.getElementById('taskName');
-    if (inputGroup) inputGroup.style.display = 'block';
-    if (inputEl) inputEl.required = true;
-}
-
-// Open create modal
-// The modal's two time answers must never contradict each other. Naming an
-// exact time settles which block it falls in, so the buttons follow the clock
-// rather than sitting there disagreeing with it. Clearing the time hands the
-// choice back. Each block shows its own real hours, so nobody has to guess
-// what this app thinks "evening" means for them.
+// The block buttons show their real hours for this person, and light up for
+// the part of the day chosen. A clock time answers the same question, so
+// while one is given no block is lit - the time chip is.
 function syncWhenUI() {
     const shape = dayShape();
     document.querySelectorAll('[data-slot-range]').forEach(el => {
         const win = slotWindow(el.getAttribute('data-slot-range'), shape);
-        el.textContent = `${fmtHM(win.from)}\u2013${fmtHM(win.to)}`;
+        el.textContent = `${fmtHM(win.from)}–${fmtHM(win.to)}`;
     });
 
     const timeInput = document.getElementById('taskDueTime');
@@ -3436,20 +3749,6 @@ function syncWhenUI() {
 
     const rawValue = timeInput.value;
     const exact = parseTimeFieldValue(rawValue);
-
-    // One place decides which button is lit, and says so out loud as well as
-    // in the styling, so the choice is not carried by a border alone.
-    const mark = (slot, locked) => {
-        document.querySelectorAll('#timeSlotGrid button').forEach(b => {
-            const on = b.getAttribute('data-slot') === slot;
-            b.classList.toggle('active', on);
-            b.setAttribute('aria-pressed', on ? 'true' : 'false');
-            // Not greyed out and unexplained: when an exact time is given the
-            // block is already answered by the clock above it, and clearing
-            // that time hands the choice straight back.
-            b.disabled = locked;
-        });
-    };
 
     if (exact === null) {
         if (hint) {
@@ -3462,229 +3761,72 @@ function syncWhenUI() {
                 hint.textContent = `Couldn't read that as a time. Try something like ${formatAppTime(13 * 60 + 30)}.`;
             }
         }
-        mark(hidden ? hidden.value : 'anytime', false);
-        return;
+    } else {
+        const slot = slotForMinutes(exact, shape);
+        if (hidden) hidden.value = slot;
+        if (hint) hint.textContent = `${fmtHM(exact)} is in your ${SLOT_META[slot].label.toLowerCase()}.`;
     }
 
-    const slot = slotForMinutes(exact, shape);
-    if (hidden) hidden.value = slot;
-    if (hint) hint.textContent = `${fmtHM(exact)} falls in your ${SLOT_META[slot].label.toLowerCase()}.`;
-    mark(slot, true);
+    const lit = exact === null && !rawValue.trim() ? (hidden ? hidden.value : 'anytime') : null;
+    document.querySelectorAll('#timeSlotGrid button').forEach(b => {
+        const on = b.getAttribute('data-slot') === lit;
+        b.classList.toggle('active', on);
+        b.setAttribute('aria-pressed', on ? 'true' : 'false');
+    });
 }
 
 function openCreateTaskModal(category, presetDate) {
-    clearValidationErrors();
     document.getElementById('modalTitle').textContent = "New task";
     document.getElementById('taskId').value = "";
     document.getElementById('taskId').dataset.updatedAt = '';
-    document.getElementById('taskName').value = "";
-    document.getElementById('taskDescription').value = "";
-    document.getElementById('taskDuration').value = "15";
-    const durInput = document.getElementById('taskDurationInput');
-    if (durInput) durInput.value = "15";
-    const dueTimeInput = document.getElementById('taskDueTime');
-    if (dueTimeInput) dueTimeInput.value = "";
-    document.getElementById('taskTimeSlot').value = "anytime";
-    document.querySelectorAll('#timeSlotGrid button').forEach(b => {
-        b.classList.toggle('active', b.getAttribute('data-slot') === 'anytime');
-    });
-    syncWhenUI();
+    taskJustSaved = false;
 
-    const cat = category || "Health & Vitality";
-    document.getElementById('taskCategory').value = cat;
-    
-    syncTaskNameUI(cat);
-    
-    // Sync Category Step 1 button active state
-    document.querySelectorAll('.wizard-step[data-step="1"] .wizard-option-btn').forEach(btn => {
-        if (btn.getAttribute('data-value') === cat) {
-            btn.classList.add('active');
-        } else {
-            btn.classList.remove('active');
-        }
-    });
-    
-    const workdaysHint = document.getElementById('workdaysHint');
-    if (workdaysHint) workdaysHint.classList.add('hidden');
-
-    if (presetDate) {
-        document.getElementById('taskType').value = 'fixed';
-        document.getElementById('taskDueDate').value = presetDate;
-        document.getElementById('taskInterval').value = "1";
-        document.querySelectorAll('.wizard-step[data-step="3"] .wizard-option-btn').forEach(b => b.classList.remove('active'));
-        const fixedBtn = document.getElementById('btnFixedDate');
-        if (fixedBtn) fixedBtn.classList.add('active');
-        intervalGroup.classList.add('hidden');
-        dueDateGroup.classList.remove('hidden');
-        if (weeklyDayGroup) weeklyDayGroup.classList.add('hidden');
-
-        // Pre-highlight the matching weekday button in weeklyDayGroup
-        const pDay = calParse(presetDate).getDay();
-        document.querySelectorAll('#weeklyDayPicker .weekday-btn').forEach(btn => {
-            btn.classList.toggle('active', parseInt(btn.getAttribute('data-day'), 10) === pDay);
-        });
-    } else {
-        document.getElementById('taskType').value = 'interval';
-        document.getElementById('taskInterval').value = "1";
-        document.getElementById('taskDueDate').value = "";
-        // Default is Daily = 1 day interval
-        document.querySelectorAll('.wizard-step[data-step="3"] .wizard-option-btn').forEach(btn => {
-            if (btn.getAttribute('data-freq-type') === 'interval' && btn.getAttribute('data-freq-val') === '1') {
-                btn.classList.add('active');
-            } else {
-                btn.classList.remove('active');
-            }
-        });
-        intervalGroup.classList.add('hidden');
-        dueDateGroup.classList.add('hidden');
-        if (weeklyDayGroup) weeklyDayGroup.classList.add('hidden');
-        document.querySelectorAll('#weeklyDayPicker .weekday-btn').forEach(btn => btn.classList.remove('active'));
-    }
-    
-    setCommitmentSwitch(false);
-    setNotifySwitch('digest');
-    setNoteOpen(false);
-
-    showStep(1);
+    // A plain New task picks up one that was closed unsaved. One started from
+    // a calendar day is its own thing and leaves the draft where it is.
+    const draft = !category && !presetDate ? taskDraft : null;
+    taskOpenedFromDraft = !!draft;
+    applyTaskFormState(draft || blankTaskState(category, presetDate));
+    showTaskStep(draft ? (draft.step || 'what') : 'what', { animate: false, focus: false, announce: false });
     openModal('New task');
 
     // Land the cursor in the only field that has to be filled in, so the
     // thought that prompted the click can be typed straight out.
-    const nameEl = document.getElementById('taskName');
-    if (nameEl) setTimeout(() => nameEl.focus(), 60);
-}
+    setTimeout(focusTaskStep, 60);
 
-// Open edit modal
-function openEditTaskModal(id) {
-    clearValidationErrors();
-    const task = tasks.find(t => t.id == id);
-    if (!task) return;
-    
-    document.getElementById('modalTitle').textContent = "Edit task";
-    document.getElementById('taskId').value = task.id;
-    document.getElementById('taskId').dataset.updatedAt = task.updatedAt || '';
-    document.getElementById('taskName').value = task.name || "";
-    document.getElementById('taskCategory').value = task.category || "Health & Vitality";
-    document.getElementById('taskDescription').value = task.description || "";
-    document.getElementById('taskType').value = task.type || "interval";
-    
-    const duration = task.durationMinutes || 15;
-    document.getElementById('taskDuration').value = duration;
-    const durInput = document.getElementById('taskDurationInput');
-    if (durInput) durInput.value = duration;
-    
-    const dueTimeInput = document.getElementById('taskDueTime');
-    if (dueTimeInput) {
-        const savedMins = task.dueTime ? parseHM(task.dueTime, null) : null;
-        dueTimeInput.value = savedMins !== null ? formatAppTime(savedMins) : "";
-    }
-    
-    const timeSlot = task.timeSlot || 'anytime';
-    document.getElementById('taskTimeSlot').value = timeSlot;
-    document.querySelectorAll('#timeSlotGrid button').forEach(b => {
-        b.classList.toggle('active', b.getAttribute('data-slot') === timeSlot);
-    });
-    syncWhenUI();
-
-    syncTaskNameUI(task.category);
-    
-    // Sync Category Step 1 button active state
-    document.querySelectorAll('.wizard-step[data-step="1"] .wizard-option-btn').forEach(btn => {
-        if (btn.getAttribute('data-value') === task.category) {
-            btn.classList.add('active');
-        } else {
-            btn.classList.remove('active');
-        }
-    });
-    
-    // Sync Frequency Step 3 button active state
-    document.querySelectorAll('.wizard-step[data-step="3"] .wizard-option-btn').forEach(btn => {
-        btn.classList.remove('active');
-    });
-    
-    const workdaysHint = document.getElementById('workdaysHint');
-    const workdaysHintText = document.getElementById('workdaysHintText');
-
-    if (task.type === 'workdays' || task.intervalType === 'Workdays' || task.interval_type === 'Workdays') {
-        document.getElementById('taskType').value = 'workdays';
-        document.getElementById('taskInterval').value = "";
-        document.getElementById('taskDueDate').value = "";
-        const btn = document.getElementById('btnWorkDays');
-        if (btn) btn.classList.add('active');
-        intervalGroup.classList.add('hidden');
-        dueDateGroup.classList.add('hidden');
-        if (weeklyDayGroup) weeklyDayGroup.classList.add('hidden');
-        if (workdaysHint) {
-            if (workdaysHintText) {
-                workdaysHintText.textContent = `Active on your work days: ${formatWorkDaysSummary(getUserWorkDays())}`;
-            }
-            workdaysHint.classList.remove('hidden');
-        }
-    } else if (task.type === 'interval') {
-        if (workdaysHint) workdaysHint.classList.add('hidden');
-        const interval = task.intervalDays || 1;
-        document.getElementById('taskInterval').value = interval;
-        document.getElementById('taskDueDate').value = "";
-        
-        if (interval === 1) {
-            const btn = document.querySelector('.wizard-step[data-step="3"] .wizard-option-btn[data-freq-val="1"]');
-            if (btn) btn.classList.add('active');
-            intervalGroup.classList.add('hidden');
-            dueDateGroup.classList.add('hidden');
-            if (weeklyDayGroup) weeklyDayGroup.classList.add('hidden');
-        } else if (interval === 7) {
-            const btn = document.querySelector('.wizard-step[data-step="3"] .wizard-option-btn[data-freq-val="7"]');
-            if (btn) btn.classList.add('active');
-            intervalGroup.classList.add('hidden');
-            dueDateGroup.classList.add('hidden');
-            if (weeklyDayGroup) {
-                weeklyDayGroup.classList.remove('hidden');
-                const rawDue = task.dueDate ? (typeof task.dueDate === 'string' ? task.dueDate.split('T')[0] : (task.dueDate.value ? String(task.dueDate.value).split('T')[0] : '')) : '';
-                const anchorDateStr = rawDue || (task.createdAt ? (typeof task.createdAt === 'string' ? task.createdAt.split('T')[0] : '') : '');
-                if (anchorDateStr) {
-                    document.getElementById('taskDueDate').value = anchorDateStr;
-                    const dueDay = calParse(anchorDateStr).getDay();
-                    document.querySelectorAll('#weeklyDayPicker .weekday-btn').forEach(b => {
-                        b.classList.toggle('active', parseInt(b.getAttribute('data-day'), 10) === dueDay);
-                    });
+    if (draft) {
+        showToast('Picked up where you left off.', 'success', {
+            action: {
+                label: 'Start fresh',
+                onClick: () => {
+                    taskDraft = null;
+                    taskOpenedFromDraft = false;
+                    applyTaskFormState(blankTaskState());
+                    showTaskStep('what', { animate: false });
                 }
             }
-        } else if (interval === 30) {
-            const btn = document.querySelector('.wizard-step[data-step="3"] .wizard-option-btn[data-freq-val="30"]');
-            if (btn) btn.classList.add('active');
-            intervalGroup.classList.add('hidden');
-            dueDateGroup.classList.add('hidden');
-            if (weeklyDayGroup) weeklyDayGroup.classList.add('hidden');
-        } else {
-            const btn = document.getElementById('btnCustomDays');
-            if (btn) btn.classList.add('active');
-            intervalGroup.classList.remove('hidden');
-            dueDateGroup.classList.add('hidden');
-            if (weeklyDayGroup) weeklyDayGroup.classList.add('hidden');
-        }
-    } else {
-        if (workdaysHint) workdaysHint.classList.add('hidden');
-        const dStr = (task.dueDate && typeof task.dueDate === 'string')
-            ? task.dueDate.split('T')[0]
-            : (task.dueDate && task.dueDate.value ? String(task.dueDate.value).split('T')[0] : "");
-        document.getElementById('taskDueDate').value = dStr;
-        document.getElementById('taskInterval').value = "1";
-        
-        const btn = document.getElementById('btnFixedDate');
-        if (btn) btn.classList.add('active');
-        intervalGroup.classList.add('hidden');
-        dueDateGroup.classList.remove('hidden');
-        if (weeklyDayGroup) weeklyDayGroup.classList.add('hidden');
+        });
     }
-    
-    const notifyPref = task.notifyPref || task.notifyPreference || 'digest';
-    setCommitmentSwitch(!!task.isCommitment);
-    setNotifySwitch(task.isCommitment ? 'digest' : notifyPref);
-    setNoteOpen(!!(task.description && task.description.trim()));
+}
 
-    showStep(1);
+// Open edit modal. An edit opens on the check screen, where every part of
+// the task is one tap from its question. `startStep` opens one question
+// instead - "Pick a day" on a parked thought goes straight to When.
+function openEditTaskModal(id, startStep) {
+    const task = tasks.find(t => t.id == id);
+    if (!task) return;
+
     document.getElementById('modalTitle').textContent = 'Edit task';
+    document.getElementById('taskId').value = task.id;
+    document.getElementById('taskId').dataset.updatedAt = task.updatedAt || '';
+    taskJustSaved = false;
+    taskOpenedFromDraft = false;
+
+    applyTaskFormState(taskStateFromTask(task));
+    const step = TASK_STEPS.includes(startStep) ? startStep : 'review';
+    taskStepReturn = step !== 'review';
+    showTaskStep(step, { animate: false, focus: false, announce: false });
     openModal('Edit task');
+    setTimeout(focusTaskStep, 60);
 }
 
 // Close modal
@@ -3705,8 +3847,19 @@ function openModal(announceAs) {
     if (announceAs) announce(announceAs + ' dialog opened. Press Escape to close.');
 }
 
+// Closing a new task before it is saved keeps what was typed for the next
+// New task. A form closed with no name has nothing worth keeping.
+function rememberTaskDraft() {
+    clearTimeout(taskAdvanceTimer);
+    if (taskJustSaved || isEditingTask()) return;
+    const state = readTaskFormState();
+    if (state.name) taskDraft = state;
+    else if (taskOpenedFromDraft) taskDraft = null;
+}
+
 function closeModal() {
     if (!modal.classList.contains('open')) return;
+    rememberTaskDraft();
     modal.classList.remove('open');
     modal.setAttribute('aria-hidden', 'true');
     if (releaseModalFocus) {
@@ -3769,6 +3922,7 @@ taskForm.addEventListener('submit', async (e) => {
     clearFieldError('taskDueDate', 'taskDueDateError');
 
     if (!name) {
+        showTaskStep('what', { focus: false, announce: false });
         showFieldError('taskName', 'taskNameError', 'Give it a name first — anything you would recognise later.');
         return;
     }
@@ -3812,6 +3966,9 @@ taskForm.addEventListener('submit', async (e) => {
             localStorage.setItem('bokea_task_durations', JSON.stringify(durations));
         }
         
+        // Saved, so there is nothing to keep for next time.
+        taskJustSaved = true;
+        if (!id && taskOpenedFromDraft) taskDraft = null;
         closeModal();
         await loadDashboardData();
 
@@ -8349,39 +8506,38 @@ function syncTimePresets() {
     ];
 
     const current = parseTimeFieldValue(field.value);
+    const matched = choices.some(c => c.mins === current);
     box.innerHTML = '';
 
-    choices.forEach(c => {
+    const chip = (on) => {
         const btn = document.createElement('button');
         btn.type = 'button';
-        btn.className = 'time-preset' + (current === c.mins ? ' active' : '');
-        btn.innerHTML = `<span class="time-preset-name"></span><span class="time-preset-clock"></span>`;
-        btn.querySelector('.time-preset-name').textContent = c.label;
-        btn.querySelector('.time-preset-clock').textContent = formatAppTime(c.mins);
+        btn.className = 'tw-chip' + (on ? ' active' : '');
+        btn.setAttribute('aria-pressed', on ? 'true' : 'false');
+        return btn;
+    };
+
+    choices.forEach(c => {
+        const btn = chip(current === c.mins);
+        btn.innerHTML = `<span class="tw-chip-name"></span><span class="tw-chip-clock"></span>`;
+        btn.querySelector('.tw-chip-name').textContent = c.label;
+        btn.querySelector('.tw-chip-clock').textContent = formatAppTime(c.mins);
         btn.setAttribute('aria-label', `${c.label}, ${formatAppTime(c.mins)}`);
-        btn.addEventListener('click', () => {
-            field.value = formatAppTime(c.mins);
-            clearTimeFieldComplaint();
-            syncWhenUI();
-            syncTimePresets();
-        });
+        btn.addEventListener('click', () => setTaskExactTime(c.mins, { fromUser: true }));
         box.appendChild(btn);
     });
 
-    // Clearing the time hands the choice back to the part-of-day buttons,
-    // which is a real answer and needs its own way of being given.
-    const clear = document.createElement('button');
-    clear.type = 'button';
-    clear.className = 'time-preset time-preset-clear';
-    clear.textContent = 'No set time';
-    clear.disabled = !field.value.trim();
-    clear.addEventListener('click', () => {
-        field.value = '';
-        clearTimeFieldComplaint();
-        syncWhenUI();
+    // Any other time is typed. Once one is given, this chip shows it, so the
+    // answer stays visible on the screen that asked for it.
+    const typed = current !== null && !matched;
+    const other = chip(typed || (exactTimeOpen() && !matched));
+    other.textContent = typed ? formatAppTime(current) : 'Other time\u2026';
+    other.setAttribute('aria-label', typed ? `At ${formatAppTime(current)}. Change it` : 'Type a different time');
+    other.addEventListener('click', () => {
+        setExactTimeOpen(true, true);
         syncTimePresets();
     });
-    box.appendChild(clear);
+    box.appendChild(other);
 }
 
 function clearTimeFieldComplaint() {

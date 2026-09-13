@@ -7620,21 +7620,31 @@ body.motion-off .tick-btn:active {
 }
 
 /* ---------- The task form ----------
-   One column. The name is first; every other question sits in a rail on
-   the left so the eye runs down one edge, and answers are segmented
-   controls and pills instead of boxed cards with radio dots. The footer
-   reads the task back in a line. Everything is scoped to #taskModal so the
-   onboarding wizard, which shares .wizard-option-btn, is untouched. */
+   One question a screen. Four dots in the header say how close the end is,
+   the body asks one thing with big answers, and the footer has Back, Save
+   and Next. Everything is scoped to #taskModal so the onboarding wizard,
+   which shares some class names, is untouched. */
 #taskModal .modal-content {
-    max-width: 640px;
+    max-width: 520px;
+    /* The same size on every screen, so Save and Next stay where the thumb
+       left them instead of jumping as the questions change. */
+    height: min(600px, 90vh);
+    height: min(600px, 90dvh);
+}
+
+#taskModal [hidden],
+#taskModal .hidden {
+    display: none !important;
 }
 
 #taskModal .modal-header {
+    gap: 12px;
     padding: 14px 14px 0 24px;
     border-bottom: none;
 }
 
 #taskModal .modal-header h3 {
+    flex: 1;
     font-size: 0.82rem;
     font-weight: 600;
     color: var(--text-muted);
@@ -7643,6 +7653,32 @@ body.motion-off .tick-btn:active {
 #taskModal .close-btn svg {
     width: 18px;
     height: 18px;
+}
+
+.tw-dots {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+}
+
+.tw-dots li {
+    width: 6px;
+    height: 6px;
+    border-radius: 9999px;
+    background: var(--border-color-dark);
+    transition: width var(--transition-speed) ease, background-color var(--transition-speed) ease;
+}
+
+.tw-dots li.done {
+    background: var(--text-secondary);
+}
+
+.tw-dots li.current {
+    width: 18px;
+    background: var(--text-main);
 }
 
 #taskModal #taskForm {
@@ -7654,79 +7690,113 @@ body.motion-off .tick-btn:active {
     overflow: hidden;
 }
 
-.task-form-stack {
+/* What Save would save, while the questions are being answered. */
+.tw-recap {
+    display: flex;
+    align-items: baseline;
+    gap: 8px;
+    min-width: 0;
+    margin: 6px 24px 0;
+    font-size: 0.82rem;
+    white-space: nowrap;
+    color: var(--text-muted);
+}
+
+.tw-recap-name {
+    flex: 0 1 auto;
+    max-width: 50%;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    font-weight: 600;
+    color: var(--text-secondary);
+}
+
+.tw-recap-rest {
+    flex: 1 1 auto;
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    font-variant-numeric: tabular-nums;
+}
+
+.tw-body {
     flex: 1;
     min-height: 0;
     overflow-y: auto;
     overflow-x: hidden;
     overscroll-behavior: contain;
+    padding: 18px 24px 24px;
 }
 
-/* The wizard-step wrappers still group the option buttons for the script;
-   their old slider positioning is unwound here. */
-.task-form-stack .wizard-step,
-.task-form-stack .wizard-step.wizard-step-active {
-    position: static !important;
-    display: block !important;
-    width: 100% !important;
-    min-width: 0;
-    min-height: 0 !important;
-    height: auto !important;
-    transform: none !important;
-    opacity: 1 !important;
-    animation: none !important;
+.tw-step {
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
 }
 
-.task-form-stack .form-group {
+.tw-in-fwd {
+    animation: twInFwd 0.22s ease both;
+}
+
+.tw-in-back {
+    animation: twInBack 0.22s ease both;
+}
+
+@keyframes twInFwd {
+    from { opacity: 0; transform: translateX(16px); }
+    to { opacity: 1; transform: none; }
+}
+
+@keyframes twInBack {
+    from { opacity: 0; transform: translateX(-16px); }
+    to { opacity: 1; transform: none; }
+}
+
+#taskModal .tw-q {
+    margin: 0 0 4px;
+    font-size: 1.35rem;
+    font-weight: 600;
+    letter-spacing: -0.015em;
+    line-height: 1.25;
+    color: var(--text-main);
+}
+
+#taskModal .tw-q:focus {
+    outline: none;
+}
+
+#taskModal .form-group {
     margin-bottom: 0;
 }
 
 /* Fields sit a step darker than the card in both themes. */
-#taskModal .task-form-stack input:not(#taskName),
-#taskModal .task-form-stack textarea {
+#taskModal .tw-body input,
+#taskModal .tw-body textarea {
     background: var(--bg-body);
     border-color: var(--border-color);
+    color: var(--text-main);
 }
 
-#taskModal .task-form-stack input:not(#taskName):focus,
-#taskModal .task-form-stack textarea:focus {
+#taskModal .tw-body input:focus,
+#taskModal .tw-body textarea:focus {
     border-color: var(--border-color-dark);
 }
 
-/* ---- Name and note ---- */
-.tf-name {
-    display: flex;
-    flex-direction: column;
-    gap: 6px;
-    padding: 6px 24px 16px;
-    border-bottom: 1px solid var(--border-color);
-}
-
+/* ---- What ---- */
 #taskModal #taskName {
-    min-height: 40px;
-    padding: 0;
-    border: none;
-    border-radius: 0;
-    background: transparent;
+    width: 100%;
+    min-height: 52px;
+    padding: 0 14px;
+    border: 1px solid var(--border-color);
+    border-radius: var(--border-radius-lg);
     box-shadow: none;
     outline: none;
-    color: var(--text-main);
-    font-size: 1.5rem !important;
-    font-weight: 600;
-    letter-spacing: -0.015em;
-    line-height: 1.3;
+    font-size: 1.1rem !important;
+    font-weight: 500;
 }
 
 #taskModal #taskName::placeholder {
     color: var(--text-muted);
-    font-weight: 500;
-}
-
-/* The caret is the focus indicator for a bare title field; a ring round
-   it read as a stray box. An error still draws its red ring. */
-#taskModal #taskName:focus-visible {
-    outline: none;
-    box-shadow: none;
 }
 
 .tf-note-toggle {
@@ -7761,351 +7831,325 @@ body.motion-off .tick-btn:active {
 }
 
 #taskDescGroup textarea {
-    min-height: 64px;
+    min-height: 80px;
     resize: vertical;
 }
 
-/* ---- The rail ---- */
-.tf-fields {
+/* ---- Big answers: the one question on screen ---- */
+.tw-grid {
+    display: grid;
+    gap: 10px;
+}
+
+.tw-grid-2 {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.tw-grid-3 {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+
+#taskModal .tw-opt {
     display: flex;
     flex-direction: column;
-    gap: 22px;
-    padding: 22px 24px 24px;
+    align-items: flex-start;
+    justify-content: center;
+    gap: 3px;
+    min-width: 0;
+    min-height: 64px;
+    padding: 10px 14px;
+    background: var(--bg-body);
+    border: 1px solid var(--border-color);
+    border-radius: var(--border-radius-lg);
+    box-shadow: none;
+    color: var(--text-main);
+    font-family: inherit;
+    text-align: left;
+    cursor: pointer;
+    transition: background-color var(--transition-speed) ease, border-color var(--transition-speed) ease, color var(--transition-speed) ease;
 }
 
-.tf-row {
-    display: grid;
-    grid-template-columns: 88px minmax(0, 1fr);
-    column-gap: 16px;
-    align-items: start;
+#taskModal .tw-grid-3 .tw-opt {
+    align-items: center;
+    min-height: 56px;
+    text-align: center;
 }
 
-#taskModal .tf-label {
-    display: block;
-    margin: 0;
-    padding-top: 11px;
-    font-size: 0.82rem;
+#taskModal .tw-opt:hover {
+    background: var(--bg-hover);
+    border-color: var(--border-color-dark);
+}
+
+#taskModal .tw-opt.active,
+#taskModal .tw-opt.active:hover {
+    background: var(--text-main);
+    border-color: var(--text-main);
+    color: var(--bg-card);
+}
+
+#taskModal .tw-opt:focus-visible {
+    outline: 2px solid var(--text-main);
+    outline-offset: 2px;
+}
+
+.tw-opt-name {
+    font-size: 0.95rem;
+    font-weight: 600;
+    line-height: 1.2;
+}
+
+.tw-opt-sub {
+    font-size: 0.75rem;
+    line-height: 1.3;
+    color: var(--text-muted);
+    font-variant-numeric: tabular-nums;
+}
+
+#taskModal .tw-opt.active .tw-opt-sub {
+    color: inherit;
+    opacity: 0.7;
+}
+
+/* ---- Smaller answers: the other way of saying the same thing ---- */
+#taskModal .tw-group-label {
+    margin: 6px 0 -4px;
+    font-size: 0.78rem;
     font-weight: 500;
-    line-height: 1.4;
+    color: var(--text-secondary);
+}
+
+.tw-chips {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+}
+
+#taskModal .tw-chip {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    min-height: 38px;
+    padding: 0 14px;
+    background: transparent;
+    border: 1px solid var(--border-color);
+    border-radius: 9999px;
+    box-shadow: none;
+    color: var(--text-secondary);
+    font-family: inherit;
+    font-size: 0.84rem;
+    font-weight: 500;
+    cursor: pointer;
+}
+
+#taskModal .tw-chip:hover {
+    border-color: var(--text-secondary);
+    color: var(--text-main);
+}
+
+#taskModal .tw-chip.active,
+#taskModal .tw-chip.active:hover {
+    background: var(--text-main);
+    border-color: var(--text-main);
+    color: var(--bg-card);
+    font-weight: 600;
+}
+
+#taskModal .tw-chip:focus-visible {
+    outline: 2px solid var(--text-main);
+    outline-offset: 2px;
+}
+
+.tw-chip-clock {
+    font-size: 0.78rem;
+    font-variant-numeric: tabular-nums;
+    opacity: 0.7;
+}
+
+/* ---- The one extra thing an answer sometimes needs ---- */
+.tw-extra {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.tw-extra.tw-inline {
+    flex-direction: row;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 10px;
+}
+
+#taskModal .tw-extra-label,
+#taskModal .tw-inline label {
+    margin: 0;
+    font-size: 0.85rem;
+    font-weight: 500;
     letter-spacing: 0;
     text-transform: none;
     color: var(--text-secondary);
 }
 
-.tf-control {
-    display: flex;
-    flex-direction: column;
-    gap: 10px;
-    min-width: 0;
-}
-
-/* ---- Segmented controls: how often, when in the day ---- */
-.tf-seg {
-    --tf-seg-count: 4;
-    display: grid;
-    grid-template-columns: repeat(var(--tf-seg-count), minmax(0, 1fr));
-    gap: 2px;
-    margin: 0;
-    padding: 3px;
-    background: var(--bg-body);
-    border: 1px solid var(--border-color);
-    border-radius: var(--border-radius-lg);
-}
-
-.tf-seg.freq-grid {
-    --tf-seg-count: 6;
-}
-
-#taskModal .tf-seg button {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    gap: 2px;
+#taskModal #taskDueDate,
+#taskModal #taskDueTime {
     width: 100%;
-    min-width: 0;
-    min-height: 34px;
-    padding: 0 4px;
-    background: transparent;
-    border: none;
+    max-width: 240px;
+    height: 48px;
+    padding: 0 12px;
     border-radius: var(--border-radius-md);
-    box-shadow: none;
-    color: var(--text-secondary);
     font-family: inherit;
-    font-size: 0.82rem;
-    font-weight: 500;
-    line-height: 1.2;
-    text-align: center;
-    white-space: nowrap;
+    font-size: 1rem;
+    font-variant-numeric: tabular-nums;
+}
+
+#taskModal #taskDueDate {
     cursor: pointer;
-    transition: background-color var(--transition-speed) ease, color var(--transition-speed) ease;
 }
 
-#taskModal .tf-seg button::after {
-    display: none;
-}
-
-#taskModal .tf-seg button:hover:not(:disabled) {
-    background: var(--bg-hover);
-    color: var(--text-main);
-}
-
-#taskModal .tf-seg button.active,
-#taskModal .tf-seg button.active:hover {
-    background: var(--text-main);
-    color: var(--bg-card);
+#taskModal #taskInterval,
+#taskModal #taskDurationInput {
+    width: 90px;
+    height: 48px;
+    padding: 0 10px;
+    border-radius: var(--border-radius-md);
+    font-size: 1rem;
     font-weight: 600;
-    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.12);
+    text-align: center;
+    font-variant-numeric: tabular-nums;
 }
 
-#taskModal .tf-seg button:focus-visible {
-    outline: 2px solid var(--text-main);
-    outline-offset: 1px;
+.tf-unit {
+    font-size: 0.85rem;
+    color: var(--text-secondary);
 }
 
-#taskModal .tf-seg .slot-btn {
-    min-height: 44px;
-}
-
-#taskModal .slot-btn-name {
-    font-size: 0.82rem;
-    font-weight: inherit;
-}
-
-#taskModal .slot-btn-range {
-    font-size: 0.68rem;
-    font-weight: 400;
-    color: var(--text-muted);
-}
-
-#taskModal .slot-btn.active .slot-btn-range {
-    color: inherit;
-    opacity: 0.7;
-}
-
-/* An exact time answers the block question on its own; the blocks agree
-   with the clock and stop taking clicks until it is cleared. */
-#taskModal .slot-btn:disabled {
-    cursor: default;
-    opacity: 1;
-}
-
-#taskModal .slot-btn:disabled:not(.active) {
-    opacity: 0.5;
-}
-
-/* ---- What opens under "Repeats" ---- */
 #taskModal .weekday-picker {
     margin-top: 0;
 }
 
 #taskModal .weekday-btn {
-    min-height: 36px;
-    font-size: 0.78rem;
-}
-
-.tf-sub {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    margin: 0;
+    min-height: 40px;
     font-size: 0.8rem;
-    color: var(--text-secondary);
-}
-
-.tf-sub svg {
-    width: 15px;
-    height: 15px;
-    color: var(--text-muted);
-}
-
-.task-form-stack .tf-inline {
-    flex-direction: row;
-    flex-wrap: wrap;
-    align-items: center;
-    gap: 10px;
-}
-
-#taskModal .tf-inline label {
-    margin: 0;
-    font-size: 0.82rem;
-    font-weight: 500;
-    letter-spacing: 0;
-    text-transform: none;
-    color: var(--text-secondary);
-}
-
-#taskModal #taskInterval {
-    width: 84px;
-}
-
-#taskModal #dueDateGroup {
-    margin-top: 2px;
-}
-
-.tf-field-icon.tf-date-field {
-    width: 170px;
-}
-
-#taskModal #taskDueDate {
-    width: 100%;
-    height: 40px;
-    padding: 0 10px 0 34px;
-    font-variant-numeric: tabular-nums;
-    color: var(--text-main);
-    font-family: inherit;
-    font-size: 0.84rem;
-    border-radius: var(--border-radius-md);
-    cursor: pointer;
-}
-
-.tf-inline .field-error {
-    flex-basis: 100%;
-}
-
-.tf-unit {
-    font-size: 0.82rem;
-    color: var(--text-secondary);
-}
-
-/* ---- Time and how long ---- */
-.tf-time-line {
-    display: flex;
-    flex-wrap: wrap;
-    align-items: center;
-    gap: 10px 12px;
-}
-
-.tf-field-icon {
-    position: relative;
-    width: 150px;
-}
-
-.tf-field-icon svg {
-    position: absolute;
-    left: 12px;
-    top: 50%;
-    width: 15px;
-    height: 15px;
-    transform: translateY(-50%);
-    color: var(--text-muted);
-    pointer-events: none;
-}
-
-#taskModal #taskDueTime {
-    height: 40px;
-    padding: 0 12px 0 34px;
-    font-variant-numeric: tabular-nums;
-}
-
-.tf-for {
-    font-size: 0.82rem;
-    color: var(--text-muted);
-}
-
-.tf-stepper {
-    display: flex;
-    align-items: stretch;
-    height: 40px;
-    box-sizing: border-box;
-    background: var(--bg-body);
-    border: 1px solid var(--border-color);
-    border-radius: var(--border-radius-md);
-    overflow: hidden;
-}
-
-.tf-stepper:focus-within {
-    border-color: var(--border-color-dark);
-}
-
-.tf-step {
-    width: 38px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    padding: 0;
-    background: none;
-    border: none;
-    color: var(--text-secondary);
-    cursor: pointer;
-}
-
-.tf-step:hover {
-    background: var(--bg-hover);
-    color: var(--text-main);
-}
-
-.tf-step:focus-visible {
-    outline: 2px solid var(--text-main);
-    outline-offset: -2px;
-}
-
-.tf-step svg {
-    width: 15px;
-    height: 15px;
-}
-
-#taskModal .tf-stepper-value {
-    display: flex;
-    align-items: center;
-    gap: 4px;
-    margin: 0;
-    padding: 0 10px;
-    border-left: 1px solid var(--border-color);
-    border-right: 1px solid var(--border-color);
-    text-transform: none;
-    letter-spacing: 0;
-    cursor: text;
-}
-
-#taskModal #taskDurationInput {
-    width: 3.4ch;
-    padding: 0;
-    border: none;
-    background: transparent;
-    box-shadow: none;
-    outline: none;
-    text-align: right;
-    color: var(--text-main);
-    font-weight: 600;
-    font-variant-numeric: tabular-nums;
-    -moz-appearance: textfield;
-    appearance: textfield;
-}
-
-#taskModal #taskDurationInput::-webkit-inner-spin-button,
-#taskModal #taskDurationInput::-webkit-outer-spin-button {
-    -webkit-appearance: none;
-    margin: 0;
-}
-
-#taskModal .time-presets {
-    margin-top: 0;
-    gap: 6px;
-}
-
-#taskModal .time-preset {
-    flex-direction: row;
-    align-items: center;
-    gap: 6px;
-    min-height: 30px;
-    padding: 0 10px;
-    border-radius: 9999px;
-}
-
-#taskModal .time-preset-name,
-#taskModal .time-preset-clear {
-    font-size: 0.75rem;
-    font-weight: 500;
-}
-
-#taskModal .time-preset-clock {
-    font-size: 0.75rem;
-    font-variant-numeric: tabular-nums;
 }
 
 #taskModal .field-hint {
     margin: 0;
+}
+
+/* ---- Check and save ---- */
+#taskModal .tw-review-name {
+    display: flex;
+    align-items: flex-start;
+    gap: 12px;
+    width: 100%;
+    padding: 12px 14px;
+    background: var(--bg-body);
+    border: 1px solid var(--border-color);
+    border-radius: var(--border-radius-lg);
+    color: var(--text-main);
+    font-family: inherit;
+    text-align: left;
+    cursor: pointer;
+}
+
+#taskModal .tw-review-name:hover {
+    border-color: var(--border-color-dark);
+}
+
+#taskModal .tw-review-name:focus-visible {
+    outline: 2px solid var(--text-main);
+    outline-offset: 2px;
+}
+
+.tw-review-text {
+    flex: 1;
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
+.tw-review-title {
+    font-size: 1.1rem;
+    font-weight: 600;
+    line-height: 1.3;
+    overflow-wrap: anywhere;
+}
+
+.tw-review-note {
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+    font-size: 0.8rem;
+    line-height: 1.4;
+    color: var(--text-muted);
+    white-space: pre-wrap;
+}
+
+.tw-review-edit {
+    padding-top: 3px;
+    font-size: 0.8rem;
+    font-weight: 500;
+    color: var(--text-secondary);
+}
+
+.tw-rows {
+    display: flex;
+    flex-direction: column;
+    border: 1px solid var(--border-color);
+    border-radius: var(--border-radius-lg);
+    overflow: hidden;
+}
+
+#taskModal .tw-row {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    width: 100%;
+    min-height: 50px;
+    padding: 0 14px;
+    background: transparent;
+    border: none;
+    border-radius: 0;
+    color: var(--text-main);
+    font-family: inherit;
+    font-size: 0.88rem;
+    text-align: left;
+    cursor: pointer;
+}
+
+#taskModal .tw-row + .tw-row {
+    border-top: 1px solid var(--border-color);
+}
+
+#taskModal .tw-row:hover {
+    background: var(--bg-hover);
+}
+
+#taskModal .tw-row:focus-visible {
+    outline: 2px solid var(--text-main);
+    outline-offset: -2px;
+}
+
+.tw-row svg {
+    color: var(--text-muted);
+}
+
+.tw-row-label {
+    flex-shrink: 0;
+    width: 76px;
+    font-weight: 500;
+    color: var(--text-secondary);
+}
+
+.tw-row-value {
+    flex: 1;
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    font-weight: 600;
+    font-variant-numeric: tabular-nums;
 }
 
 /* ---- Area pills ---- */
@@ -8116,6 +8160,8 @@ body.motion-off .tick-btn:active {
 }
 
 #taskModal .tf-pill {
+    display: inline-flex;
+    align-items: center;
     width: auto;
     min-height: 36px;
     gap: 8px;
@@ -8125,29 +8171,19 @@ body.motion-off .tick-btn:active {
     border-radius: 9999px;
     box-shadow: none;
     color: var(--text-secondary);
+    font-family: inherit;
     font-size: 0.82rem;
     font-weight: 500;
-}
-
-#taskModal .tf-pill::after {
-    display: none;
-}
-
-#taskModal .tf-pill span {
-    padding-right: 0;
-    font-size: inherit;
-    font-weight: inherit;
+    cursor: pointer;
 }
 
 #taskModal .tf-pill svg {
     width: 16px;
     height: 16px;
     color: currentColor;
-    transform: none;
 }
 
 #taskModal .tf-pill:hover {
-    background: transparent;
     border-color: var(--text-secondary);
     color: var(--text-main);
 }
@@ -8157,7 +8193,6 @@ body.motion-off .tick-btn:active {
     border-color: var(--text-main);
     color: var(--text-main);
     font-weight: 600;
-    box-shadow: none;
 }
 
 #taskModal .tf-pill:focus-visible {
@@ -8165,15 +8200,12 @@ body.motion-off .tick-btn:active {
     outline-offset: 2px;
 }
 
-/* ---- Switches: Clean, unboxed rows aligned with form controls ---- */
+/* ---- Switches ---- */
 .tf-switches {
     display: flex;
     flex-direction: column;
     gap: 4px;
-    background: transparent;
-    border: none;
-    border-radius: 0;
-    overflow: visible;
+    margin: 4px -10px 0;
 }
 
 #taskModal .tf-sw {
@@ -8183,16 +8215,11 @@ body.motion-off .tick-btn:active {
     border-radius: var(--border-radius-md);
     background: transparent;
     border: 1px solid transparent;
-    border-bottom: none;
     transition: background-color var(--transition-speed) ease;
 }
 
 #taskModal .tf-sw:hover {
     background: var(--bg-hover);
-}
-
-#taskModal .tf-sw + .tf-sw {
-    border-top: 1px solid transparent;
 }
 
 #taskModal .tf-sw:focus-visible {
@@ -8220,7 +8247,6 @@ body.motion-off .tick-btn:active {
     line-height: 1.3;
 }
 
-/* No heavy boxed background for the switch icons */
 .tf-sw-icon {
     width: 22px;
     height: 22px;
@@ -8228,9 +8254,6 @@ body.motion-off .tick-btn:active {
     display: flex;
     align-items: center;
     justify-content: center;
-    background: transparent;
-    border: none;
-    border-radius: 0;
     color: var(--text-muted);
 }
 
@@ -8270,118 +8293,94 @@ body.motion-off .tick-btn:active {
     flex-shrink: 0;
 }
 
-.tf-summary {
-    min-width: 0;
-    margin: 0;
-    overflow: hidden;
-    white-space: nowrap;
-    text-overflow: ellipsis;
-    font-size: 0.82rem;
-    color: var(--text-muted);
+#taskModal .tw-back {
+    min-height: 40px;
+    margin-left: -12px;
+    padding: 0 12px;
+    background: none;
+    border: none;
+    border-radius: var(--border-radius-md);
+    color: var(--text-secondary);
+    font-size: 0.88rem;
+}
+
+#taskModal .tw-back:hover {
+    background: var(--bg-hover);
+    color: var(--text-main);
 }
 
 .tf-actions {
     display: flex;
     align-items: center;
     gap: 10px;
+    margin-left: auto;
     flex-shrink: 0;
 }
 
 #taskForm .tf-actions .btn {
+    white-space: nowrap;
     min-height: 40px;
     padding: 0 18px;
     border-radius: var(--border-radius-md);
     font-size: 0.88rem;
 }
 
-#saveTaskBtn[disabled] {
-    opacity: .45;
-    cursor: not-allowed;
-}
-
-/* ---- Phones: the rail stacks over its answers and every target is a full tap ---- */
+/* ---- Phones: a bottom sheet, and every target is a full tap ---- */
 @media (max-width: 768px) {
+    #taskModal .modal-content {
+        height: 88vh;
+        height: 88dvh;
+    }
+
     #taskModal .modal-header {
         padding: 16px 10px 0 18px;
-        border-bottom: none;
     }
 
-    .tf-name {
-        padding: 2px 18px 14px;
+    .tw-recap {
+        margin: 6px 18px 0;
     }
 
-    .tf-fields {
-        gap: 20px;
-        padding: 18px 18px 22px;
+    .tw-body {
+        padding: 14px 18px 20px;
     }
 
-    .tf-row {
-        grid-template-columns: minmax(0, 1fr);
-        row-gap: 8px;
+    #taskModal .tw-q {
+        font-size: 1.25rem;
     }
 
-    #taskModal .tf-label {
-        padding-top: 0;
-    }
-
-    .tf-seg.freq-grid {
-        --tf-seg-count: 3;
-    }
-
-    #taskModal .tf-seg button,
+    #taskModal .tw-chip,
+    #taskModal .tw-row,
     #taskModal .tf-pill,
-    #taskModal .time-preset,
     #taskModal .weekday-btn,
     .tf-note-toggle {
         min-height: var(--tap);
     }
 
-    .tf-stepper,
-    #taskModal #taskDueTime,
-    #taskModal #taskDueDate {
-        height: var(--tap);
-    }
-
-    .tf-step {
-        width: var(--tap);
-    }
-
-    /* Time, "for" and the stepper stay on one line; the time field gives way. */
-    .tf-time-line {
-        flex-wrap: nowrap;
-        gap: 10px;
-    }
-
-    .tf-field-icon {
-        flex: 1;
-        width: auto;
-        min-width: 0;
-    }
-
     #taskForm .modal-footer {
-        flex-direction: row;
         padding: 12px 18px calc(12px + env(safe-area-inset-bottom, 0px));
     }
 
-    .tf-summary {
-        display: none;
+    #taskForm .tf-actions .btn,
+    #taskModal .tw-back {
+        min-height: var(--tap);
+    }
+
+    /* Back keeps its own width; Save and Next share the rest evenly. */
+    #taskModal .tw-back {
+        flex: 0 0 auto;
+        width: auto;
     }
 
     .tf-actions {
-        width: 100%;
+        flex: 1;
+        justify-content: flex-end;
     }
 
     #taskForm .tf-actions .btn {
-        flex: 1;
+        flex: 1 1 0;
         width: auto;
-        min-height: var(--tap);
+        max-width: 180px;
         justify-content: center;
-    }
-}
-
-@media (max-width: 480px) {
-    #taskModal .time-slot-grid {
-        --tf-seg-count: 2;
     }
 }
 
