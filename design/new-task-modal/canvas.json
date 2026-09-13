@@ -1,0 +1,17 @@
+{
+  "pages": [
+    { "id": "page-1", "name": "Chosen" },
+    { "id": "page-2", "name": "Other directions" }
+  ],
+  "artboards": [
+    { "file": "Main.dc.html", "title": "A · Quiet column", "x": 0, "y": 0, "w": 720, "h": 860, "page": "page-1" },
+    { "file": "SentenceBuilder.dc.html", "title": "B · Sentence", "x": 0, "y": 0, "w": 720, "h": 720, "page": "page-2" },
+    { "file": "PropertyList.dc.html", "title": "C · Property list", "x": 800, "y": 0, "w": 640, "h": 820, "page": "page-2" }
+  ],
+  "annotations": [
+    { "id": "note-a", "x": 0, "y": -170, "w": 700, "page": "page-1", "text": "A · Quiet column (chosen)\nEverything stays on one screen, but labels move into a left rail and choices become segmented controls instead of boxed cards with radio dots, so your eye runs down one edge. The footer reads the task back to you.\nTradeoff: still shows every field at once, so it's the tallest of the three." },
+    { "id": "note-b", "x": 0, "y": -170, "w": 700, "page": "page-2", "text": "B · Sentence\nThe task reads as a sentence, and each word in a box opens a small picker (the repeat picker is shown open). Extras sit as chips underneath.\nTradeoff: options stay hidden until you tap, and long sentences wrap awkwardly on a phone." },
+    { "id": "note-c", "x": 800, "y": -170, "w": 620, "page": "page-2", "text": "C · Property list\nName up top, then one tidy row per setting showing its current value; tap a row to open it (Repeat is open). Calmest to look at, and it's easy to add settings later.\nTradeoff: changing several things costs a tap per row." }
+  ],
+  "launch": { "view": "canvas", "page": "page-1" }
+}
