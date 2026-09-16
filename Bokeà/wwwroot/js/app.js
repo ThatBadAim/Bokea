@@ -149,16 +149,35 @@ let isFallbackMode = false; // Flag for localStorage fallback
 
 // Lucide Icons initialization helper - batched via microtask to eliminate duplicate full-DOM sweeps
 let isRefreshingIcons = false;
-function refreshIcons() {
+const pendingIconRoots = new Set();
+let fullIconSweepNeeded = false;
+
+function refreshIcons(container) {
     if (typeof lucide === 'undefined') return;
+    if (container && container.nodeType === 1) {
+        pendingIconRoots.add(container);
+    } else {
+        fullIconSweepNeeded = true;
+    }
     if (isRefreshingIcons) return;
     isRefreshingIcons = true;
     queueMicrotask(() => {
         isRefreshingIcons = false;
         try {
-            lucide.createIcons();
+            if (!fullIconSweepNeeded && pendingIconRoots.size > 0) {
+                pendingIconRoots.forEach(root => {
+                    if (root && root.isConnected) {
+                        lucide.createIcons({ root });
+                    }
+                });
+            } else {
+                lucide.createIcons();
+            }
         } catch (e) {
             console.error("Failed to render icons", e);
+        } finally {
+            pendingIconRoots.clear();
+            fullIconSweepNeeded = false;
         }
     });
 }
@@ -2185,7 +2204,7 @@ function toggleRowMenu(btn, id, done, kind) {
     document.body.appendChild(menu);
     menu._owner = btn;
     btn.setAttribute('aria-expanded', 'true');
-    refreshIcons();
+    refreshIcons(menu);
 
     // Right-aligned to the button, flipped above it when there is no room
     // below, and never off the left edge of a narrow phone.
@@ -5360,7 +5379,10 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // 7. Window resize event to redraw responsive graph
     window.addEventListener('resize', debounce(() => {
-        renderAnalyticsGraph();
+        const activeTab = document.body.getAttribute('data-active-tab') || 'home';
+        if (activeTab === 'analytics') {
+            renderAnalyticsGraph();
+        }
     }, 150));
     
     // 8. Search input listener - debounced to prevent heavy reflows on each keystroke
@@ -6775,6 +6797,7 @@ document.addEventListener('DOMContentLoaded', () => {
     // The marks that say where in the day you are and the live clock move on the minute.
     let lastMinute = -1;
     setInterval(() => {
+        if (document.hidden) return;
         const m = nowMinutes();
         updateLiveClock(m);
         if (m === lastMinute) return;
@@ -6782,6 +6805,19 @@ document.addEventListener('DOMContentLoaded', () => {
         renderNowBlock();
         renderTimelineNow();
     }, 5000);
+
+    // Refresh instantly when the tab becomes visible after being backgrounded
+    document.addEventListener('visibilitychange', () => {
+        if (!document.hidden) {
+            const m = nowMinutes();
+            updateLiveClock(m);
+            if (m !== lastMinute) {
+                lastMinute = m;
+                renderNowBlock();
+                renderTimelineNow();
+            }
+        }
+    });
 
     // 11. Settings View Loading, Theme and Saving Handler logic
     function loadSettingsIntoForm() {

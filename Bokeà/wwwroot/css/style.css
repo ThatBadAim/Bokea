@@ -3303,6 +3303,8 @@ body.motion-off *::after {
 
 /* ---------- Task row: one line, big targets, rail not wash ---------- */
 .task-row {
+    content-visibility: auto;
+    contain-intrinsic-size: auto 54px;
     display: flex;
     align-items: center;
     gap: 18px;
@@ -7039,6 +7041,7 @@ span.settings-label {
    say it disappeared exactly where a phone needs it, at the foot of the
    screen. 1200 matches .snooze-menu: above both pinned bars, below modals. */
 .row-menu.is-floating {
+    contain: layout;
     display: flex;
     position: absolute;
     z-index: 1200;

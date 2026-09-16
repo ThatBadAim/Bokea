@@ -1,4 +1,4 @@
-const CACHE_NAME = 'bokea-v41';
+const CACHE_NAME = 'bokea-v42';
 const ASSETS_TO_CACHE = [
   '/',
   '/index.html',
@@ -11,8 +11,8 @@ const ASSETS_TO_CACHE = [
   '/manifest.json',
   '/assets/icon.svg',
   'https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Outfit:wght@300;400;500;600;700&family=Playfair+Display:ital,wght@0,400..900;1,400..900&display=swap',
-  'https://unpkg.com/lucide@latest',
-  'https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2'
+  'https://unpkg.com/lucide@1.45.0',
+  'https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.116.0'
 ];
 
 // The only third-party hosts whose responses are cached. Everything else that
