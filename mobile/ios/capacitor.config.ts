@@ -29,8 +29,14 @@ const config: CapacitorConfig = {
       presentationOptions: ['banner', 'list', 'sound', 'badge']
     },
     Keyboard: {
+      // Lower case: compared against "body" exactly.
       resize: 'body',
-      style: 'dark'
+      // Upper case: compared against "DARK" exactly. This path happens to be
+      // upper cased natively first, so either would work here - but the
+      // setStyle call the bridge makes as the theme changes is not, and a
+      // lower-case value there fails silently. Written the same way in both
+      // places so neither looks like the odd one out.
+      style: 'DARK'
     }
   }
 };

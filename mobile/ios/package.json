@@ -9,7 +9,7 @@
     "sync": "npm run sync:web && cap sync ios",
     "open": "cap open ios",
     "run": "npm run sync && cap run ios",
-    "build:ios": "npm run sync && cd ios/App && xcodebuild -workspace App.xcworkspace -scheme App -configuration Release -destination generic/platform=iOS -archivePath ../../dist/Bokea.xcarchive archive",
+    "build:ios": "npm run sync && cd ios/App && xcodebuild -workspace App.xcworkspace -scheme App -configuration Release -destination generic/platform=iOS -archivePath ../../dist/Bokea.xcarchive CODE_SIGNING_ALLOWED=NO archive",
     "assets:ios": "node scripts/make-ios-assets.mjs",
     "clean": "node --eval \"const fs=require('node:fs');['www','dist','.cache','ios/App/build','ios/App/Pods'].forEach(p=>fs.rmSync(p,{recursive:true,force:true}))\""
   },

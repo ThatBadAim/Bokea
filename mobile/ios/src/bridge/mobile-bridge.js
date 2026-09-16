@@ -91,8 +91,10 @@
             style.id = 'bokea-native-ios';
             style.textContent =
                 'html, body { overscroll-behavior-y: none; }' +
-                // Long-press on a task row should open the row menu, not iOS's
-                // own text selection loupe. Fields are put back below.
+                // Long-press on a task row should open the row menu, not the
+                // iOS callout with Copy and Look Up in it. This is the callout
+                // only - text selection is left alone, because a task name is
+                // worth being able to copy. Fields are put back below.
                 '.bokea-ios body { -webkit-touch-callout: none; }' +
                 '.bokea-ios input, .bokea-ios textarea, .bokea-ios [contenteditable] {' +
                 ' -webkit-touch-callout: default; -webkit-user-select: text; }';
@@ -184,10 +186,21 @@
         // IOS: the keyboard is a large piece of chrome that the app cannot draw
         // and that sits directly against it. Left alone it follows the phone's
         // appearance, so a person running the app dark on a light phone gets a
-        // white keyboard under a black modal. `dark` and `light` here are the
-        // plugin's own words, and are lower case where the bars' are not.
+        // white keyboard under a black modal.
+        //
+        // DARK and LIGHT are upper case, and have to be: setStyle compares the
+        // string it is given against @"DARK" and @"LIGHT" exactly, and anything
+        // else falls through to UIKeyboardAppearanceDefault - which is the
+        // phone's appearance, the very thing being corrected here. It resolves
+        // without error either way, so a lower-case value fails silently and
+        // looks from JavaScript exactly like a value that worked.
+        //
+        // The `style` in capacitor.config.ts is a different path and is upper
+        // cased natively before the same comparison, so it would work in either
+        // case. It is written upper case there too, so that the two never look
+        // like they mean different things.
         if (isIOS) {
-            var keyboardStyle = dark ? 'dark' : 'light';
+            var keyboardStyle = dark ? 'DARK' : 'LIGHT';
             if (keyboardStyle !== currentKeyboardStyle) {
                 currentKeyboardStyle = keyboardStyle;
                 try { Keyboard.setStyle({ style: keyboardStyle }); } catch (e) { ignore(); }

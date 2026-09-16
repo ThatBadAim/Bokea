@@ -243,7 +243,7 @@ async function run(browser, base, platform) {
       ? 'the keyboard follows the theme too, so a dark app never raises a white one'
       : 'the keyboard style is left alone, being an iOS setting',
     ios
-      ? keyboardStyle.length > 0 && keyboardStyle[keyboardStyle.length - 1].options.style === 'dark'
+      ? keyboardStyle.length > 0 && keyboardStyle[keyboardStyle.length - 1].options.style === 'DARK'
       : keyboardStyle.length === 0,
     JSON.stringify(keyboardStyle)
   );
@@ -255,7 +255,7 @@ async function run(browser, base, platform) {
     const backToLight = await calls(page, 'Keyboard', 'setStyle');
     check(
       'and follows it back to light again',
-      backToLight[backToLight.length - 1].options.style === 'light',
+      backToLight[backToLight.length - 1].options.style === 'LIGHT',
       JSON.stringify(backToLight[backToLight.length - 1])
     );
   }
