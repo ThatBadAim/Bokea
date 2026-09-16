@@ -54,10 +54,10 @@ jobs:
         with:
           node-version: '20'
           cache: npm
-          cache-dependency-path: mobile/package-lock.json
+          cache-dependency-path: mobile/ios/package-lock.json
 
       - name: Install dependencies
-        working-directory: mobile
+        working-directory: mobile/ios
         run: npm ci
 
       # The fonts and CDN scripts the web app loads are downloaded once and
@@ -65,16 +65,16 @@ jobs:
       - name: Cache vendored web files
         uses: actions/cache@v4
         with:
-          path: mobile/.cache
+          path: mobile/ios/.cache
           key: bokea-web-vendor-${{ hashFiles('Bokeà/wwwroot/index.html') }}
           restore-keys: bokea-web-vendor-
 
       - name: Build the web app
-        working-directory: mobile
+        working-directory: mobile/ios
         run: npm run sync:web
 
       - name: Install Playwright
-        working-directory: mobile
+        working-directory: mobile/ios
         run: |
           npm install --no-save playwright-core
           npx --yes playwright@latest install --with-deps chromium
@@ -82,7 +82,7 @@ jobs:
       # Runs the whole suite twice, once as each app. A difference between them
       # fails here rather than on somebody's phone.
       - name: Run the bridge suite as both platforms
-        working-directory: mobile
+        working-directory: mobile/ios
         run: npm test
 
   archive:
@@ -98,7 +98,7 @@ jobs:
         with:
           node-version: '20'
           cache: npm
-          cache-dependency-path: mobile/package-lock.json
+          cache-dependency-path: mobile/ios/package-lock.json
 
       # macos-latest ships several Xcodes; name the one this is built against
       # rather than letting the runner image decide it for us.
@@ -108,47 +108,47 @@ jobs:
           xcodebuild -version
 
       - name: Install dependencies
-        working-directory: mobile
+        working-directory: mobile/ios
         run: npm ci
 
       - name: Cache vendored web files
         uses: actions/cache@v4
         with:
-          path: mobile/.cache
+          path: mobile/ios/.cache
           key: bokea-web-vendor-${{ hashFiles('Bokeà/wwwroot/index.html') }}
           restore-keys: bokea-web-vendor-
 
       # Copies wwwroot into www, vendors the fonts and CDN scripts, drops in
       # mobile-bridge.js, then hands all of it to the Xcode project.
       - name: Build the web app and sync the Xcode project
-        working-directory: mobile
-        run: npm run sync:ios
+        working-directory: mobile/ios
+        run: npm run sync
 
       - name: Cache CocoaPods
         uses: actions/cache@v4
         with:
-          path: mobile/ios/App/Pods
-          key: bokea-pods-${{ hashFiles('mobile/ios/App/Podfile') }}-${{ hashFiles('mobile/package-lock.json') }}
+          path: mobile/ios/ios/App/Pods
+          key: bokea-pods-${{ hashFiles('mobile/ios/ios/App/Podfile') }}-${{ hashFiles('mobile/ios/package-lock.json') }}
           restore-keys: bokea-pods-
 
       # `cap sync` above skips this when CocoaPods is missing, and does run it
       # when it is there; running it again is cheap and makes the step that
       # fails say so plainly when the Podfile and the workspace disagree.
       - name: Install pods
-        working-directory: mobile/ios/App
+        working-directory: mobile/ios/ios/App
         run: pod install --repo-update
 
       # The one check worth making before a five-minute compile: that the shared
       # scheme committed at ios/App/App.xcodeproj/xcshareddata is actually the
       # one xcodebuild can see through the workspace.
       - name: Check the scheme is shared
-        working-directory: mobile/ios/App
+        working-directory: mobile/ios/ios/App
         run: |
           xcodebuild -workspace App.xcworkspace -list
           xcodebuild -workspace App.xcworkspace -list | grep -qw App
 
       - name: Archive
-        working-directory: mobile/ios/App
+        working-directory: mobile/ios/ios/App
         run: |
           xcodebuild \
             -workspace App.xcworkspace \

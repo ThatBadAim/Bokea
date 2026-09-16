@@ -25,7 +25,7 @@ import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 
 const HERE = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
-const SOURCE = path.resolve(HERE, '..', 'Bokeà', 'wwwroot');
+const SOURCE = path.resolve(HERE, '..', '..', 'Bokeà', 'wwwroot');
 const OUT = path.join(HERE, 'www');
 const VENDOR = path.join(OUT, 'vendor');
 const CACHE = path.join(HERE, '.cache', 'remote');

@@ -31,7 +31,7 @@ import { fileURLToPath } from 'node:url';
 const run = promisify(execFile);
 
 const HERE = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
-const SOURCE = path.resolve(HERE, '..', 'Bokeà', 'wwwroot', 'assets', 'icon.svg');
+const SOURCE = path.resolve(HERE, '..', '..', 'Bokeà', 'wwwroot', 'assets', 'icon.svg');
 const CATALOG = path.join(HERE, 'ios', 'App', 'App', 'Assets.xcassets');
 const APPICON = path.join(CATALOG, 'AppIcon.appiconset');
 const SPLASH = path.join(CATALOG, 'Splash.imageset');

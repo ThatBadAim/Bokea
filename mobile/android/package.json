@@ -1,0 +1,30 @@
+{
+  "name": "bokea-android",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Bokeà for Android. Runs the web app from Bokeà/wwwroot inside Capacitor.",
+  "type": "module",
+  "scripts": {
+    "sync:web": "node scripts/sync-web.mjs",
+    "sync": "npm run sync:web && cap sync android",
+    "open": "cap open android",
+    "run": "npm run sync && cap run android",
+    "build:debug": "npm run sync && cd android && ./gradlew assembleDebug",
+    "build:release": "npm run sync && cd android && ./gradlew assembleRelease",
+    "clean": "node --eval \"const fs=require('node:fs');['www','dist','.cache','android/app/build'].forEach(p=>fs.rmSync(p,{recursive:true,force:true}))\""
+  },
+  "dependencies": {
+    "@capacitor/android": "^8.5.2",
+    "@capacitor/app": "^8.1.1",
+    "@capacitor/core": "^8.5.2",
+    "@capacitor/haptics": "^8.0.2",
+    "@capacitor/keyboard": "^8.0.5",
+    "@capacitor/local-notifications": "^8.3.1",
+    "@capacitor/splash-screen": "^8.0.2",
+    "@capacitor/status-bar": "^8.0.3"
+  },
+  "devDependencies": {
+    "@capacitor/cli": "^8.5.2",
+    "typescript": "^5.9.0"
+  }
+}
