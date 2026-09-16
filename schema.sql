@@ -391,5 +391,9 @@ GRANT EXECUTE ON FUNCTION public.uncomplete_task(BIGINT) TO authenticated;
 -- snooze, display switches). Written and read by the app as one JSON object.
 ALTER TABLE public.profiles ADD COLUMN IF NOT EXISTS preferences JSONB;
 
--- Tell the API about the new functions and column straight away.
+-- 10e. Task commitments and sample flags for existing databases.
+ALTER TABLE public.tasks ADD COLUMN IF NOT EXISTS is_sample BOOLEAN DEFAULT FALSE;
+ALTER TABLE public.tasks ADD COLUMN IF NOT EXISTS is_commitment BOOLEAN NOT NULL DEFAULT FALSE;
+
+-- Tell the API about the new functions and columns straight away.
 NOTIFY pgrst, 'reload schema';

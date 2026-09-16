@@ -1,0 +1,50 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <!--
+    Bokeà for Windows: a small Win32 host around the WebKit engine.
+
+    There is no WinForms or WPF here on purpose. Every native call is a
+    P/Invoke, which keeps the executable small and lets it be cross-built
+    from Linux as well as built on Windows with nothing but the .NET SDK.
+  -->
+
+  <PropertyGroup>
+    <OutputType>WinExe</OutputType>
+    <TargetFramework>net10.0</TargetFramework>
+    <RuntimeIdentifier>win-x64</RuntimeIdentifier>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+    <LangVersion>latest</LangVersion>
+
+    <AssemblyName>Bokea</AssemblyName>
+    <RootNamespace>Bokea.Desktop</RootNamespace>
+    <ApplicationIcon>Assets\icon.ico</ApplicationIcon>
+    <ApplicationManifest>app.manifest</ApplicationManifest>
+
+    <!-- FileDescription is the name Windows shows in Task Manager and on notifications. -->
+    <Product>Bokeà</Product>
+    <AssemblyTitle>Bokeà</AssemblyTitle>
+    <Company>Bokeà</Company>
+    <Copyright>© Bokeà</Copyright>
+    <Version>1.0.0</Version>
+
+    <SelfContained>true</SelfContained>
+    <PublishSingleFile>true</PublishSingleFile>
+    <PublishTrimmed>true</PublishTrimmed>
+    <PublishReadyToRun>true</PublishReadyToRun>
+    <InvariantGlobalization>true</InvariantGlobalization>
+    <UseSystemResourceKeys>true</UseSystemResourceKeys>
+    <SatelliteResourceLanguages>en</SatelliteResourceLanguages>
+    <EventSourceSupport>false</EventSourceSupport>
+    <JsonSerializerIsReflectionEnabledByDefault>false</JsonSerializerIsReflectionEnabledByDefault>
+    <DebugType>embedded</DebugType>
+    <DefineConstants Condition="'$(BokeaTestHooks)' == 'true'">$(DefineConstants);BOKEA_TEST_HOOKS</DefineConstants>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <EmbeddedResource Include="Resources\bridge.js" LogicalName="bridge.js" />
+    <EmbeddedResource Include="Resources\handoff.js" LogicalName="handoff.js" />
+  </ItemGroup>
+
+</Project>

@@ -540,6 +540,10 @@ async function apiRequest(endpoint, method = 'GET', body = null) {
     }
 }
 
+// Remote schema cache resilience: if Supabase is missing newly added columns,
+// omit them dynamically and retry rather than failing the user's action.
+const unsupportedTaskColumns = new Set();
+
 async function routeApiRequest(endpoint, method = 'GET', body = null) {
     // localStorage is a cushion for a server that has gone quiet mid-session
     // (isFallbackMode), not a way to run without one. Reaching here without a
@@ -605,7 +609,24 @@ async function routeApiRequest(endpoint, method = 'GET', body = null) {
                 display_order: body.displayOrder || 0
             };
 
-            const { data, error } = await supabaseClient.from('tasks').insert([newTaskRow]).select().single();
+            for (const col of unsupportedTaskColumns) {
+                delete newTaskRow[col];
+            }
+
+            let { data, error } = await supabaseClient.from('tasks').insert([newTaskRow]).select().single();
+            while (error) {
+                const missingCol = error.message?.match(/Could not find the '([^']+)' column of 'tasks' in the schema cache/i)?.[1];
+                if (missingCol && newTaskRow[missingCol] !== undefined) {
+                    console.warn(`Column '${missingCol}' not found in Supabase schema cache; retrying without it.`);
+                    unsupportedTaskColumns.add(missingCol);
+                    delete newTaskRow[missingCol];
+                    const retry = await supabaseClient.from('tasks').insert([newTaskRow]).select().single();
+                    data = retry.data;
+                    error = retry.error;
+                } else {
+                    break;
+                }
+            }
             if (error) throw error;
             return mapBackendTask(data);
         }
@@ -667,13 +688,32 @@ async function routeApiRequest(endpoint, method = 'GET', body = null) {
             if (body.notifyPref !== undefined) updatePayload.notify_pref = body.notifyPref;
             if (body.isArchived !== undefined) updatePayload.is_archived = body.isArchived;
 
+            for (const col of unsupportedTaskColumns) {
+                delete updatePayload[col];
+            }
+
             // expectedUpdatedAt is the version the form was filled in from.
             // Sending every field meant a form opened before a change made on
             // another device quietly put the old values back. If the row has
             // moved on, the update matches nothing and the caller is told.
             let query = supabaseClient.from('tasks').update(updatePayload).eq('id', id);
             if (body.expectedUpdatedAt) query = query.eq('updated_at', body.expectedUpdatedAt);
-            const { data, error } = await query.select();
+            let { data, error } = await query.select();
+            while (error) {
+                const missingCol = error.message?.match(/Could not find the '([^']+)' column of 'tasks' in the schema cache/i)?.[1];
+                if (missingCol && updatePayload[missingCol] !== undefined) {
+                    console.warn(`Column '${missingCol}' not found in Supabase schema cache; retrying without it.`);
+                    unsupportedTaskColumns.add(missingCol);
+                    delete updatePayload[missingCol];
+                    let retryQuery = supabaseClient.from('tasks').update(updatePayload).eq('id', id);
+                    if (body.expectedUpdatedAt) retryQuery = retryQuery.eq('updated_at', body.expectedUpdatedAt);
+                    const retry = await retryQuery.select();
+                    data = retry.data;
+                    error = retry.error;
+                } else {
+                    break;
+                }
+            }
             if (error) throw error;
             if (!data || data.length === 0) {
                 const conflict = new Error('This task was changed somewhere else.');
@@ -4787,7 +4827,22 @@ document.addEventListener('DOMContentLoaded', () => {
             }
 
             if (rowsToInsert.length > 0) {
-                await supabaseClient.from('tasks').insert(rowsToInsert);
+                for (const col of unsupportedTaskColumns) {
+                    rowsToInsert.forEach(r => delete r[col]);
+                }
+                let { error: insertErr } = await supabaseClient.from('tasks').insert(rowsToInsert);
+                while (insertErr) {
+                    const missingCol = insertErr.message?.match(/Could not find the '([^']+)' column of 'tasks' in the schema cache/i)?.[1];
+                    if (missingCol) {
+                        unsupportedTaskColumns.add(missingCol);
+                        rowsToInsert.forEach(r => delete r[missingCol]);
+                        const retry = await supabaseClient.from('tasks').insert(rowsToInsert);
+                        insertErr = retry.error;
+                    } else {
+                        break;
+                    }
+                }
+                if (insertErr) throw insertErr;
                 // Migrated once, then removed from the guest bucket so the next
                 // account created on this device does not pick them up again.
                 localStorage.removeItem(`bokea_tasks_${guestScope}`);

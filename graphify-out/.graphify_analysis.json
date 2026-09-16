@@ -1,6 +1,54 @@
 {
   "communities": {
     "0": [
+      "bokeà_wwwroot_js_app_applytaskformstate",
+      "bokeà_wwwroot_js_app_autoadvancetask",
+      "bokeà_wwwroot_js_app_blanktaskstate",
+      "bokeà_wwwroot_js_app_checktaskstep",
+      "bokeà_wwwroot_js_app_clearfielderror",
+      "bokeà_wwwroot_js_app_cleartimefieldcomplaint",
+      "bokeà_wwwroot_js_app_clearvalidationerrors",
+      "bokeà_wwwroot_js_app_dayshape",
+      "bokeà_wwwroot_js_app_exacttimeopen",
+      "bokeà_wwwroot_js_app_fmthm",
+      "bokeà_wwwroot_js_app_focustaskstep",
+      "bokeà_wwwroot_js_app_formatapptime",
+      "bokeà_wwwroot_js_app_marktaskduration",
+      "bokeà_wwwroot_js_app_nexttaskstep",
+      "bokeà_wwwroot_js_app_nowminutes",
+      "bokeà_wwwroot_js_app_opencreatetaskmodal",
+      "bokeà_wwwroot_js_app_openmodal",
+      "bokeà_wwwroot_js_app_parsehm",
+      "bokeà_wwwroot_js_app_parsetimefieldvalue",
+      "bokeà_wwwroot_js_app_prevtaskstep",
+      "bokeà_wwwroot_js_app_propagateclockformatchange",
+      "bokeà_wwwroot_js_app_renderdailyscheduletimeline",
+      "bokeà_wwwroot_js_app_rendernowblock",
+      "bokeà_wwwroot_js_app_rendertimelinenow",
+      "bokeà_wwwroot_js_app_setexacttimeopen",
+      "bokeà_wwwroot_js_app_setnoteopen",
+      "bokeà_wwwroot_js_app_settaskarea",
+      "bokeà_wwwroot_js_app_settaskduration",
+      "bokeà_wwwroot_js_app_settaskexacttime",
+      "bokeà_wwwroot_js_app_settaskslot",
+      "bokeà_wwwroot_js_app_settaskwhen",
+      "bokeà_wwwroot_js_app_showfielderror",
+      "bokeà_wwwroot_js_app_showtaskstep",
+      "bokeà_wwwroot_js_app_slotforminutes",
+      "bokeà_wwwroot_js_app_slotwindow",
+      "bokeà_wwwroot_js_app_synctasksummary",
+      "bokeà_wwwroot_js_app_synctimeinputsclockformat",
+      "bokeà_wwwroot_js_app_synctimepresets",
+      "bokeà_wwwroot_js_app_syncwhenui",
+      "bokeà_wwwroot_js_app_taskdateoffset",
+      "bokeà_wwwroot_js_app_tasklengthtext",
+      "bokeà_wwwroot_js_app_taskstatefromtask",
+      "bokeà_wwwroot_js_app_tasktimetext",
+      "bokeà_wwwroot_js_app_updateliveclock",
+      "bokeà_wwwroot_js_app_whenkindfordate",
+      "bokeà_wwwroot_js_app_wireaccessibilitybehaviour"
+    ],
+    "1": [
       "bokeà_wwwroot_js_app_areameta",
       "bokeà_wwwroot_js_app_autosegment",
       "bokeà_wwwroot_js_app_cadencetext",
@@ -9,22 +57,13 @@
       "bokeà_wwwroot_js_app_calgridkeydown",
       "bokeà_wwwroot_js_app_calnowline",
       "bokeà_wwwroot_js_app_calopendayfocus",
+      "bokeà_wwwroot_js_app_calparse",
       "bokeà_wwwroot_js_app_calshiftmonth",
       "bokeà_wwwroot_js_app_calstatecls",
-      "bokeà_wwwroot_js_app_capturetime",
-      "bokeà_wwwroot_js_app_cleartimefieldcomplaint",
-      "bokeà_wwwroot_js_app_commitcapture",
       "bokeà_wwwroot_js_app_computenextweekdaydate",
-      "bokeà_wwwroot_js_app_dayshape",
       "bokeà_wwwroot_js_app_esc",
-      "bokeà_wwwroot_js_app_fmthm",
-      "bokeà_wwwroot_js_app_formatapptime",
       "bokeà_wwwroot_js_app_initcalendar",
       "bokeà_wwwroot_js_app_nextwindowlabel",
-      "bokeà_wwwroot_js_app_nowminutes",
-      "bokeà_wwwroot_js_app_parsehm",
-      "bokeà_wwwroot_js_app_parsetimefieldvalue",
-      "bokeà_wwwroot_js_app_propagateclockformatchange",
       "bokeà_wwwroot_js_app_refreshicons",
       "bokeà_wwwroot_js_app_renderafterthat",
       "bokeà_wwwroot_js_app_renderalltasksgrid",
@@ -32,26 +71,19 @@
       "bokeà_wwwroot_js_app_rendercalendar",
       "bokeà_wwwroot_js_app_rendercalendarday",
       "bokeà_wwwroot_js_app_rendercalendarmonth",
-      "bokeà_wwwroot_js_app_renderdailyscheduletimeline",
       "bokeà_wwwroot_js_app_renderfocusclock",
       "bokeà_wwwroot_js_app_rendermomentum",
       "bokeà_wwwroot_js_app_rendernavcount",
       "bokeà_wwwroot_js_app_rendernextuptask",
-      "bokeà_wwwroot_js_app_rendernowblock",
       "bokeà_wwwroot_js_app_renderparked",
       "bokeà_wwwroot_js_app_renderrightnow",
       "bokeà_wwwroot_js_app_renderstats",
-      "bokeà_wwwroot_js_app_rendertimelinenow",
       "bokeà_wwwroot_js_app_renderwaiting",
       "bokeà_wwwroot_js_app_segmentof",
       "bokeà_wwwroot_js_app_showsettingsgroup",
-      "bokeà_wwwroot_js_app_slotforminutes",
-      "bokeà_wwwroot_js_app_slotwindow",
       "bokeà_wwwroot_js_app_startfocus",
       "bokeà_wwwroot_js_app_statemeta",
       "bokeà_wwwroot_js_app_syncsegmentbuttons",
-      "bokeà_wwwroot_js_app_synctimepresets",
-      "bokeà_wwwroot_js_app_syncwhenui",
       "bokeà_wwwroot_js_app_taskdoneon",
       "bokeà_wwwroot_js_app_taskminutes",
       "bokeà_wwwroot_js_app_taskrowdate",
@@ -59,31 +91,27 @@
       "bokeà_wwwroot_js_app_taskwhen",
       "bokeà_wwwroot_js_app_togglefocuspause",
       "bokeà_wwwroot_js_app_updatefocuspausebutton",
-      "bokeà_wwwroot_js_app_updateliveclock",
       "bokeà_wwwroot_js_app_whenchiptext",
       "bokeà_wwwroot_js_app_whenisnow",
       "bokeà_wwwroot_js_app_whenispast",
       "bokeà_wwwroot_js_app_whyline"
     ],
-    "1": [
+    "2": [
       "bokeà_wwwroot_js_app",
+      "bokeà_wwwroot_js_app_authbackendready",
       "bokeà_wwwroot_js_app_cal_days",
       "bokeà_wwwroot_js_app_cal_months",
       "bokeà_wwwroot_js_app_cal_rank",
       "bokeà_wwwroot_js_app_calfocusstr",
       "bokeà_wwwroot_js_app_calviewdate",
       "bokeà_wwwroot_js_app_clearscopedstorage",
-      "bokeà_wwwroot_js_app_closemodal",
       "bokeà_wwwroot_js_app_closeresetconfirm",
-      "bokeà_wwwroot_js_app_commitmentswitchon",
       "bokeà_wwwroot_js_app_debounce",
       "bokeà_wwwroot_js_app_dismissfirstrun",
-      "bokeà_wwwroot_js_app_duedategroup",
       "bokeà_wwwroot_js_app_firstrundismissed",
       "bokeà_wwwroot_js_app_formattimeinputontype",
       "bokeà_wwwroot_js_app_getactivemobiletab",
       "bokeà_wwwroot_js_app_historydata",
-      "bokeà_wwwroot_js_app_intervalgroup",
       "bokeà_wwwroot_js_app_ispasswordrecovery",
       "bokeà_wwwroot_js_app_legacy_storage_keys",
       "bokeà_wwwroot_js_app_maybeaskforschedule",
@@ -95,20 +123,149 @@
       "bokeà_wwwroot_js_app_pointerdown",
       "bokeà_wwwroot_js_app_pointerup",
       "bokeà_wwwroot_js_app_profile_blank",
+      "bokeà_wwwroot_js_app_promptsignupfromlocal",
       "bokeà_wwwroot_js_app_renderavatarcrop",
       "bokeà_wwwroot_js_app_renderfirstrun",
       "bokeà_wwwroot_js_app_sample_tasks",
-      "bokeà_wwwroot_js_app_showfielderror",
+      "bokeà_wwwroot_js_app_setlocalmode",
+      "bokeà_wwwroot_js_app_showautherror",
+      "bokeà_wwwroot_js_app_showauthform",
       "bokeà_wwwroot_js_app_snooze_choices",
       "bokeà_wwwroot_js_app_storage_keys",
       "bokeà_wwwroot_js_app_storepasswordcredentials",
       "bokeà_wwwroot_js_app_striprecoveryhash",
+      "bokeà_wwwroot_js_app_task_durations",
+      "bokeà_wwwroot_js_app_task_repeats",
+      "bokeà_wwwroot_js_app_task_steps",
+      "bokeà_wwwroot_js_app_task_when_advances",
       "bokeà_wwwroot_js_app_taskactionsinflight",
       "bokeà_wwwroot_js_app_taskform",
       "bokeà_wwwroot_js_app_tasks",
-      "bokeà_wwwroot_js_app_weeklydaygroup"
+      "bokeà_wwwroot_js_app_unsupportedtaskcolumns"
     ],
-    "2": [
+    "3": [
+      "bokeà_database_models",
+      "bokeà_database_models_bokea_database_duedatetype",
+      "bokeà_database_models_bokea_database_duedatetype_equals",
+      "bokeà_database_models_bokea_database_duedatetype_gethashcode",
+      "bokeà_database_models_bokea_database_duedatetype_hasvalue",
+      "bokeà_database_models_bokea_database_duedatetype_tostring",
+      "bokeà_database_models_bokea_database_duedatetype_value",
+      "bokeà_database_models_bokea_database_duedatetypejsonconverter",
+      "bokeà_database_models_bokea_database_duedatetypejsonconverter_read",
+      "bokeà_database_models_bokea_database_duedatetypejsonconverter_write",
+      "bokeà_database_models_bokea_database_intervaltype",
+      "bokeà_database_models_bokea_database_intervaltype_fixeddate",
+      "bokeà_database_models_bokea_database_intervaltype_intervalbased",
+      "bokeà_database_models_bokea_database_intervaltype_workdays",
+      "bokeà_database_models_bokea_database_sector",
+      "bokeà_database_models_bokea_database_sector_careerandfinance",
+      "bokeà_database_models_bokea_database_sector_healthandvitality",
+      "bokeà_database_models_bokea_database_sector_mindandenvironment",
+      "bokeà_database_models_bokea_database_sector_relationshipsandsocial",
+      "bokeà_database_models_bokea_database_taskitem_sector",
+      "bokeà_endpoints_taskendpoints",
+      "bokeà_endpoints_taskendpoints_bokea_endpoints_completetaskrequest",
+      "bokeà_endpoints_taskendpoints_bokea_endpoints_createtaskrequest",
+      "bokeà_endpoints_taskendpoints_bokea_endpoints_reordertaskrequest",
+      "bokeà_endpoints_taskendpoints_bokea_endpoints_snoozetaskrequest",
+      "bokeà_endpoints_taskendpoints_bokea_endpoints_taskendpoints",
+      "bokeà_endpoints_taskendpoints_bokea_endpoints_taskendpoints_maptaskendpoints",
+      "bokeà_endpoints_taskendpoints_bokea_endpoints_updatetaskrequest",
+      "bokeà_endpoints_taskendpoints_bokea_endpoints_whenintheday",
+      "bokeà_endpoints_taskendpoints_bokea_endpoints_whenintheday_duration",
+      "bokeà_endpoints_taskendpoints_bokea_endpoints_whenintheday_slot",
+      "bokeà_endpoints_taskendpoints_bokea_endpoints_whenintheday_time",
+      "bokeà_endpoints_taskendpoints_cs_datetime",
+      "bokeà_endpoints_taskendpoints_cs_iendpointroutebuilder",
+      "iequatable",
+      "jsonconverter",
+      "jsonserializeroptions",
+      "type",
+      "utf8jsonreader",
+      "utf8jsonwriter"
+    ],
+    "4": [
+      "bokeà_wwwroot_js_app_addsampletasks",
+      "bokeà_wwwroot_js_app_apirequest",
+      "bokeà_wwwroot_js_app_capturetime",
+      "bokeà_wwwroot_js_app_checkmissedcommitmentalerts",
+      "bokeà_wwwroot_js_app_closefocus",
+      "bokeà_wwwroot_js_app_closerowconfirm",
+      "bokeà_wwwroot_js_app_closerowmenus",
+      "bokeà_wwwroot_js_app_closerowmenusandreturn",
+      "bokeà_wwwroot_js_app_closerowmenusonoutside",
+      "bokeà_wwwroot_js_app_commitcapture",
+      "bokeà_wwwroot_js_app_completetask",
+      "bokeà_wwwroot_js_app_deletetask",
+      "bokeà_wwwroot_js_app_disablepushnotifications",
+      "bokeà_wwwroot_js_app_dismissednotificationskey",
+      "bokeà_wwwroot_js_app_enablepushnotifications",
+      "bokeà_wwwroot_js_app_finishfocus",
+      "bokeà_wwwroot_js_app_getexistingpushsubscription",
+      "bokeà_wwwroot_js_app_initpushnotificationsettings",
+      "bokeà_wwwroot_js_app_loaddashboarddata",
+      "bokeà_wwwroot_js_app_notificationsignature",
+      "bokeà_wwwroot_js_app_openedittaskmodal",
+      "bokeà_wwwroot_js_app_parkfocusthought",
+      "bokeà_wwwroot_js_app_parkwholefocustask",
+      "bokeà_wwwroot_js_app_readdismissednotifications",
+      "bokeà_wwwroot_js_app_reallydeletetask",
+      "bokeà_wwwroot_js_app_renderanalyticsfinding",
+      "bokeà_wwwroot_js_app_rendernotifications",
+      "bokeà_wwwroot_js_app_scheduleparked",
+      "bokeà_wwwroot_js_app_showtoast",
+      "bokeà_wwwroot_js_app_snoozetask",
+      "bokeà_wwwroot_js_app_snoozewordfor",
+      "bokeà_wwwroot_js_app_taskiscommitment",
+      "bokeà_wwwroot_js_app_togglerowmenu",
+      "bokeà_wwwroot_js_app_uncompletetask",
+      "bokeà_wwwroot_js_app_unsnoozetask",
+      "bokeà_wwwroot_js_app_updatepushtoggleui",
+      "bokeà_wwwroot_js_app_urlbase64touint8array",
+      "bokeà_wwwroot_js_app_wirefocus",
+      "bokeà_wwwroot_js_app_writedismissednotifications"
+    ],
+    "5": [
+      "bokeà_endpoints_digestendpoints",
+      "bokeà_endpoints_digestendpoints_bokea_endpoints_digestendpoints",
+      "bokeà_endpoints_digestendpoints_bokea_endpoints_digestendpoints_mapdigestendpoints",
+      "bokeà_endpoints_digestendpoints_cs_iendpointroutebuilder",
+      "bokeà_endpoints_pushendpoints",
+      "bokeà_endpoints_pushendpoints_bokea_endpoints_pushendpoints",
+      "bokeà_endpoints_pushendpoints_bokea_endpoints_pushendpoints_mappushendpoints",
+      "bokeà_endpoints_pushendpoints_bokea_endpoints_pushsubscriptionkeys",
+      "bokeà_endpoints_pushendpoints_bokea_endpoints_pushsubscriptionrequest",
+      "bokeà_endpoints_pushendpoints_bokea_endpoints_unsubscriberequest",
+      "bokeà_endpoints_pushendpoints_cs_iendpointroutebuilder",
+      "bokeà_program",
+      "bokeà_services_digestservice",
+      "bokeà_services_digestservice_bokea_services_digestservice",
+      "bokeà_services_digestservice_bokea_services_digestservice_generaterecommendation",
+      "bokeà_services_digestservice_bokea_services_digestservice_getmorningdigestasync",
+      "bokeà_services_digestservice_bokea_services_digestservice_getsectordisplayname",
+      "bokeà_services_digestservice_bokea_services_digesttaskdto",
+      "bokeà_services_digestservice_bokea_services_digesttaskdto_description",
+      "bokeà_services_digestservice_bokea_services_digesttaskdto_duedate",
+      "bokeà_services_digestservice_bokea_services_digesttaskdto_id",
+      "bokeà_services_digestservice_bokea_services_digesttaskdto_sector",
+      "bokeà_services_digestservice_bokea_services_digesttaskdto_state",
+      "bokeà_services_digestservice_bokea_services_digesttaskdto_title",
+      "bokeà_services_digestservice_bokea_services_morningdigestmodel",
+      "bokeà_services_digestservice_bokea_services_morningdigestmodel_recommendedactions",
+      "bokeà_services_digestservice_bokea_services_morningdigestmodel_tasksbysector",
+      "bokeà_services_digestservice_bokea_services_morningdigestmodel_totalwarningtasks",
+      "bokeà_services_digestservice_cs_datetime",
+      "bokeà_services_digestservice_cs_list",
+      "bokeà_services_digestservice_cs_sector",
+      "bokeà_services_pushnotificationservice",
+      "bokeà_services_taskwatchdogservice",
+      "csharp_namespace:5940c7f73bfb367b",
+      "csharp_namespace:ae1102e99c943fd5",
+      "csharp_namespace:d87b358914907239",
+      "dictionary"
+    ],
+    "6": [
       "bokeà_endpoints_authendpoints",
       "bokeà_endpoints_authendpoints_bokea_endpoints_authendpoints",
       "bokeà_endpoints_authendpoints_bokea_endpoints_authendpoints_agefrom",
@@ -145,70 +302,7 @@
       "bokeà_endpoints_authendpoints_cs_list",
       "bokeà_endpoints_authendpoints_cs_user"
     ],
-    "3": [
-      "bokeà_wwwroot_js_app_calculatetaskstate",
-      "bokeà_wwwroot_js_app_caldatedtasksfordate",
-      "bokeà_wwwroot_js_app_calisdaily",
-      "bokeà_wwwroot_js_app_calltaskrpc",
-      "bokeà_wwwroot_js_app_calparse",
-      "bokeà_wwwroot_js_app_checkmissedcommitmentalerts",
-      "bokeà_wwwroot_js_app_clearfielderror",
-      "bokeà_wwwroot_js_app_clearvalidationerrors",
-      "bokeà_wwwroot_js_app_dismissednotificationskey",
-      "bokeà_wwwroot_js_app_formatworkdayssummary",
-      "bokeà_wwwroot_js_app_gettasksfordate",
-      "bokeà_wwwroot_js_app_getuserworkdays",
-      "bokeà_wwwroot_js_app_handlelocalstoragefallback",
-      "bokeà_wwwroot_js_app_initlocalstorage",
-      "bokeà_wwwroot_js_app_isdateworkday",
-      "bokeà_wwwroot_js_app_mapbackendtask",
-      "bokeà_wwwroot_js_app_notificationsignature",
-      "bokeà_wwwroot_js_app_opencreatetaskmodal",
-      "bokeà_wwwroot_js_app_openedittaskmodal",
-      "bokeà_wwwroot_js_app_openmodal",
-      "bokeà_wwwroot_js_app_parsetaskid",
-      "bokeà_wwwroot_js_app_readdismissednotifications",
-      "bokeà_wwwroot_js_app_readstore",
-      "bokeà_wwwroot_js_app_rendernotifications",
-      "bokeà_wwwroot_js_app_routeapirequest",
-      "bokeà_wwwroot_js_app_setcommitmentswitch",
-      "bokeà_wwwroot_js_app_showstep",
-      "bokeà_wwwroot_js_app_syncsaveenabled",
-      "bokeà_wwwroot_js_app_synctasknameui",
-      "bokeà_wwwroot_js_app_taskgraceratio",
-      "bokeà_wwwroot_js_app_taskiscommitment",
-      "bokeà_wwwroot_js_app_updatelocalhistory",
-      "bokeà_wwwroot_js_app_writedismissednotifications"
-    ],
-    "4": [
-      "bokeà_wwwroot_js_app_addsampletasks",
-      "bokeà_wwwroot_js_app_apirequest",
-      "bokeà_wwwroot_js_app_closefocus",
-      "bokeà_wwwroot_js_app_closerowconfirm",
-      "bokeà_wwwroot_js_app_completetask",
-      "bokeà_wwwroot_js_app_deletetask",
-      "bokeà_wwwroot_js_app_disablepushnotifications",
-      "bokeà_wwwroot_js_app_enablepushnotifications",
-      "bokeà_wwwroot_js_app_finishfocus",
-      "bokeà_wwwroot_js_app_getexistingpushsubscription",
-      "bokeà_wwwroot_js_app_initpushnotificationsettings",
-      "bokeà_wwwroot_js_app_initsetuppagelisteners",
-      "bokeà_wwwroot_js_app_loaddashboarddata",
-      "bokeà_wwwroot_js_app_parkfocusthought",
-      "bokeà_wwwroot_js_app_parkwholefocustask",
-      "bokeà_wwwroot_js_app_reallydeletetask",
-      "bokeà_wwwroot_js_app_renderanalyticsfinding",
-      "bokeà_wwwroot_js_app_scheduleparked",
-      "bokeà_wwwroot_js_app_showtoast",
-      "bokeà_wwwroot_js_app_snoozetask",
-      "bokeà_wwwroot_js_app_snoozewordfor",
-      "bokeà_wwwroot_js_app_uncompletetask",
-      "bokeà_wwwroot_js_app_unsnoozetask",
-      "bokeà_wwwroot_js_app_updatepushtoggleui",
-      "bokeà_wwwroot_js_app_urlbase64touint8array",
-      "bokeà_wwwroot_js_app_wirefocus"
-    ],
-    "5": [
+    "7": [
       "bokeà_wwwroot_js_app_agefromdob",
       "bokeà_wwwroot_js_app_applyavatareverywhere",
       "bokeà_wwwroot_js_app_collectprofile",
@@ -234,7 +328,7 @@
       "bokeà_wwwroot_js_app_updategreetings",
       "bokeà_wwwroot_js_app_validatedob"
     ],
-    "6": [
+    "8": [
       "bokeà_database_models_bokea_database_user",
       "bokeà_database_models_bokea_database_user_avatardataurl",
       "bokeà_database_models_bokea_database_user_bedtime",
@@ -259,31 +353,7 @@
       "bokeà_database_models_bokea_database_user_workendtime",
       "bokeà_database_models_bokea_database_user_workstarttime"
     ],
-    "7": [
-      "bokeà_database_models_bokea_database_taskitem",
-      "bokeà_database_models_bokea_database_taskitem_completionlogs",
-      "bokeà_database_models_bokea_database_taskitem_createdat",
-      "bokeà_database_models_bokea_database_taskitem_description",
-      "bokeà_database_models_bokea_database_taskitem_displayorder",
-      "bokeà_database_models_bokea_database_taskitem_duedate",
-      "bokeà_database_models_bokea_database_taskitem_duedatevalue",
-      "bokeà_database_models_bokea_database_taskitem_duetime",
-      "bokeà_database_models_bokea_database_taskitem_durationminutes",
-      "bokeà_database_models_bokea_database_taskitem_id",
-      "bokeà_database_models_bokea_database_taskitem_intervaldays",
-      "bokeà_database_models_bokea_database_taskitem_intervaltype",
-      "bokeà_database_models_bokea_database_taskitem_iscommitment",
-      "bokeà_database_models_bokea_database_taskitem_lastcompletedat",
-      "bokeà_database_models_bokea_database_taskitem_sector",
-      "bokeà_database_models_bokea_database_taskitem_snoozeduntil",
-      "bokeà_database_models_bokea_database_taskitem_state",
-      "bokeà_database_models_bokea_database_taskitem_timeslot",
-      "bokeà_database_models_bokea_database_taskitem_title",
-      "bokeà_database_models_bokea_database_taskitem_user",
-      "bokeà_database_models_bokea_database_taskitem_userid",
-      "icollection"
-    ],
-    "8": [
+    "9": [
       "bokeà_wwwroot_js_onboarding",
       "bokeà_wwwroot_js_onboarding_buildchrome",
       "bokeà_wwwroot_js_onboarding_clearhighlights",
@@ -307,27 +377,30 @@
       "bokeà_wwwroot_js_onboarding_switchtab",
       "bokeà_wwwroot_js_onboarding_teardownchrome"
     ],
-    "9": [
-      "bokeà_database_appdbcontext_bokea_database_appdbcontext_onmodelcreating",
-      "bokeà_database_models_bokea_database_pushsubscription",
-      "bokeà_database_models_bokea_database_pushsubscription_auth",
-      "bokeà_database_models_bokea_database_pushsubscription_createdat",
-      "bokeà_database_models_bokea_database_pushsubscription_endpoint",
-      "bokeà_database_models_bokea_database_pushsubscription_id",
-      "bokeà_database_models_bokea_database_pushsubscription_p256dh",
-      "bokeà_database_models_bokea_database_pushsubscription_user",
-      "bokeà_database_models_bokea_database_pushsubscription_userid",
-      "bokeà_database_models_bokea_database_taskcompletionlog",
-      "bokeà_database_models_bokea_database_taskcompletionlog_completedat",
-      "bokeà_database_models_bokea_database_taskcompletionlog_id",
-      "bokeà_database_models_bokea_database_taskcompletionlog_notes",
-      "bokeà_database_models_bokea_database_taskcompletionlog_task",
-      "bokeà_database_models_bokea_database_taskcompletionlog_taskid",
-      "bokeà_database_models_cs_datetime",
-      "bokeà_services_pushnotificationservice_bokea_services_pushnotificationservice_notifyuserasync",
-      "modelbuilder"
-    ],
     "10": [
+      "bokeà_database_models_bokea_database_taskitem",
+      "bokeà_database_models_bokea_database_taskitem_completionlogs",
+      "bokeà_database_models_bokea_database_taskitem_createdat",
+      "bokeà_database_models_bokea_database_taskitem_description",
+      "bokeà_database_models_bokea_database_taskitem_displayorder",
+      "bokeà_database_models_bokea_database_taskitem_duedate",
+      "bokeà_database_models_bokea_database_taskitem_duedatevalue",
+      "bokeà_database_models_bokea_database_taskitem_duetime",
+      "bokeà_database_models_bokea_database_taskitem_durationminutes",
+      "bokeà_database_models_bokea_database_taskitem_id",
+      "bokeà_database_models_bokea_database_taskitem_intervaldays",
+      "bokeà_database_models_bokea_database_taskitem_intervaltype",
+      "bokeà_database_models_bokea_database_taskitem_iscommitment",
+      "bokeà_database_models_bokea_database_taskitem_lastcompletedat",
+      "bokeà_database_models_bokea_database_taskitem_snoozeduntil",
+      "bokeà_database_models_bokea_database_taskitem_state",
+      "bokeà_database_models_bokea_database_taskitem_timeslot",
+      "bokeà_database_models_bokea_database_taskitem_title",
+      "bokeà_database_models_bokea_database_taskitem_user",
+      "bokeà_database_models_bokea_database_taskitem_userid",
+      "icollection"
+    ],
+    "11": [
       "bokeà_wwwroot_js_a11y",
       "bokeà_wwwroot_js_a11y_announce",
       "bokeà_wwwroot_js_a11y_apply",
@@ -347,59 +420,43 @@
       "bokeà_wwwroot_js_a11y_wiremenu_sync",
       "bokeà_wwwroot_js_a11y_wiresettingscontrols"
     ],
-    "11": [
-      "bokeà_endpoints_taskendpoints",
-      "bokeà_endpoints_taskendpoints_bokea_endpoints_completetaskrequest",
-      "bokeà_endpoints_taskendpoints_bokea_endpoints_createtaskrequest",
-      "bokeà_endpoints_taskendpoints_bokea_endpoints_reordertaskrequest",
-      "bokeà_endpoints_taskendpoints_bokea_endpoints_snoozetaskrequest",
-      "bokeà_endpoints_taskendpoints_bokea_endpoints_taskendpoints",
-      "bokeà_endpoints_taskendpoints_bokea_endpoints_taskendpoints_maptaskendpoints",
-      "bokeà_endpoints_taskendpoints_bokea_endpoints_updatetaskrequest",
-      "bokeà_endpoints_taskendpoints_bokea_endpoints_whenintheday",
-      "bokeà_endpoints_taskendpoints_bokea_endpoints_whenintheday_duration",
-      "bokeà_endpoints_taskendpoints_bokea_endpoints_whenintheday_slot",
-      "bokeà_endpoints_taskendpoints_bokea_endpoints_whenintheday_time",
-      "bokeà_endpoints_taskendpoints_cs_datetime",
-      "bokeà_endpoints_taskendpoints_cs_taskstate",
-      "iendpointroutebuilder",
-      "intervaltype",
-      "sector"
-    ],
     "12": [
-      "bokeà_database_models",
-      "bokeà_database_models_bokea_database_duedatetype",
-      "bokeà_database_models_bokea_database_duedatetype_equals",
-      "bokeà_database_models_bokea_database_duedatetype_gethashcode",
-      "bokeà_database_models_bokea_database_duedatetype_hasvalue",
-      "bokeà_database_models_bokea_database_duedatetype_tostring",
-      "bokeà_database_models_bokea_database_duedatetype_value",
-      "bokeà_database_models_bokea_database_duedatetypejsonconverter",
-      "bokeà_database_models_bokea_database_duedatetypejsonconverter_read",
-      "bokeà_database_models_bokea_database_duedatetypejsonconverter_write",
-      "iequatable",
-      "jsonconverter",
-      "jsonserializeroptions",
-      "type",
-      "utf8jsonreader",
-      "utf8jsonwriter"
+      "bokeà_wwwroot_js_app_calculatetaskstate",
+      "bokeà_wwwroot_js_app_caldatedtasksfordate",
+      "bokeà_wwwroot_js_app_calisdaily",
+      "bokeà_wwwroot_js_app_calltaskrpc",
+      "bokeà_wwwroot_js_app_formatworkdayssummary",
+      "bokeà_wwwroot_js_app_gettasksfordate",
+      "bokeà_wwwroot_js_app_getuserworkdays",
+      "bokeà_wwwroot_js_app_handlelocalstoragefallback",
+      "bokeà_wwwroot_js_app_isdateworkday",
+      "bokeà_wwwroot_js_app_mapbackendtask",
+      "bokeà_wwwroot_js_app_marktaskwhen",
+      "bokeà_wwwroot_js_app_parsetaskid",
+      "bokeà_wwwroot_js_app_readstore",
+      "bokeà_wwwroot_js_app_routeapirequest",
+      "bokeà_wwwroot_js_app_shorttaskdate",
+      "bokeà_wwwroot_js_app_taskgraceratio",
+      "bokeà_wwwroot_js_app_taskwhentext",
+      "bokeà_wwwroot_js_app_updatelocalhistory"
     ],
     "13": [
-      "appdbcontext",
-      "backgroundservice",
-      "bokeà_services_taskwatchdogservice",
-      "bokeà_services_taskwatchdogservice_bokea_services_taskwatchdogservice",
-      "bokeà_services_taskwatchdogservice_bokea_services_taskwatchdogservice_calculatestate",
-      "bokeà_services_taskwatchdogservice_bokea_services_taskwatchdogservice_executeasync",
-      "bokeà_services_taskwatchdogservice_bokea_services_taskwatchdogservice_recalculatetaskstatesasync",
-      "bokeà_services_taskwatchdogservice_cs_datetime",
-      "bokeà_services_taskwatchdogservice_cs_taskstate",
-      "cancellationtoken",
-      "ilogger",
-      "iservicescopefactory",
-      "pushnotificationservice",
-      "task",
-      "taskitem"
+      "bokeà_database_appdbcontext_bokea_database_appdbcontext_onmodelcreating",
+      "bokeà_database_models_bokea_database_pushsubscription",
+      "bokeà_database_models_bokea_database_pushsubscription_auth",
+      "bokeà_database_models_bokea_database_pushsubscription_createdat",
+      "bokeà_database_models_bokea_database_pushsubscription_endpoint",
+      "bokeà_database_models_bokea_database_pushsubscription_id",
+      "bokeà_database_models_bokea_database_pushsubscription_p256dh",
+      "bokeà_database_models_bokea_database_pushsubscription_user",
+      "bokeà_database_models_bokea_database_pushsubscription_userid",
+      "bokeà_database_models_bokea_database_taskcompletionlog",
+      "bokeà_database_models_bokea_database_taskcompletionlog_completedat",
+      "bokeà_database_models_bokea_database_taskcompletionlog_id",
+      "bokeà_database_models_bokea_database_taskcompletionlog_notes",
+      "bokeà_database_models_bokea_database_taskcompletionlog_taskid",
+      "bokeà_database_models_cs_datetime",
+      "modelbuilder"
     ],
     "14": [
       "bokeà_database_appdbcontext",
@@ -419,6 +476,38 @@
       "dbset"
     ],
     "15": [
+      "backgroundservice",
+      "bokeà_database_models_bokea_database_taskcompletionlog_task",
+      "bokeà_services_pushnotificationservice_bokea_services_pushnotificationservice",
+      "bokeà_services_pushnotificationservice_bokea_services_pushnotificationservice_notifyuserasync",
+      "bokeà_services_pushnotificationservice_cs_ilogger",
+      "bokeà_services_taskwatchdogservice_bokea_services_taskwatchdogservice",
+      "bokeà_services_taskwatchdogservice_bokea_services_taskwatchdogservice_calculatestate",
+      "bokeà_services_taskwatchdogservice_bokea_services_taskwatchdogservice_executeasync",
+      "bokeà_services_taskwatchdogservice_bokea_services_taskwatchdogservice_recalculatetaskstatesasync",
+      "bokeà_services_taskwatchdogservice_cs_datetime",
+      "bokeà_services_taskwatchdogservice_cs_ilogger",
+      "cancellationtoken",
+      "iservicescopefactory",
+      "vapiddetails"
+    ],
+    "16": [
+      "bokeà_wwwroot_js_app_applylocalmodechrome",
+      "bokeà_wwwroot_js_app_applyprofilerow",
+      "bokeà_wwwroot_js_app_checkauthtoken",
+      "bokeà_wwwroot_js_app_clearstalelocalsession",
+      "bokeà_wwwroot_js_app_currentstoragescope",
+      "bokeà_wwwroot_js_app_initlocalstorage",
+      "bokeà_wwwroot_js_app_initsetuppagelisteners",
+      "bokeà_wwwroot_js_app_invalidatedayshapecache",
+      "bokeà_wwwroot_js_app_islocalmode",
+      "bokeà_wwwroot_js_app_maybestarttutorial",
+      "bokeà_wwwroot_js_app_migratelegacystorage",
+      "bokeà_wwwroot_js_app_refreshdashboardinbackground",
+      "bokeà_wwwroot_js_app_refreshstoragescope",
+      "bokeà_wwwroot_js_app_setstoragescope"
+    ],
+    "17": [
       "bokeà_wwwroot_js_app_calculatesleepduration",
       "bokeà_wwwroot_js_app_cleanupincomingview",
       "bokeà_wwwroot_js_app_hidecharttooltip",
@@ -434,46 +523,7 @@
       "bokeà_wwwroot_js_app_updatesleephealthmeter",
       "bokeà_wwwroot_js_app_updatethemecardselection"
     ],
-    "16": [
-      "bokeà_wwwroot_js_app_applylocalmodechrome",
-      "bokeà_wwwroot_js_app_applyprofilerow",
-      "bokeà_wwwroot_js_app_checkauthtoken",
-      "bokeà_wwwroot_js_app_clearstalelocalsession",
-      "bokeà_wwwroot_js_app_currentstoragescope",
-      "bokeà_wwwroot_js_app_invalidatedayshapecache",
-      "bokeà_wwwroot_js_app_islocalmode",
-      "bokeà_wwwroot_js_app_maybestarttutorial",
-      "bokeà_wwwroot_js_app_migratelegacystorage",
-      "bokeà_wwwroot_js_app_refreshdashboardinbackground",
-      "bokeà_wwwroot_js_app_refreshstoragescope",
-      "bokeà_wwwroot_js_app_setstoragescope"
-    ],
-    "17": [
-      "bokeà_wwwroot_js_app_applyremotepreferences",
-      "bokeà_wwwroot_js_app_applyuiprefs",
-      "bokeà_wwwroot_js_app_collectpreferences",
-      "bokeà_wwwroot_js_app_loaduiprefs",
-      "bokeà_wwwroot_js_app_markpreferenceschanged",
-      "bokeà_wwwroot_js_app_prefsdevicekey",
-      "bokeà_wwwroot_js_app_pushpreferences",
-      "bokeà_wwwroot_js_app_saveuiprefs",
-      "bokeà_wwwroot_js_app_schedulepreferencespush",
-      "bokeà_wwwroot_js_app_synctimeinputsclockformat",
-      "bokeà_wwwroot_js_app_wireaccessibilitybehaviour"
-    ],
     "18": [
-      "bokeà_endpoints_digestendpoints",
-      "bokeà_program",
-      "bokeà_services_digestservice",
-      "bokeà_services_pushnotificationservice",
-      "bokeà_services_pushnotificationservice_bokea_services_pushnotificationservice",
-      "bokeà_services_pushnotificationservice_cs_ilogger",
-      "csharp_namespace:5940c7f73bfb367b",
-      "csharp_namespace:ae1102e99c943fd5",
-      "csharp_namespace:d87b358914907239",
-      "vapiddetails"
-    ],
-    "19": [
       "bokeà_properties_launchsettings",
       "bokeà_properties_launchsettings_environmentvariables_aspnetcore_environment",
       "bokeà_properties_launchsettings_http_applicationurl",
@@ -485,7 +535,7 @@
       "bokeà_properties_launchsettings_profiles_http",
       "bokeà_properties_launchsettings_schema"
     ],
-    "20": [
+    "19": [
       "bokeà_bokea",
       "framework_net10_0",
       "nuget_bcrypt_net_next",
@@ -496,18 +546,18 @@
       "nuget_webpush",
       "sdk_microsoft_net_sdk_web"
     ],
-    "21": [
-      "bokeà_endpoints_digestendpoints_bokea_endpoints_digestendpoints",
-      "bokeà_endpoints_digestendpoints_bokea_endpoints_digestendpoints_mapdigestendpoints",
-      "bokeà_endpoints_digestendpoints_cs_iendpointroutebuilder",
-      "bokeà_services_digestservice_bokea_services_digestservice",
-      "bokeà_services_digestservice_bokea_services_digestservice_generaterecommendation",
-      "bokeà_services_digestservice_bokea_services_digestservice_getmorningdigestasync",
-      "bokeà_services_digestservice_bokea_services_digestservice_getsectordisplayname",
-      "bokeà_services_digestservice_cs_datetime",
-      "bokeà_services_digestservice_cs_sector"
+    "20": [
+      "bokeà_wwwroot_js_app_applyremotepreferences",
+      "bokeà_wwwroot_js_app_applyuiprefs",
+      "bokeà_wwwroot_js_app_collectpreferences",
+      "bokeà_wwwroot_js_app_loaduiprefs",
+      "bokeà_wwwroot_js_app_markpreferenceschanged",
+      "bokeà_wwwroot_js_app_prefsdevicekey",
+      "bokeà_wwwroot_js_app_pushpreferences",
+      "bokeà_wwwroot_js_app_saveuiprefs",
+      "bokeà_wwwroot_js_app_schedulepreferencespush"
     ],
-    "22": [
+    "21": [
       "bokeà_wwwroot_manifest",
       "bokeà_wwwroot_manifest_background_color",
       "bokeà_wwwroot_manifest_description",
@@ -518,17 +568,7 @@
       "bokeà_wwwroot_manifest_start_url",
       "bokeà_wwwroot_manifest_theme_color"
     ],
-    "23": [
-      "bokeà_database_models_bokea_database_intervaltype",
-      "bokeà_database_models_bokea_database_intervaltype_fixeddate",
-      "bokeà_database_models_bokea_database_intervaltype_intervalbased",
-      "bokeà_database_models_bokea_database_intervaltype_workdays",
-      "bokeà_database_models_bokea_database_taskstate",
-      "bokeà_database_models_bokea_database_taskstate_amber",
-      "bokeà_database_models_bokea_database_taskstate_green",
-      "bokeà_database_models_bokea_database_taskstate_red"
-    ],
-    "24": [
+    "22": [
       "bokeà_wwwroot_js_app_applyavatarcroptransform",
       "bokeà_wwwroot_js_app_avatarcropels",
       "bokeà_wwwroot_js_app_cancel",
@@ -538,25 +578,17 @@
       "bokeà_wwwroot_js_app_openavatarcropper",
       "bokeà_wwwroot_js_app_pointermove"
     ],
-    "25": [
-      "bokeà_endpoints_pushendpoints",
-      "bokeà_endpoints_pushendpoints_bokea_endpoints_pushendpoints",
-      "bokeà_endpoints_pushendpoints_bokea_endpoints_pushendpoints_mappushendpoints",
-      "bokeà_endpoints_pushendpoints_bokea_endpoints_pushsubscriptionkeys",
-      "bokeà_endpoints_pushendpoints_bokea_endpoints_pushsubscriptionrequest",
-      "bokeà_endpoints_pushendpoints_bokea_endpoints_unsubscriberequest",
-      "bokeà_endpoints_pushendpoints_cs_iendpointroutebuilder"
+    "23": [
+      "bokeà_wwwroot_js_app_closemodal",
+      "bokeà_wwwroot_js_app_commitmentswitchon",
+      "bokeà_wwwroot_js_app_iseditingtask",
+      "bokeà_wwwroot_js_app_readtaskformstate",
+      "bokeà_wwwroot_js_app_remembertaskdraft",
+      "bokeà_wwwroot_js_app_setcommitmentswitch",
+      "bokeà_wwwroot_js_app_setnotifyswitch",
+      "bokeà_wwwroot_js_app_syncnotifylock"
     ],
-    "26": [
-      "bokeà_services_digestservice_bokea_services_digesttaskdto",
-      "bokeà_services_digestservice_bokea_services_digesttaskdto_description",
-      "bokeà_services_digestservice_bokea_services_digesttaskdto_duedate",
-      "bokeà_services_digestservice_bokea_services_digesttaskdto_id",
-      "bokeà_services_digestservice_bokea_services_digesttaskdto_sector",
-      "bokeà_services_digestservice_bokea_services_digesttaskdto_state",
-      "bokeà_services_digestservice_bokea_services_digesttaskdto_title"
-    ],
-    "27": [
+    "24": [
       "next_steps",
       "next_steps_1_run_the_database_migration_supabase",
       "next_steps_2_commit_and_deploy",
@@ -565,15 +597,7 @@
       "next_steps_5_known_limits_and_choices_made",
       "next_steps_next_steps_sync_fixes_13_sep_2026"
     ],
-    "28": [
-      "bokeà_services_digestservice_bokea_services_morningdigestmodel",
-      "bokeà_services_digestservice_bokea_services_morningdigestmodel_recommendedactions",
-      "bokeà_services_digestservice_bokea_services_morningdigestmodel_tasksbysector",
-      "bokeà_services_digestservice_bokea_services_morningdigestmodel_totalwarningtasks",
-      "bokeà_services_digestservice_cs_list",
-      "dictionary"
-    ],
-    "29": [
+    "25": [
       "vercel",
       "vercel_cleanurls",
       "vercel_outputdirectory",
@@ -581,96 +605,68 @@
       "vercel_trailingslash",
       "vercel_version"
     ],
-    "30": [
-      "bokeà_database_models_bokea_database_sector",
-      "bokeà_database_models_bokea_database_sector_careerandfinance",
-      "bokeà_database_models_bokea_database_sector_healthandvitality",
-      "bokeà_database_models_bokea_database_sector_mindandenvironment",
-      "bokeà_database_models_bokea_database_sector_relationshipsandsocial"
+    "26": [
+      "bokeà_database_models_bokea_database_taskstate",
+      "bokeà_database_models_bokea_database_taskstate_amber",
+      "bokeà_database_models_bokea_database_taskstate_green",
+      "bokeà_database_models_bokea_database_taskstate_red"
     ],
-    "31": [
-      "bokeà_wwwroot_js_app_authbackendready",
-      "bokeà_wwwroot_js_app_promptsignupfromlocal",
-      "bokeà_wwwroot_js_app_setlocalmode",
-      "bokeà_wwwroot_js_app_showautherror",
-      "bokeà_wwwroot_js_app_showauthform"
-    ],
-    "32": [
-      "bokeà_wwwroot_js_app_closerowmenus",
-      "bokeà_wwwroot_js_app_closerowmenusandreturn",
-      "bokeà_wwwroot_js_app_closerowmenusonoutside",
-      "bokeà_wwwroot_js_app_togglerowmenu"
-    ],
-    "33": [
+    "27": [
       "bokeà_wwwroot_js_app_closesnoozemenu",
       "bokeà_wwwroot_js_app_closesnoozemenuonescape",
       "bokeà_wwwroot_js_app_closesnoozemenuonoutside",
       "bokeà_wwwroot_js_app_opensnoozemenu"
     ],
-    "34": [
+    "28": [
       "bokeà_wwwroot_sw",
       "bokeà_wwwroot_sw_assets_to_cache",
       "bokeà_wwwroot_sw_cdn_hosts"
     ],
-    "35": [
+    "29": [
       "AGENTS.md"
     ],
-    "36": [
-      "bokeà_endpoints_taskendpoints_cs_iendpointroutebuilder"
-    ],
-    "37": [
-      "bokeà_services_taskwatchdogservice_cs_ilogger"
-    ],
-    "38": [
+    "30": [
       "bokeà_wwwroot_js_config"
     ]
   },
   "cohesion": {
-    "0": 0.08397337429595494,
-    "1": 0.0524390243902439,
-    "2": 0.06386554621848739,
-    "3": 0.10037878787878787,
-    "4": 0.1723076923076923,
-    "5": 0.1956521739130435,
-    "6": 0.08695652173913043,
-    "7": 0.09090909090909091,
-    "8": 0.22510822510822512,
-    "9": 0.12418300653594772,
-    "10": 0.17647058823529413,
-    "11": 0.16176470588235295,
-    "12": 0.175,
-    "13": 0.17142857142857143,
+    "0": 0.09565217391304348,
+    "1": 0.10144927536231885,
+    "2": 0.051515151515151514,
+    "3": 0.06666666666666667,
+    "4": 0.10121457489878542,
+    "5": 0.07357357357357357,
+    "6": 0.06386554621848739,
+    "7": 0.1956521739130435,
+    "8": 0.08695652173913043,
+    "9": 0.22510822510822512,
+    "10": 0.09523809523809523,
+    "11": 0.17647058823529413,
+    "12": 0.16993464052287582,
+    "13": 0.13333333333333333,
     "14": 0.18095238095238095,
-    "15": 0.17582417582417584,
-    "16": 0.19696969696969696,
-    "17": 0.2727272727272727,
-    "18": 0.24444444444444444,
-    "19": 0.2,
-    "20": 0.2222222222222222,
-    "21": 0.2777777777777778,
-    "22": 0.2222222222222222,
-    "23": 0.21428571428571427,
-    "24": 0.25,
+    "15": 0.1978021978021978,
+    "16": 0.2087912087912088,
+    "17": 0.17582417582417584,
+    "18": 0.2,
+    "19": 0.2222222222222222,
+    "20": 0.3611111111111111,
+    "21": 0.2222222222222222,
+    "22": 0.25,
+    "23": 0.2857142857142857,
+    "24": 0.2857142857142857,
     "25": 0.3333333333333333,
-    "26": 0.2857142857142857,
-    "27": 0.2857142857142857,
-    "28": 0.3333333333333333,
-    "29": 0.3333333333333333,
-    "30": 0.4,
-    "31": 0.4,
-    "32": 0.6666666666666666,
-    "33": 0.8333333333333334,
-    "34": 0.6666666666666666,
-    "35": 1.0,
-    "36": 1.0,
-    "37": 1.0,
-    "38": 1.0
+    "26": 0.5,
+    "27": 0.8333333333333334,
+    "28": 0.6666666666666666,
+    "29": 1.0,
+    "30": 1.0
   },
   "gods": [
     {
       "id": "bokeà_database_models_bokea_database_taskitem",
       "label": "TaskItem",
-      "degree": 32
+      "degree": 34
     },
     {
       "id": "bokeà_database_models_bokea_database_user",
@@ -678,14 +674,19 @@
       "degree": 31
     },
     {
+      "id": "bokeà_wwwroot_js_app_caldatestr",
+      "label": "calDateStr()",
+      "degree": 23
+    },
+    {
       "id": "bokeà_wwwroot_js_app_loaddashboarddata",
       "label": "loadDashboardData()",
       "degree": 23
     },
     {
-      "id": "bokeà_wwwroot_js_app_caldatestr",
-      "label": "calDateStr()",
-      "degree": 22
+      "id": "bokeà_database_appdbcontext_bokea_database_appdbcontext",
+      "label": "AppDbContext",
+      "degree": 19
     },
     {
       "id": "bokeà_wwwroot_js_app_rendernextuptask",
@@ -698,18 +699,13 @@
       "degree": 19
     },
     {
-      "id": "bokeà_database_appdbcontext_bokea_database_appdbcontext",
-      "label": "AppDbContext",
-      "degree": 18
+      "id": "bokeà_wwwroot_js_app_showtoast",
+      "label": "showToast()",
+      "degree": 19
     },
     {
       "id": "bokeà_wwwroot_js_app_apirequest",
       "label": "apiRequest()",
-      "degree": 18
-    },
-    {
-      "id": "bokeà_wwwroot_js_app_showtoast",
-      "label": "showToast()",
       "degree": 18
     },
     {
@@ -719,6 +715,17 @@
     }
   ],
   "surprises": [
+    {
+      "source": "AppDbContext",
+      "target": "TaskItem",
+      "source_files": [
+        "Bokeà/Database/AppDbContext.cs",
+        "Bokeà/Database/Models.cs"
+      ],
+      "confidence": "EXTRACTED",
+      "relation": "references",
+      "why": "bridges separate communities"
+    },
     {
       "source": "AppDbContext",
       "target": "PushSubscription",
@@ -733,17 +740,6 @@
     {
       "source": "AppDbContext",
       "target": "TaskCompletionLog",
-      "source_files": [
-        "Bokeà/Database/AppDbContext.cs",
-        "Bokeà/Database/Models.cs"
-      ],
-      "confidence": "EXTRACTED",
-      "relation": "references",
-      "why": "bridges separate communities"
-    },
-    {
-      "source": "AppDbContext",
-      "target": "TaskItem",
       "source_files": [
         "Bokeà/Database/AppDbContext.cs",
         "Bokeà/Database/Models.cs"
@@ -778,38 +774,38 @@
   "questions": [
     {
       "type": "bridge_node",
-      "question": "Why does `Bokea.Database` connect `Bokea.Database` to `PushEndpoints.cs`, `ProfileAboutRequest`, `DueDateType`, `AppDbContext`?",
+      "question": "Why does `TaskItem` connect `TaskItem` to `DueDateType`, `DigestTaskDto`, `User`, `PushSubscription`, `AppDbContext`, `TaskWatchdogService`, `TaskState`?",
       "why": "High betweenness centrality (0.041) - this node is a cross-community bridge."
     },
     {
       "type": "bridge_node",
-      "question": "Why does `TaskItem` connect `TaskItem` to `User`, `PushSubscription`, `DueDateType`, `AppDbContext`, `.GetMorningDigestAsync`, `IntervalType`?",
-      "why": "High betweenness centrality (0.040) - this node is a cross-community bridge."
+      "question": "Why does `Bokea.Database` connect `DigestTaskDto` to `DueDateType`, `AppDbContext`, `ProfileAboutRequest`?",
+      "why": "High betweenness centrality (0.039) - this node is a cross-community bridge."
     },
     {
       "type": "bridge_node",
-      "question": "Why does `User` connect `User` to `ProfileAboutRequest`, `TaskItem`, `PushSubscription`, `DueDateType`, `AppDbContext`?",
-      "why": "High betweenness centrality (0.037) - this node is a cross-community bridge."
+      "question": "Why does `User` connect `User` to `DueDateType`, `ProfileAboutRequest`, `TaskItem`, `PushSubscription`, `AppDbContext`?",
+      "why": "High betweenness centrality (0.033) - this node is a cross-community bridge."
     },
     {
       "type": "isolated_nodes",
-      "question": "What connects `ReorderTaskRequest`, `UnsubscribeRequest`, `CAL_DAYS` to the rest of the system?",
-      "why": "155 weakly-connected nodes found - possible documentation gaps or missing edges."
+      "question": "What connects `ReorderTaskRequest`, `UnsubscribeRequest`, `CompletionLogs` to the rest of the system?",
+      "why": "156 weakly-connected nodes found - possible documentation gaps or missing edges."
+    },
+    {
+      "type": "low_cohesion",
+      "question": "Should `applyTaskFormState` be split into smaller, more focused modules?",
+      "why": "Cohesion score 0.09565217391304348 - nodes in this community are weakly interconnected."
     },
     {
       "type": "low_cohesion",
       "question": "Should `calDateStr` be split into smaller, more focused modules?",
-      "why": "Cohesion score 0.08397337429595494 - nodes in this community are weakly interconnected."
+      "why": "Cohesion score 0.10144927536231885 - nodes in this community are weakly interconnected."
     },
     {
       "type": "low_cohesion",
       "question": "Should `app.js` be split into smaller, more focused modules?",
-      "why": "Cohesion score 0.0524390243902439 - nodes in this community are weakly interconnected."
-    },
-    {
-      "type": "low_cohesion",
-      "question": "Should `ProfileAboutRequest` be split into smaller, more focused modules?",
-      "why": "Cohesion score 0.06386554621848739 - nodes in this community are weakly interconnected."
+      "why": "Cohesion score 0.051515151515151514 - nodes in this community are weakly interconnected."
     }
   ]
 }

@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- The page's own background, and the PWA theme colour: what the app
+         paints behind everything before the web view has drawn anything. -->
+    <color name="bokea_background">#09090b</color>
+    <!-- The mark's ground, one step lighter, so the icon is not a hole. -->
+    <color name="bokea_ink">#18181b</color>
+
+    <!-- Referenced by the stock AppTheme that nothing uses any more; kept so
+         the resource references in it still resolve. -->
+    <color name="colorPrimary">#18181b</color>
+    <color name="colorPrimaryDark">#09090b</color>
+    <color name="colorAccent">#4A7C59</color>
+</resources>

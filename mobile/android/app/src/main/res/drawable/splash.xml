@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+    The splash as an ImageView background, which is what the SplashScreen
+    plugin shows if it is ever asked to show one after launch. The launch
+    splash itself comes from AppTheme.NoActionBarLaunch and the Android
+    splash screen API; both are the same dark ground with the same mark on it.
+-->
+<layer-list xmlns:android="http://schemas.android.com/apk/res/android">
+    <item android:drawable="@color/bokea_background" />
+    <item
+        android:gravity="center"
+        android:width="128dp"
+        android:height="128dp"
+        android:drawable="@drawable/ic_bokea_logo" />
+</layer-list>

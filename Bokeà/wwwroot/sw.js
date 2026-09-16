@@ -1,4 +1,4 @@
-const CACHE_NAME = 'bokea-v40';
+const CACHE_NAME = 'bokea-v41';
 const ASSETS_TO_CACHE = [
   '/',
   '/index.html',

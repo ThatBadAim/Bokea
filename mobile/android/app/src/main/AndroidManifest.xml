@@ -1,0 +1,72 @@
+<?xml version="1.0" encoding="utf-8"?>
+<manifest xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools">
+
+    <application
+        android:allowBackup="true"
+        android:icon="@mipmap/ic_launcher"
+        android:label="@string/app_name"
+        android:roundIcon="@mipmap/ic_launcher_round"
+        android:supportsRtl="true"
+        android:theme="@style/AppTheme">
+
+        <activity
+            android:configChanges="orientation|keyboardHidden|keyboard|screenSize|locale|smallestScreenSize|screenLayout|uiMode|navigation|density"
+            android:name=".MainActivity"
+            android:label="@string/title_activity_main"
+            android:theme="@style/AppTheme.NoActionBarLaunch"
+            android:launchMode="singleTask"
+            android:windowSoftInputMode="adjustResize"
+            android:exported="true">
+
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+                <category android:name="android.intent.category.LAUNCHER" />
+            </intent-filter>
+
+            <!--
+                Password resets and sign-in links. Supabase is told to send
+                people to bokea://auth (see mobile-bridge.js), the mail app
+                hands the link to Android, and Android hands it here, where the
+                bridge puts the fragment back in the address and reloads so the
+                app reads it the way it does in a browser.
+
+                The same address has to be listed in the Supabase dashboard,
+                under Authentication - URL Configuration - Redirect URLs.
+            -->
+            <intent-filter>
+                <action android:name="android.intent.action.VIEW" />
+                <category android:name="android.intent.category.DEFAULT" />
+                <category android:name="android.intent.category.BROWSABLE" />
+                <data android:scheme="@string/custom_url_scheme" android:host="auth" />
+            </intent-filter>
+
+        </activity>
+
+        <provider
+            android:name="androidx.core.content.FileProvider"
+            android:authorities="${applicationId}.fileprovider"
+            android:exported="false"
+            android:grantUriPermissions="true">
+            <meta-data
+                android:name="android.support.FILE_PROVIDER_PATHS"
+                android:resource="@xml/file_paths"></meta-data>
+        </provider>
+    </application>
+
+    <!-- Permissions -->
+
+    <uses-permission android:name="android.permission.INTERNET" />
+
+    <!--
+        Reminders are scheduled inexactly - Android fires them in the next idle
+        window near the time asked for - which needs no permission and never
+        sends anybody to a settings screen. The local notifications plugin asks
+        for the exact-alarm permission in its own manifest, so it is taken back
+        out here rather than shipped unused and declared to Google Play.
+
+        To use exact alarms instead: delete this one line, and set
+        EXACT_REMINDERS to true in mobile/src/bridge/mobile-bridge.js.
+    -->
+    <uses-permission android:name="android.permission.SCHEDULE_EXACT_ALARM" tools:node="remove" />
+</manifest>

@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+    The Bokeà mark, the same one in wwwroot/assets/icon.svg: a rounded square
+    with the tick drawn through it. Kept as a vector so it is sharp on every
+    density without a folder of PNGs to keep in step with it.
+-->
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="512dp"
+    android:height="512dp"
+    android:viewportWidth="512"
+    android:viewportHeight="512">
+    <path
+        android:fillColor="#18181b"
+        android:pathData="M100,0 L412,0 A100,100 0 0 1 512,100 L512,412 A100,100 0 0 1 412,512 L100,512 A100,100 0 0 1 0,412 L0,100 A100,100 0 0 1 100,0 Z" />
+    <path
+        android:pathData="M160,256 L224,320 L352,160"
+        android:strokeColor="#ffffff"
+        android:strokeWidth="40"
+        android:strokeLineCap="round"
+        android:strokeLineJoin="round" />
+</vector>

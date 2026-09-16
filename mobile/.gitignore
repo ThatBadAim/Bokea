@@ -1,0 +1,31 @@
+# Built from Bokeà/wwwroot by scripts/sync-web.mjs. Never edited by hand.
+www/
+
+# npm
+node_modules/
+
+# Downloaded copies of the fonts and CDN scripts, kept so a build needs the
+# network only once.
+.cache/
+
+# Build output
+dist/
+android/app/build/
+android/build/
+android/.gradle/
+android/capacitor-cordova-android-plugins/build/
+android/local.properties
+
+# The iOS equivalents are in ios/.gitignore, which Capacitor wrote and which
+# already covers Pods/, build/, DerivedData and xcuserdata. Podfile.lock is
+# deliberately not among them: it pins the pod versions a build resolved to,
+# and is committed so the CI runner builds against the same ones.
+
+# Signing
+*.keystore
+*.jks
+keystore.properties
+*.mobileprovision
+*.p12
+*.cer
+ExportOptions.plist

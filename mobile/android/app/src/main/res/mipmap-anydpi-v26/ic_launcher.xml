@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="utf-8"?>
+<adaptive-icon xmlns:android="http://schemas.android.com/apk/res/android">
+    <background android:drawable="@color/bokea_ink" />
+    <foreground android:drawable="@drawable/ic_bokea_tick" />
+    <!-- Android 13 and up, where the launcher tints the icon to match the
+         wallpaper: it needs the shape on its own, with no ground under it. -->
+    <monochrome android:drawable="@drawable/ic_bokea_tick" />
+</adaptive-icon>

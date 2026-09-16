@@ -1,0 +1,46 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+
+    <!--
+        The theme the app runs in. Everything visible is drawn by the web view,
+        so this is mostly about getting out of its way: no action bar, nothing
+        painted over the system bars, and a dark ground behind the page for the
+        moment before it has painted and for the strips beside a cutout.
+    -->
+    <style name="AppTheme.NoActionBar" parent="Theme.AppCompat.DayNight.NoActionBar">
+        <item name="windowActionBar">false</item>
+        <item name="windowNoTitle">true</item>
+        <item name="android:windowBackground">@color/bokea_background</item>
+
+        <!-- Edge to edge. MainActivity turns it on for Android 14 and below;
+             Android 15 enforces it. Transparent bars let the page's own
+             background be what shows through them. -->
+        <item name="android:statusBarColor">@android:color/transparent</item>
+        <item name="android:navigationBarColor">@android:color/transparent</item>
+        <item name="android:windowDrawsSystemBarBackgrounds">true</item>
+
+        <!-- Use the whole screen on a phone with a camera cutout, in both
+             orientations, rather than letterboxing beside it. The web app's
+             phone styles already keep their content clear of it through
+             env(safe-area-inset-*). -->
+        <item name="android:windowLayoutInDisplayCutoutMode">shortEdges</item>
+    </style>
+
+    <!--
+        The launch theme, which is what the system draws between the tap on the
+        icon and the first frame of the app. androidx.core.splashscreen gives
+        the Android 12 splash screen API the whole way back to Android 6, so
+        one description covers every phone this runs on.
+    -->
+    <style name="AppTheme.NoActionBarLaunch" parent="Theme.SplashScreen">
+        <item name="windowSplashScreenBackground">@color/bokea_background</item>
+        <item name="windowSplashScreenAnimatedIcon">@drawable/ic_bokea_tick</item>
+        <item name="postSplashScreenTheme">@style/AppTheme.NoActionBar</item>
+    </style>
+
+    <!-- Nothing uses this; the generated manifest names it on <application>
+         before the activity overrides it. -->
+    <style name="AppTheme" parent="Theme.AppCompat.DayNight.NoActionBar">
+        <item name="android:windowBackground">@color/bokea_background</item>
+    </style>
+</resources>

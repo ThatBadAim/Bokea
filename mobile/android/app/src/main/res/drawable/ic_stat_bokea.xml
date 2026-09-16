@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+    The notification status bar icon. Android throws away every colour in it
+    and draws the silhouette in the tint from the LocalNotifications config,
+    so this has to be one flat shape on nothing - a filled tick rather than a
+    stroked one, because strokes are what turn into a grey square.
+-->
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="24dp"
+    android:height="24dp"
+    android:viewportWidth="24"
+    android:viewportHeight="24">
+    <path
+        android:fillColor="#ffffff"
+        android:pathData="M9.3,16.7 L4.6,12 a1.6,1.6 0 0 1 2.3,-2.3 l3.6,3.6 L17.1,6 a1.6,1.6 0 0 1 2.4,2.1 l-7.7,8.7 a1.6,1.6 0 0 1 -2.4,0.1 Z" />
+</vector>

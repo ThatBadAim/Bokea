@@ -1,0 +1,58 @@
+Bokeà for Windows - third-party software
+========================================
+
+Bokeà for Windows ships the following third-party components. Each keeps its
+own licence. Where a licence requires source code to be offered (LGPL), the
+exact source is linked.
+
+
+1. WebKit (runtime\WebKit2.dll, WebCore.dll, JavaScriptCore.dll and the
+   WebKit*Process.exe helpers)
+
+   The WebKit Windows port, built by the Playwright project (build r2359)
+   from upstream WebKit commit 56453fdfe0b0ca6258c23e6453b34f70b885d13f with
+   Playwright's patches applied.
+
+   Licences: BSD 2-Clause (most of WebKit) and GNU LGPL 2.1 (parts of WebCore
+   and JavaScriptCore).
+     https://webkit.org/licensing-webkit/
+     https://www.gnu.org/licenses/old-licenses/lgpl-2.1.html
+   Source:
+     https://github.com/WebKit/WebKit/tree/56453fdfe0b0ca6258c23e6453b34f70b885d13f
+     https://github.com/microsoft/playwright/tree/main/browser_patches/webkit
+   The LGPL-covered libraries are separate DLLs and may be replaced.
+
+   Libraries shipped alongside WebKit in runtime\:
+     ANGLE (libEGL, libGLESv2) ........ BSD 3-Clause  https://chromium.googlesource.com/angle/angle
+     Brotli ........................... MIT           https://github.com/google/brotli
+     cURL ............................. curl licence  https://curl.se/docs/copyright.html
+     HarfBuzz ......................... MIT           https://github.com/harfbuzz/harfbuzz
+     ICU .............................. Unicode       https://github.com/unicode-org/icu
+     JPEG XL (libjxl) ................. BSD 3-Clause  https://github.com/libjxl/libjxl
+     libjpeg-turbo .................... IJG / BSD     https://github.com/libjpeg-turbo/libjpeg-turbo
+     Little CMS ....................... MIT           https://github.com/mm2/Little-CMS
+     LibreSSL (ssl, crypto) ........... OpenSSL / ISC https://www.libressl.org
+     libpng ........................... libpng        http://www.libpng.org/pub/png/src/libpng-LICENSE.txt
+     libpsl ........................... MIT           https://github.com/rockdaboot/libpsl
+     libwebp .......................... BSD 3-Clause  https://chromium.googlesource.com/webm/libwebp
+     libxml2, libxslt ................. MIT           https://gitlab.gnome.org/GNOME/libxml2
+     nghttp2, nghttp3, ngtcp2 ......... MIT           https://github.com/ngtcp2
+     SQLite ........................... Public domain https://sqlite.org/copyright.html
+     zlib ............................. zlib          https://zlib.net/zlib_license.html
+     Microsoft Visual C++ runtime ..... redistributable under the Visual Studio licence terms
+
+
+2. Bundled web assets (web\vendor\)
+
+     Inter ............................ SIL Open Font License 1.1  https://github.com/rsms/inter
+     Outfit ........................... SIL Open Font License 1.1  https://github.com/Outfitio/Outfit-Fonts
+     Playfair Display ................. SIL Open Font License 1.1  https://github.com/clauseggers/Playfair
+     Lucide icons ..................... ISC                        https://github.com/lucide-icons/lucide
+     supabase-js ...................... MIT                        https://github.com/supabase/supabase-js
+
+   web\vendor\SOURCES.txt lists the exact URL each file was taken from.
+
+
+3. .NET runtime (inside Bokea.exe)
+
+     .NET ............................. MIT  https://github.com/dotnet/runtime

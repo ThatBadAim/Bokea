@@ -1,0 +1,189 @@
+# Builds Bokeà for iOS on a Mac that nobody has to own.
+#
+# The whole Xcode project - the Swift, the storyboards, the asset catalogue,
+# the Info.plist, the Podfile - is committed under mobile/ios and is built on
+# Linux by `./build.sh ios`. The one step that cannot be done there is the
+# compile itself, because xcodebuild and the iOS SDKs are macOS only. That step
+# happens here, on the same committed project, so the machine this is developed
+# on and the machine it is built on disagree about nothing.
+#
+# The archive is unsigned. Signing needs an Apple Developer account, a team ID
+# and a provisioning profile, none of which belong in a repository; turning the
+# archive into an .ipa is described in mobile/README.md under "Signing a
+# release". An unsigned archive is still the real thing: it proves the project
+# compiles, links, and carries the right icons, Info.plist and bundle id.
+
+name: build ios
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'mobile/**'
+      - 'Bokeà/wwwroot/**'
+      - '.github/workflows/build-ios.yml'
+  pull_request:
+    paths:
+      - 'mobile/**'
+      - 'Bokeà/wwwroot/**'
+      - '.github/workflows/build-ios.yml'
+  workflow_dispatch:
+    inputs:
+      version:
+        description: 'Version stamped on the build'
+        required: false
+        default: '1.0.0'
+
+# A second push should not race the first through the same build.
+concurrency:
+  group: build-ios-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  # Runs first, and on Linux, because it is quick and because what it checks -
+  # that the bridge behaves the same as both apps - is the thing most likely to
+  # be wrong and the thing a compiler cannot catch. No sense holding a macOS
+  # runner while finding out the iOS app would have had a white keyboard.
+  parity:
+    name: bridge parity
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: npm
+          cache-dependency-path: mobile/package-lock.json
+
+      - name: Install dependencies
+        working-directory: mobile
+        run: npm ci
+
+      # The fonts and CDN scripts the web app loads are downloaded once and
+      # vendored into www/, so the app never needs the network on a phone.
+      - name: Cache vendored web files
+        uses: actions/cache@v4
+        with:
+          path: mobile/.cache
+          key: bokea-web-vendor-${{ hashFiles('Bokeà/wwwroot/index.html') }}
+          restore-keys: bokea-web-vendor-
+
+      - name: Build the web app
+        working-directory: mobile
+        run: npm run sync:web
+
+      - name: Install Playwright
+        working-directory: mobile
+        run: |
+          npm install --no-save playwright-core
+          npx --yes playwright@latest install --with-deps chromium
+
+      # Runs the whole suite twice, once as each app. A difference between them
+      # fails here rather than on somebody's phone.
+      - name: Run the bridge suite as both platforms
+        working-directory: mobile
+        run: npm test
+
+  archive:
+    name: xcode archive
+    needs: parity
+    runs-on: macos-latest
+    timeout-minutes: 45
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: npm
+          cache-dependency-path: mobile/package-lock.json
+
+      # macos-latest ships several Xcodes; name the one this is built against
+      # rather than letting the runner image decide it for us.
+      - name: Select Xcode
+        run: |
+          sudo xcode-select --switch /Applications/Xcode.app
+          xcodebuild -version
+
+      - name: Install dependencies
+        working-directory: mobile
+        run: npm ci
+
+      - name: Cache vendored web files
+        uses: actions/cache@v4
+        with:
+          path: mobile/.cache
+          key: bokea-web-vendor-${{ hashFiles('Bokeà/wwwroot/index.html') }}
+          restore-keys: bokea-web-vendor-
+
+      # Copies wwwroot into www, vendors the fonts and CDN scripts, drops in
+      # mobile-bridge.js, then hands all of it to the Xcode project.
+      - name: Build the web app and sync the Xcode project
+        working-directory: mobile
+        run: npm run sync:ios
+
+      - name: Cache CocoaPods
+        uses: actions/cache@v4
+        with:
+          path: mobile/ios/App/Pods
+          key: bokea-pods-${{ hashFiles('mobile/ios/App/Podfile') }}-${{ hashFiles('mobile/package-lock.json') }}
+          restore-keys: bokea-pods-
+
+      # `cap sync` above skips this when CocoaPods is missing, and does run it
+      # when it is there; running it again is cheap and makes the step that
+      # fails say so plainly when the Podfile and the workspace disagree.
+      - name: Install pods
+        working-directory: mobile/ios/App
+        run: pod install --repo-update
+
+      # The one check worth making before a five-minute compile: that the shared
+      # scheme committed at ios/App/App.xcodeproj/xcshareddata is actually the
+      # one xcodebuild can see through the workspace.
+      - name: Check the scheme is shared
+        working-directory: mobile/ios/App
+        run: |
+          xcodebuild -workspace App.xcworkspace -list
+          xcodebuild -workspace App.xcworkspace -list | grep -qw App
+
+      - name: Archive
+        working-directory: mobile/ios/App
+        run: |
+          xcodebuild \
+            -workspace App.xcworkspace \
+            -scheme App \
+            -configuration Release \
+            -destination generic/platform=iOS \
+            -archivePath "$RUNNER_TEMP/Bokea.xcarchive" \
+            MARKETING_VERSION="${{ inputs.version || '1.0.0' }}" \
+            CURRENT_PROJECT_VERSION="${{ github.run_number }}" \
+            CODE_SIGNING_ALLOWED=NO \
+            CODE_SIGNING_REQUIRED=NO \
+            CODE_SIGN_IDENTITY="" \
+            archive
+
+      # Proves the things that are easy to get wrong and invisible until the
+      # App Store rejects them: the bundle id, the display name, the URL scheme
+      # the reset links come back through, and an icon that actually shipped.
+      - name: Check what came out
+        run: |
+          APP="$RUNNER_TEMP/Bokea.xcarchive/Products/Applications/App.app"
+          PLIST="$APP/Info.plist"
+          echo "--- $PLIST"
+          plutil -p "$PLIST" | grep -E 'CFBundleIdentifier|CFBundleDisplayName|CFBundleURLSchemes|UILaunchStoryboardName|UIStatusBarStyle' || true
+          test "$(/usr/libexec/PlistBuddy -c 'Print :CFBundleIdentifier' "$PLIST")" = "com.bokea.app"
+          test "$(/usr/libexec/PlistBuddy -c 'Print :CFBundleURLTypes:0:CFBundleURLSchemes:0' "$PLIST")" = "bokea"
+          echo "--- icons"
+          ls "$APP" | grep -i AppIcon
+          echo "--- the web app is inside the bundle"
+          test -f "$APP/public/index.html"
+          test -f "$APP/public/js/mobile-bridge.js"
+
+      - name: Upload the archive
+        uses: actions/upload-artifact@v4
+        with:
+          name: Bokea-ios-archive
+          path: ${{ runner.temp }}/Bokea.xcarchive
+          retention-days: 14
+          if-no-files-found: error

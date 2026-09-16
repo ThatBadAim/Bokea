@@ -15,6 +15,8 @@ a database change that only you can run. In order:
    select proname from pg_proc where proname in ('complete_task', 'uncomplete_task');       -- 2 rows
    select column_name from information_schema.columns
     where table_name = 'profiles' and column_name = 'preferences';                           -- 1 row
+   select column_name from information_schema.columns
+    where table_name = 'tasks' and column_name = 'is_commitment';                            -- 1 row
    select tgname from pg_trigger where tgname = 'tasks_touch_updated_at';                    -- 1 row
    ```
 
@@ -26,10 +28,10 @@ What it turns on:
 | 10b | `updated_at` now changes on every edit, which lets the app notice an edit form that is out of date. |
 | 10c | `complete_task` / `uncomplete_task` save a tick or untick as one all-or-nothing write. |
 | 10d | `profiles.preferences`, so theme, clock format, default snooze and display switches follow your account. |
+| 10e | `tasks.is_commitment` & `tasks.is_sample`, so task commitments turn red when missed. |
 
-**The app works before you run it.** Until then it quietly falls back to the old
-behaviour for each of those four things (two separate writes per tick, last save
-wins, preferences stay per device, deleting a task still removes its history).
+**The app works before you run it.** Until then it quietly falls back to omitting
+unsupported columns dynamically on save, while completing tasks using legacy calls.
 
 If 10a errors on the foreign key, the constraint has a different name in your
 project. Find it and swap the name into the `DROP CONSTRAINT` line:
